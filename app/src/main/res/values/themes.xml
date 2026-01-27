@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.AquaRouteSystem" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/deep_ocean_blue</item>
+        <item name="colorPrimaryVariant">@color/weather_teal</item>
+        <item name="colorOnPrimary">@color/white</item>
 
-    <style name="Theme.AquaRouteSystem" parent="android:Theme.Material.Light.NoActionBar" />
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/sky_cyan</item>
+        <item name="colorSecondaryVariant">@color/weather_teal</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/deep_ocean_blue</item>
+
+        <!-- Customize your theme here -->
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
 </resources>

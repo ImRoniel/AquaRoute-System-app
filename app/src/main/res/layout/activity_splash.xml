@@ -16,7 +16,7 @@
             android:id="@+id/ferryIcon"
             android:layout_width="242dp"
             android:layout_height="277dp"
-            android:src="@drawable/aqua_route_log"
+            android:src="@drawable/ic_ferry"
             android:contentDescription="AquaRoute Logo" />
 
     </LinearLayout>

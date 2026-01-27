@@ -1,14 +1,12 @@
 plugins {
+    // Use version-catalog plugin aliases (keep Compose alias removed)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "com.example.aquaroute_system"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.aquaroute_system"
@@ -36,27 +34,33 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
+//    buildFeatures {
+//        compose = true
+//    }
 }
 
+
 dependencies {
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+
+    // OpenStreetMap - resolves from JitPack
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+    implementation("com.github.mkergall:osmbonuspack:6.9.0@aar")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.cardview:cardview:1.0.0")
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    // In app/build.gradle.kts dependencies
+    implementation(platform(libs.androidx.compose.bom)) // Compose BOM
+    implementation("androidx.compose.ui:ui")             // For Color, basic Compose UI
+    implementation("androidx.compose.material3:material3") // For MaterialTheme, dark/light color schemes
+    implementation("androidx.compose.ui:ui-tooling-preview") // Optional for preview in IDE
 }

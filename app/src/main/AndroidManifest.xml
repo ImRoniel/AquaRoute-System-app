@@ -2,7 +2,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+<!--    &lt;!&ndash; Add location permissions if using maps &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
+<!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
+    <!-- ========== PERMISSIONS ========== -->
+    <!-- Internet access for loading map tiles -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- For offline map caching -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!-- For location services (ferry tracking) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Network state for checking connectivity -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+
     <application
+
+
+
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -11,16 +34,43 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AquaRouteSystem">
+
+<!--        GOOGLE MAP API-->
+<!--        <meta-data-->
+<!--            android:name="com.google.android.geo.API_KEY"-->
+<!--            android:value="AIzaSyA6nBErGYXCX_2Xf20ITs4UqLCzdVMlVMA" />-->
+<!--        <uses-library android:name="com.google.android.maps" android:required="false" />-->
+
+
+        <!-- OpenStreetMap Configuration -->
+        <meta-data
+            android:name="osmdroid.basePath"
+            android:value="/osmdroid" />
+        <meta-data
+            android:name="osmdroid.cachePath"
+            android:value="/osmdroid/Cache" />
+
+
+        <!-- Splash Activity (Entry Point) -->
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AquaRouteSystem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- MainDashboard Activity -->
+        <activity
+            android:name=".View.MainDashboard"
+            android:exported="false" />
+
     </application>
 </manifest>
