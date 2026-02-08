@@ -16,7 +16,7 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         supportActionBar?.hide()
-        // Delayed transition to MainDashboard
+
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(Intent(this, MainDashboard::class.java))
             finish() // Remove SplashActivity from back stack

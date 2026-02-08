@@ -4,13 +4,13 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- ========== LAYER 1: LIVE MAP (BACKGROUND) ========== -->
-    <org.osmdroid.views.MapView
-        android:id="@+id/mapView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+<!--    LAYER: 1 LIVE MAP BACKGROUND-->
+        <org.osmdroid.views.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
-    <!-- ========== LAYER 3: FLOATING CONTROLS (CORNERS) ========== -->
+    <!--LAYER 3: FLOATING CONTROLS -->
 
     <!-- Top-Left Controls -->
     <androidx.cardview.widget.CardView
@@ -29,6 +29,7 @@
             android:orientation="vertical"
             android:padding="4dp">
 
+<!--            THIS THE BLOCK OF CODE THAT ESSENTIALLY MAKE A LOGIC ON HAMBURGER ICON-->
             <ImageButton
                 android:id="@+id/btnMenu"
                 android:layout_width="48dp"
@@ -108,7 +109,61 @@
                 android:layout_marginTop="4dp"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+    <!-- ========== SEARCH BAR ========== -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/searchCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardControlsRight"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#FFFFFFFF"
+        android:visibility="gone">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_search"
+                app:tint="#666666"
+                android:layout_gravity="center_vertical"/>
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:hint="Search ports, ferries..."
+                android:background="@android:color/transparent"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingVertical="4dp"
+                android:textColor="#000000"
+                android:textColorHint="#666666"/>
+
+            <ImageButton
+                android:id="@+id/btnClearSearch"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:scaleType="center"
+                android:src="@drawable/ic_close"
+                app:tint="#666666"
+                android:visibility="gone"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
     <!-- ========== LAYER 4: STATUS OVERLAY ========== -->
     <LinearLayout
         android:id="@+id/statusOverlay"
@@ -181,7 +236,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
-                android:tint="#FFFFFF"/>
+                app:tint="#FFFFFF"/>
 
             <TextView
                 android:id="@+id/tvSelectedTitle"
@@ -199,7 +254,7 @@
                 android:layout_height="24dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_close"
-                android:tint="#FFFFFF"/>
+                app:tint="#FFFFFF"/>
         </LinearLayout>
 
         <!-- Content -->

@@ -51,7 +51,7 @@
             android:value="/osmdroid/Cache" />
 
 
-        <!-- Splash Activity (Entry Point) -->
+        <!-- SPLASH ASCTIVTTY(ENTRY POINT) -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -62,12 +62,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Main Activity -->
+        <!-- MAIN ACTIVITY-->
         <activity
             android:name=".MainActivity"
             android:exported="false" />
 
-        <!-- MainDashboard Activity -->
+        <!-- MAIN DASHBOARD ACTIVITY-->
         <activity
             android:name=".View.MainDashboard"
             android:exported="false" />

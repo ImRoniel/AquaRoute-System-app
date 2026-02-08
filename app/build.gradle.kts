@@ -47,7 +47,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
 
-    // OpenStreetMap - resolves from JitPack
+    // OPEN STREET MAP - RESOLVE FROM JITPACK
     implementation("org.osmdroid:osmdroid-android:6.1.20")
     implementation("com.github.mkergall:osmbonuspack:6.9.0@aar")
 
@@ -58,9 +58,9 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-    // In app/build.gradle.kts dependencies
-    implementation(platform(libs.androidx.compose.bom)) // Compose BOM
-    implementation("androidx.compose.ui:ui")             // For Color, basic Compose UI
-    implementation("androidx.compose.material3:material3") // For MaterialTheme, dark/light color schemes
-    implementation("androidx.compose.ui:ui-tooling-preview") // Optional for preview in IDE
+
+    implementation(platform(libs.androidx.compose.bom))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
 }

@@ -20,7 +20,11 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import java.text.SimpleDateFormat
 import java.util.*
-
+import android.content.SharedPreferences
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
+import android.view.inputmethod.InputMethodManager
 class MainDashboard : AppCompatActivity() {
 
     private lateinit var mapView: MapView
@@ -62,6 +66,18 @@ class MainDashboard : AppCompatActivity() {
     private val updateInterval = 3000L
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
+
+    // Search views
+    private lateinit var searchCard: CardView
+    private lateinit var etSearch: EditText
+    private lateinit var btnClearSearch: ImageButton
+
+    // SharedPreferences
+    private val PREFS_NAME = "MainDashboardPrefs"
+    private val KEY_LAST_SEARCH = "last_search_query"
+    private lateinit var sharedPreferences: SharedPreferences
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -76,6 +92,7 @@ class MainDashboard : AppCompatActivity() {
         supportActionBar?.hide()
 
         initializeViews()
+        setupSharedPreferences()
         setupMap()
         setupEventListeners()
         startLiveUpdates()
@@ -100,6 +117,11 @@ class MainDashboard : AppCompatActivity() {
         tvSelectedRoute = findViewById(R.id.tvSelectedRoute)
         tvSelectedDetails = findViewById(R.id.tvSelectedDetails)
         btnCloseSheet = findViewById(R.id.btnCloseSheet)
+
+        // Search views
+        searchCard = findViewById(R.id.searchCard)
+        etSearch = findViewById(R.id.etSearch)
+        btnClearSearch = findViewById(R.id.btnClearSearch)
     }
 
     private fun setupMap() {
@@ -231,9 +253,30 @@ class MainDashboard : AppCompatActivity() {
         mapView.controller.animateTo(GeoPoint(port.lat, port.lon))
     }
 
+    private fun setupSharedPreferences() {
+        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        restoreSearchText()
+    }
+
+    private fun restoreSearchText() {
+        val savedQuery = sharedPreferences.getString(KEY_LAST_SEARCH, "") ?: ""
+        if (savedQuery.isNotBlank()) {
+            etSearch.setText(savedQuery)
+            etSearch.setSelection(savedQuery.length)
+        }
+    }
+
+    private fun saveSearchText() {
+        val query = etSearch.text.toString().trim()
+        sharedPreferences.edit().apply {
+            putString(KEY_LAST_SEARCH, query)
+            apply()
+        }
+    }
+
     private fun setupEventListeners() {
         btnMenu.setOnClickListener {
-            Toast.makeText(this, "Menu", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "You clicked menu", Toast.LENGTH_SHORT).show()
         }
 
         btnLayers.setOnClickListener {
@@ -247,8 +290,15 @@ class MainDashboard : AppCompatActivity() {
             Toast.makeText(this, "North reset", Toast.LENGTH_SHORT).show()
         }
 
+        // Search functionality
         btnSearch.setOnClickListener {
-            Toast.makeText(this, "Search", Toast.LENGTH_SHORT).show()
+            toggleSearchBar()
+        }
+
+        btnClearSearch.setOnClickListener {
+            etSearch.text.clear()
+            hideKeyboard()
+            btnClearSearch.visibility = View.GONE
         }
 
         btnZoomIn.setOnClickListener {
@@ -269,8 +319,88 @@ class MainDashboard : AppCompatActivity() {
                 bottomSheet.visibility = View.GONE
             }
         }
+
+        // Search text change listener
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                btnClearSearch.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // Handle search action on keyboard
+        etSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                val query = etSearch.text.toString()
+                if (query.isNotBlank()) {
+                    performSearch(query)
+                }
+                hideKeyboard()
+                return@setOnEditorActionListener true
+            }
+            false
+        }
     }
 
+    private fun toggleSearchBar() {
+        if (searchCard.visibility == View.VISIBLE) {
+            hideSearchBar()
+        } else {
+            showSearchBar()
+        }
+    }
+
+    private fun showSearchBar() {
+        searchCard.visibility = View.VISIBLE
+        etSearch.requestFocus()
+
+        // Show keyboard
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(etSearch, InputMethodManager.SHOW_IMPLICIT)
+
+        // Update clear button
+        btnClearSearch.visibility = if (etSearch.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun hideSearchBar() {
+        searchCard.visibility = View.GONE
+        hideKeyboard()
+        saveSearchText()  // Save when hiding
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(etSearch.windowToken, 0)
+    }
+
+    private fun performSearch(query: String) {
+        if (query.isNotBlank()) {
+            // Simple search - you can enhance this
+            val foundPorts = portData.filter { it.name.contains(query, ignoreCase = true) }
+            val foundFerries = ferryData.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.route.contains(query, ignoreCase = true)
+            }
+
+            if (foundPorts.isNotEmpty() || foundFerries.isNotEmpty()) {
+                // Center on first result
+                val firstResult = foundPorts.firstOrNull() ?: foundFerries.firstOrNull()
+                if (firstResult is Port) {
+                    mapView.controller.animateTo(GeoPoint(firstResult.lat, firstResult.lon))
+                    showBottomSheetForPort(firstResult)
+                } else if (firstResult is Ferry) {
+                    mapView.controller.animateTo(GeoPoint(firstResult.lat, firstResult.lon))
+                    showBottomSheetForFerry(firstResult)
+                }
+                Toast.makeText(this, "Found ${foundPorts.size + foundFerries.size} results", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "No results found", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     private fun toggleLayers() {
         val areRoutesVisible = routeLines.any { it.isEnabled }
         val areFerriesVisible = ferryMarkers.values.any { it.isEnabled }
@@ -322,6 +452,11 @@ class MainDashboard : AppCompatActivity() {
         super.onPause()
         mapView.onPause()
         handler.removeCallbacksAndMessages(null)
+        saveSearchText()
+    }
+    override fun onStop() {
+        super.onStop()
+        saveSearchText()
     }
 
     data class Ferry(
