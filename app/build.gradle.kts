@@ -1,5 +1,6 @@
 plugins {
     // Use version-catalog plugin aliases (keep Compose alias removed)
+    id("com.google.gms.google-services")
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
@@ -41,6 +42,9 @@ android {
 
 
 dependencies {
+    implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.11.0")
@@ -63,4 +67,6 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
+
+
 }

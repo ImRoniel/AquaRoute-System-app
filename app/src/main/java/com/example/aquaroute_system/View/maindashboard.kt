@@ -1,10 +1,15 @@
 package com.example.aquaroute_system.View
 
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -12,6 +17,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.example.aquaroute_system.R
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -19,14 +30,22 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import java.text.SimpleDateFormat
-import java.util.*
-import android.content.SharedPreferences
-import android.text.Editable
-import android.text.TextWatcher
-import android.widget.EditText
-import android.view.inputmethod.InputMethodManager
+import java.util.Date
+import java.util.Locale
+import android.util.Log
+
 class MainDashboard : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "MainDashboard"
+    }
+
+    // Firebase
+    private val firestore = FirebaseFirestore.getInstance()
+    private val portsCollection = firestore.collection("ports")
+    private val firestorePortMarkers = mutableMapOf<String, Marker>()
+
+    // UI Components
     private lateinit var mapView: MapView
     private lateinit var btnMenu: ImageButton
     private lateinit var btnLayers: ImageButton
@@ -46,6 +65,12 @@ class MainDashboard : AppCompatActivity() {
     private lateinit var tvSelectedDetails: TextView
     private lateinit var btnCloseSheet: ImageButton
 
+    // Search views
+    private lateinit var searchCard: CardView
+    private lateinit var etSearch: EditText
+    private lateinit var btnClearSearch: ImageButton
+
+    // Data
     private val ferryMarkers = mutableMapOf<String, Marker>()
     private val portMarkers = mutableMapOf<String, Marker>()
     private val routeLines = mutableListOf<Polyline>()
@@ -62,21 +87,16 @@ class MainDashboard : AppCompatActivity() {
         Port("Cavite Port", 14.475, 120.915, false)
     )
 
+    // Handler and formatters, (the time and in the right button of the app )
     private val handler = Handler(Looper.getMainLooper())
     private val updateInterval = 3000L
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-
-    // Search views
-    private lateinit var searchCard: CardView
-    private lateinit var etSearch: EditText
-    private lateinit var btnClearSearch: ImageButton
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
 
     // SharedPreferences
     private val PREFS_NAME = "MainDashboardPrefs"
     private val KEY_LAST_SEARCH = "last_search_query"
     private lateinit var sharedPreferences: SharedPreferences
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,7 +108,6 @@ class MainDashboard : AppCompatActivity() {
         }
 
         setContentView(R.layout.maindashboard)
-
         supportActionBar?.hide()
 
         initializeViews()
@@ -98,13 +117,14 @@ class MainDashboard : AppCompatActivity() {
         startLiveUpdates()
     }
 
+    //this function is to call the id from the xml file
     private fun initializeViews() {
         mapView = findViewById(R.id.mapView)
         btnMenu = findViewById(R.id.btnMenu)
         btnLayers = findViewById(R.id.btnLayers)
         btnCompass = findViewById(R.id.btnCompass)
         btnSearch = findViewById(R.id.btnSearch)
-        btnZoomIn = findViewById(R.id.btnZoomIn)
+        btnZoomIn = findViewById(   R.id.btnZoomIn)
         btnZoomOut = findViewById(R.id.btnZoomOut)
         tvLiveStatus = findViewById(R.id.tvLiveStatus)
         tvLastUpdate = findViewById(R.id.tvLastUpdate)
@@ -131,20 +151,315 @@ class MainDashboard : AppCompatActivity() {
             mapView.minZoomLevel = 5.0
             mapView.maxZoomLevel = 19.0
 
-            // Set initial view
-            val dagupan = GeoPoint(16.0431, 120.3339)
-            mapView.controller.setZoom(13.0)
-            mapView.controller.setCenter(dagupan)
+            // Set initial view to Philippines
+            val phCenter = GeoPoint(12.8797, 121.7740)
+            mapView.controller.setZoom(6.0)
+            mapView.controller.setCenter(phCenter)
 
             addPortMarkers()
             addFerryMarkers()
             drawRoutes()
+            loadPortsFromFirestore()
 
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
+
+    // ==================== FIREBASE FUNCTIONS ====================
+
+    private fun loadPortsFromFirestore() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                portsCollection.get()
+                    .addOnSuccessListener { querySnapshot ->
+                        if (querySnapshot.isEmpty) {
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@MainDashboard,
+                                    "No ports found in database",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            Log.d(TAG, "No ports found in Firestore")
+                            return@addOnSuccessListener
+                        }
+
+                        // Clear existing Firestore markers
+                        clearFirestoreMarkers()
+
+                        var successCount = 0
+                        var errorCount = 0
+
+                        for (document in querySnapshot.documents) {
+                            try {
+                                if (addFirestoreMarker(document)) {
+                                    successCount++
+                                } else {
+                                    errorCount++
+                                }
+                            } catch (e: Exception) {
+                                errorCount++
+                                Log.e(TAG, "Error processing document ${document.id}: ${e.message}")
+                            }
+                        }
+
+                        // Update the map on UI thread
+                        runOnUiThread {
+                            mapView.invalidate()
+                            if (errorCount > 0) {
+                                Toast.makeText(
+                                    this@MainDashboard,
+                                    "Loaded $successCount ports ($errorCount errors)",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    this@MainDashboard,
+                                    "Loaded $successCount ports from Firestore",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+
+                        Log.d(TAG, "Firestore load complete: $successCount successful, $errorCount errors")
+
+                    }
+                    .addOnFailureListener { exception ->
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@MainDashboard,
+                                "Failed to load ports: ${exception.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        Log.e(TAG, "Error loading ports from Firestore", exception)
+                    }
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error in loadPortsFromFirestore: ${e.message}", e)
+            }
+        }
+    }
+
+    private fun addFirestoreMarker(document: DocumentSnapshot): Boolean {
+        val data = document.data ?: run {
+            Log.w(TAG, "Document ${document.id} has no data")
+            return false
+        }
+
+        // Extract required fields with safe null checks
+        val name = data["name"] as? String ?: run {
+            Log.w(TAG, "Document ${document.id} missing 'name' field")
+            return false
+        }
+
+        // Handle lat field - it could be Double, Float, Long, or Int
+        val latValue = data["lat"]
+        val lat = when (latValue) {
+            is Double -> latValue
+            is Float -> latValue.toDouble()
+            is Number -> latValue.toDouble()
+            is String -> try {
+                latValue.toDouble()
+            } catch (e: NumberFormatException) {
+                Log.w(TAG, "Document ${document.id} has invalid 'lat' format: $latValue")
+                return false
+            }
+            else -> {
+                Log.w(TAG, "Document ${document.id} missing or invalid 'lat' field: $latValue")
+                return false
+            }
+        }
+
+        // Handle lng field - it could be Double, Float, Long, or Int
+        val lngValue = data["lng"]
+        val lng = when (lngValue) {
+            is Double -> lngValue
+            is Float -> lngValue.toDouble()
+            is Number -> lngValue.toDouble()
+            is String -> try {
+                lngValue.toDouble()
+            } catch (e: NumberFormatException) {
+                Log.w(TAG, "Document ${document.id} has invalid 'lng' format: $lngValue")
+                return false
+            }
+            else -> {
+                Log.w(TAG, "Document ${document.id} missing or invalid 'lng' field: $lngValue")
+                return false
+            }
+        }
+
+        // Optional fields with defaults
+        val type = (data["type"] as? String)?.trim()?.lowercase() ?: "unknown"
+        val status = (data["status"] as? String)?.trim() ?: "Unknown"
+        val source = (data["source"] as? String)?.trim() ?: "Unknown"
+        val createdAt = data["createdAt"] as? Timestamp ?: Timestamp.now()
+
+        // Validate coordinates
+        if (lat < -90 || lat > 90) {
+            Log.w(TAG, "Document ${document.id} has invalid latitude: $lat")
+            return false
+        }
+        if (lng < -180 || lng > 180) {
+            Log.w(TAG, "Document ${document.id} has invalid longitude: $lng")
+            return false
+        }
+
+        // Create GeoPoint
+        val geoPoint = GeoPoint(lat, lng)
+
+        // Create marker on UI thread
+        runOnUiThread {
+            try {
+                val marker = Marker(mapView).apply {
+                    position = geoPoint
+                    title = name
+
+                    // Set text icon based on type
+                    val iconText = when (type) {
+                        "ferry_terminal" -> "⛴"  // Ferry emoji
+                        "pier" -> "⚓"            // Anchor emoji
+                        else -> "📍"              // Default location pin
+                    }
+                    setTextIcon(iconText)
+
+                    // Set color based on type
+                    val color = when (type) {
+                        "ferry_terminal" -> Color.parseColor("#2196F3") // Blue
+                        "pier" -> Color.parseColor("#4CAF50")          // Green
+                        else -> Color.parseColor("#FF9800")            // Orange
+                    }
+                    setTextLabelForegroundColor(color)
+
+                    // Set background color based on status
+                    when (status.lowercase()) {
+                        "open" -> setTextLabelBackgroundColor(Color.parseColor("#E8F5E8")) // Light green
+                        "closed" -> setTextLabelBackgroundColor(Color.parseColor("#FFEBEE")) // Light red
+                        else -> setTextLabelBackgroundColor(Color.TRANSPARENT)
+                    }
+
+                    setTextLabelFontSize(14)
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+
+                    // Set subtitle with additional info
+                    subDescription = "Type: ${type.uppercase()} | Status: $status"
+
+                    // Set OnMarkerClickListener
+                    setOnMarkerClickListener { _, _ ->
+                        showFirestorePortDetails(name, type, status, source, createdAt, lat, lng)
+                        true
+                    }
+                }
+
+                mapView.overlays.add(marker)
+                firestorePortMarkers[document.id] = marker
+
+                Log.d(TAG, "Added marker for: $name at ($lat, $lng)")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating marker for document ${document.id}: ${e.message}", e)
+            }
+        }
+
+        return true
+    }
+
+    private fun showFirestorePortDetails(
+        name: String,
+        type: String,
+        status: String,
+        source: String,
+        createdAt: Timestamp,
+        lat: Double,
+        lng: Double
+    ) {
+        runOnUiThread {
+            tvSelectedTitle.text = name
+
+            // Format type for display (ferry_terminal -> Ferry Terminal)
+            val displayType = type.split("_")
+                .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+
+            tvSelectedStatus.text = status
+            tvSelectedETA.text = displayType
+            tvSelectedRoute.text = "Source: $source"
+
+            // Format the date
+            val dateString = dateFormat.format(createdAt.toDate())
+            tvSelectedDetails.text = "Created: $dateString\n" +
+                    "Location: ${String.format("%.6f", lat)}, ${String.format("%.6f", lng)}"
+
+            bottomSheet.visibility = View.VISIBLE
+
+            // Center map on the port
+            mapView.controller.animateTo(GeoPoint(lat, lng))
+        }
+    }
+
+    // Function to clear all Firestore markers
+    private fun clearFirestoreMarkers() {
+        runOnUiThread {
+            // Remove markers from map
+            firestorePortMarkers.values.forEach { marker ->
+                mapView.overlays.remove(marker)
+            }
+
+            // Clear the map
+            firestorePortMarkers.clear()
+            Log.d(TAG, "Cleared all Firestore markers")
+        }
+    }
+
+    // Function to reload Firestore data
+    fun reloadFirestoreData() {
+        Log.d(TAG, "Reloading Firestore data...")
+        loadPortsFromFirestore()
+    }
+
+    // Add real-time listener for Firestore updates (optional)
+    private fun setupFirestoreRealtimeListener() {
+        portsCollection.addSnapshotListener { querySnapshot, error ->
+            if (error != null) {
+                Log.e(TAG, "Firestore real-time listen failed", error)
+                return@addSnapshotListener
+            }
+
+            if (querySnapshot != null && !querySnapshot.metadata.hasPendingWrites()) {
+                Log.d(TAG, "Firestore real-time update received: ${querySnapshot.size()} documents")
+
+                // Clear existing markers
+                clearFirestoreMarkers()
+
+                var successCount = 0
+                var errorCount = 0
+
+                // Add updated markers
+                for (document in querySnapshot.documents) {
+                    try {
+                        if (addFirestoreMarker(document)) {
+                            successCount++
+                        } else {
+                            errorCount++
+                        }
+                    } catch (e: Exception) {
+                        errorCount++
+                        Log.e(TAG, "Error updating document ${document.id}: ${e.message}")
+                    }
+                }
+
+                // Update the map
+                runOnUiThread {
+                    mapView.invalidate()
+                    if (successCount > 0) {
+                        Log.d(TAG, "Real-time update applied: $successCount successful, $errorCount errors")
+                    }
+                }
+            }
+        }
+    }
+
+    // ==================== ORIGINAL MARKER FUNCTIONS ====================
 
     private fun addPortMarkers() {
         portData.forEach { port ->
@@ -253,6 +568,8 @@ class MainDashboard : AppCompatActivity() {
         mapView.controller.animateTo(GeoPoint(port.lat, port.lon))
     }
 
+    // ==================== SEARCH & PREFERENCES ====================
+
     private fun setupSharedPreferences() {
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         restoreSearchText()
@@ -273,6 +590,8 @@ class MainDashboard : AppCompatActivity() {
             apply()
         }
     }
+
+    // ==================== EVENT LISTENERS ====================
 
     private fun setupEventListeners() {
         btnMenu.setOnClickListener {
@@ -311,6 +630,12 @@ class MainDashboard : AppCompatActivity() {
 
         btnCloseSheet.setOnClickListener {
             bottomSheet.visibility = View.GONE
+            // Clear any selection
+            tvSelectedTitle.text = ""
+            tvSelectedStatus.text = ""
+            tvSelectedETA.text = ""
+            tvSelectedRoute.text = ""
+            tvSelectedDetails.text = ""
         }
 
         // Close bottom sheet when clicking map
@@ -378,41 +703,72 @@ class MainDashboard : AppCompatActivity() {
 
     private fun performSearch(query: String) {
         if (query.isNotBlank()) {
-            // Simple search - you can enhance this
+            // Search in Firestore markers
+            var firestoreFound = false
+
+            firestorePortMarkers.values.forEach { marker ->
+                if (marker.title?.contains(query, ignoreCase = true) == true) {
+                    // Center map on found marker
+                    mapView.controller.animateTo(marker.position)
+
+                    // Try to find the document to show details
+                    val documentId = firestorePortMarkers.entries.find { it.value == marker }?.key
+                    if (documentId != null) {
+                        portsCollection.document(documentId).get()
+                            .addOnSuccessListener { document ->
+                                if (document.exists()) {
+                                    val data = document.data
+                                    val name = data?.get("name") as? String ?: ""
+                                    val type = (data?.get("type") as? String)?.lowercase() ?: "unknown"
+                                    val status = data?.get("status") as? String ?: "Unknown"
+                                    val source = data?.get("source") as? String ?: "Unknown"
+                                    val createdAt = data?.get("createdAt") as? Timestamp ?: Timestamp.now()
+                                    val lat = (data?.get("lat") as? Double) ?: marker.position.latitude
+                                    val lng = (data?.get("lng") as? Double) ?: marker.position.longitude
+
+                                    showFirestorePortDetails(name, type, status, source, createdAt, lat, lng)
+                                }
+                            }
+                    }
+
+                    firestoreFound = true
+                }
+            }
+
+            // Also search in local port data
             val foundPorts = portData.filter { it.name.contains(query, ignoreCase = true) }
             val foundFerries = ferryData.filter {
                 it.name.contains(query, ignoreCase = true) ||
                         it.route.contains(query, ignoreCase = true)
             }
 
-            if (foundPorts.isNotEmpty() || foundFerries.isNotEmpty()) {
-                // Center on first result
-                val firstResult = foundPorts.firstOrNull() ?: foundFerries.firstOrNull()
-                if (firstResult is Port) {
-                    mapView.controller.animateTo(GeoPoint(firstResult.lat, firstResult.lon))
-                    showBottomSheetForPort(firstResult)
-                } else if (firstResult is Ferry) {
-                    mapView.controller.animateTo(GeoPoint(firstResult.lat, firstResult.lon))
-                    showBottomSheetForFerry(firstResult)
-                }
-                Toast.makeText(this, "Found ${foundPorts.size + foundFerries.size} results", Toast.LENGTH_SHORT).show()
+            if (firestoreFound || foundPorts.isNotEmpty() || foundFerries.isNotEmpty()) {
+                val totalFound = (if (firestoreFound) 1 else 0) + foundPorts.size + foundFerries.size
+                Toast.makeText(this, "Found $totalFound results", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "No results found", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
+    // ==================== MAP FUNCTIONS ====================
+
     private fun toggleLayers() {
         val areRoutesVisible = routeLines.any { it.isEnabled }
         val areFerriesVisible = ferryMarkers.values.any { it.isEnabled }
+        val areFirestorePortsVisible = firestorePortMarkers.values.any { it.isEnabled }
 
         routeLines.forEach { it.isEnabled = !areRoutesVisible }
         ferryMarkers.values.forEach { it.isEnabled = !areFerriesVisible }
+        firestorePortMarkers.values.forEach { it.isEnabled = !areFirestorePortsVisible }
 
         mapView.invalidate()
 
-        val state = if (!areRoutesVisible && !areFerriesVisible) "shown" else "hidden"
+        val state = if (!areRoutesVisible && !areFerriesVisible && !areFirestorePortsVisible) "shown" else "hidden"
         Toast.makeText(this, "Layers $state", Toast.LENGTH_SHORT).show()
     }
+
+    // ==================== LIVE UPDATES ====================
 
     private fun startLiveUpdates() {
         handler.post(object : Runnable {
@@ -443,9 +799,38 @@ class MainDashboard : AppCompatActivity() {
         tvLiveStatus.alpha = if (tvLiveStatus.alpha == 1f) 0.5f else 1f
     }
 
+    // ==================== UTILITY FUNCTIONS ====================
+
+    // Add this function to clear all markers from the map
+    private fun clearAllMarkers() {
+        // Clear local port markers
+        portMarkers.values.forEach { marker ->
+            mapView.overlays.remove(marker)
+        }
+        portMarkers.clear()
+
+        // Clear local ferry markers
+        ferryMarkers.values.forEach { marker ->
+            mapView.overlays.remove(marker)
+        }
+        ferryMarkers.clear()
+
+        // Clear Firestore markers
+        clearFirestoreMarkers()
+
+        // Invalidate map
+        mapView.invalidate()
+
+        Log.d(TAG, "Cleared all markers from map")
+    }
+
+    // ==================== LIFECYCLE ====================
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
+        // Optional: Start real-time listener when activity resumes
+        // setupFirestoreRealtimeListener()
     }
 
     override fun onPause() {
@@ -454,10 +839,13 @@ class MainDashboard : AppCompatActivity() {
         handler.removeCallbacksAndMessages(null)
         saveSearchText()
     }
+
     override fun onStop() {
         super.onStop()
         saveSearchText()
     }
+
+    // ==================== DATA CLASSES ====================
 
     data class Ferry(
         val name: String,
