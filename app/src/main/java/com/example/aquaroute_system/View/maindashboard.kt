@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.aquaroute_system.R
+import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.MarkerDetail
 import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.ui.viewmodel.MainDashboardViewModel
@@ -31,6 +32,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import android.util.Log
+import java.util.*
 
 class MainDashboard : AppCompatActivity() {
 
@@ -147,27 +149,27 @@ class MainDashboard : AppCompatActivity() {
     // ==================== VIEWMODEL OBSERVERS ====================
 
     private fun setupViewModelObservers() {
-        // Observe Firestore ports
+        // MODIFIED: Observe Firestore ports with dynamic status
         viewModel.firestorePorts.observe(this) { result ->
             when (result) {
                 is Result.Loading -> {
-                    // Show loading state if needed
                     Toast.makeText(this, "Loading ports...", Toast.LENGTH_SHORT).show()
                 }
                 is Result.Success -> {
-                    clearFirestoreMarkers()
-                    result.data.forEach { port ->
-                        val marker = MapHelper.createFirestorePortMarker(mapView, port) { firestorePort ->
-                            viewModel.onFirestorePortMarkerClick(firestorePort)
-                        }
-                        mapView.overlays.add(marker)
-                        firestorePortMarkers[port.id] = marker
-                    }
-                    mapView.invalidate()
-                    Toast.makeText(this, "Loaded ${result.data.size} ports from Firestore", Toast.LENGTH_SHORT).show()
+                    updateFirestorePortMarkers(result.data)
                 }
                 is Result.Error -> {
                     Toast.makeText(this, "Failed to load ports: ${result.exception.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // MODIFIED: Observe current hour to refresh port markers
+        viewModel.currentHour.observe(this) { hour ->
+            Log.d(TAG, "Hour updated to: $hour - Refreshing port markers")
+            viewModel.firestorePorts.value?.let { result ->
+                if (result is Result.Success) {
+                    updateFirestorePortMarkers(result.data)
                 }
             }
         }
@@ -249,6 +251,37 @@ class MainDashboard : AppCompatActivity() {
         }
     }
 
+    // NEW: Update Firestore port markers with dynamic status
+    private fun updateFirestorePortMarkers(ports: List<FirestorePort>) {
+        // Clear existing markers
+        clearFirestoreMarkers()
+
+        // Get current hour from ViewModel
+        val currentHour = viewModel.currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+        // Add new markers with dynamic status
+        ports.forEach { port ->
+            // Get port with dynamic status
+            val portWithStatus = viewModel.getPortWithDynamicStatus(port)
+
+            // Use your existing MapHelper function (we'll modify it next)
+            val marker = MapHelper.createFirestorePortMarker(
+                mapView = mapView,
+                port = portWithStatus,
+                currentHour = currentHour,  // Pass current hour
+                onMarkerClick = { clickedPort ->
+                    viewModel.onFirestorePortMarkerClick(clickedPort)
+                }
+            )
+
+            mapView.overlays.add(marker)
+            firestorePortMarkers[port.id] = marker
+        }
+
+        mapView.invalidate()
+        Log.d(TAG, "Updated ${ports.size} Firestore port markers with dynamic status")
+    }
+
     private fun drawRoutes() {
         val northRoute = listOf(
             GeoPoint(16.0431, 120.3339), // Dagupan
@@ -295,29 +328,49 @@ class MainDashboard : AppCompatActivity() {
     private fun showBottomSheetForPort(port: com.example.aquaroute_system.data.models.Port) {
         tvSelectedTitle.text = port.name
         tvSelectedStatus.text = if (port.isPrimary) "MAIN TERMINAL" else "TERMINAL"
-//        tvSelectedETA.text = "N/A"
         tvSelectedRoute.text = "Hub"
         tvSelectedDetails.text = "Location: ${port.lat}, ${port.lon}"
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(port.lat, port.lon))
     }
 
+    // MODIFIED: Show ONLY name, status, type for Firestore ports
     private fun showBottomSheetForFirestorePort(port: com.example.aquaroute_system.data.models.FirestorePort) {
         tvSelectedTitle.text = port.name
 
+        // Format type nicely (e.g., "ferry_terminal" -> "Ferry Terminal")
         val displayType = port.type.split("_")
             .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
 
+        // Show dynamic status
         tvSelectedStatus.text = port.status
+
+        // Show type in ETA field (reusing existing UI)
         tvSelectedETA.text = displayType
+
+        // Show source in route field
         tvSelectedRoute.text = "Source: ${port.source}"
 
-        val dateString = DateFormatter.formatDateTime(port.createdAt.toDate())
-        tvSelectedDetails.text = "Created: $dateString\n" +
-                "Location: ${String.format("%.6f", port.lat)}, ${String.format("%.6f", port.lng)}"
+        // MODIFIED: Remove createdAt and location details
+        // Show operating hours if available
+        tvSelectedDetails.text = if (port.openHour != null && port.closeHour != null) {
+            "Hours: ${formatHour(port.openHour)} - ${formatHour(port.closeHour)}"
+        } else {
+            "" // Empty string - no details shown
+        }
 
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(port.lat, port.lng))
+    }
+
+    // NEW: Helper to format hour
+    private fun formatHour(hour: Int): String {
+        return when {
+            hour == 0 -> "12 AM"
+            hour == 12 -> "12 PM"
+            hour < 12 -> "${hour} AM"
+            else -> "${hour - 12} PM"
+        }
     }
 
     private fun hideBottomSheet() {

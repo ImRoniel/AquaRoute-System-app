@@ -89,12 +89,20 @@ object MapHelper {
     fun createFirestorePortMarker(
         mapView: MapView,
         port: FirestorePort,
+        currentHour: Int,  // NEW: Pass current hour
         onMarkerClick: (FirestorePort) -> Unit
     ): Marker {
+        // Calculate dynamic status based on time
+        val dynamicStatus = port.getCurrentStatus(currentHour)
+
+        // Create a copy of port with dynamic status for display
+        val displayPort = port.copy(status = dynamicStatus)
+
         return Marker(mapView).apply {
             position = GeoPoint(port.lat, port.lng)
-            title = port.name
+            title = port.name  // Keep original name
 
+            // Icon based on port type (unchanged)
             val iconText = when (port.type) {
                 "ferry_terminal" -> "⛴"  // Ferry emoji
                 "pier" -> "⚓"            // Anchor emoji
@@ -102,6 +110,7 @@ object MapHelper {
             }
             setTextIcon(iconText)
 
+            // Color based on port type (unchanged)
             val color = when (port.type) {
                 "ferry_terminal" -> Color.parseColor("#2196F3") // Blue
                 "pier" -> Color.parseColor("#4CAF50")          // Green
@@ -109,18 +118,31 @@ object MapHelper {
             }
             setTextLabelForegroundColor(color)
 
-            when (port.status.lowercase()) {
+            // MODIFIED: Background based on DYNAMIC status
+            when (dynamicStatus.lowercase()) {
                 "open" -> setTextLabelBackgroundColor(Color.parseColor("#E8F5E8")) // Light green
                 "closed" -> setTextLabelBackgroundColor(Color.parseColor("#FFEBEE")) // Light red
+                "closing soon" -> setTextLabelBackgroundColor(Color.parseColor("#FFF3E0")) // Light orange
                 else -> setTextLabelBackgroundColor(Color.TRANSPARENT)
             }
 
             setTextLabelFontSize(14)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-            subDescription = "Type: ${port.type.uppercase()} | Status: ${port.status}"
 
+            // MODIFIED: Show dynamic status in description
+            subDescription = buildString {
+                append("Type: ${port.type.uppercase()}")
+                append(" | Status: $dynamicStatus")
+
+                // Show hours if available
+                if (port.openHour != null && port.closeHour != null) {
+                    append(" | ${port.openHour}:00-${port.closeHour}:00")
+                }
+            }
+
+            // IMPORTANT: Pass the displayPort (with dynamic status) to click handler
             setOnMarkerClickListener { _, _ ->
-                onMarkerClick(port)
+                onMarkerClick(displayPort)  // Pass port with current status
                 true
             }
         }

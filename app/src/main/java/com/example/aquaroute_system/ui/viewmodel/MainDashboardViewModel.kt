@@ -18,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Date
 
 /**
@@ -74,6 +75,10 @@ class MainDashboardViewModel(
     // Live update job
     private var liveUpdateJob: Job? = null
 
+    //current hour dynamic status
+    private val _currentHour = MutableLiveData<Int?>()
+    val currentHour: LiveData<Int?> = _currentHour
+
     // Static port data
     private val portData = listOf(
         Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
@@ -83,8 +88,25 @@ class MainDashboardViewModel(
 
     init {
         initializeData()
+        startTimeUpdates()
     }
 
+    private fun startTimeUpdates() {
+        viewModelScope.launch {
+            while (true) {
+                _currentHour.postValue(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
+                delay(60000) // Update every minute
+            }
+        }
+    }
+
+    fun getPortWithDynamicStatus(port: FirestorePort): FirestorePort {
+        val currentHour = _currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val dynamicStatus = port.getCurrentStatus(currentHour)
+
+        // Return a copy with updated status
+        return port.copy(status = dynamicStatus)
+    }
     /**
      * Initialize data on ViewModel creation
      */
@@ -97,7 +119,7 @@ class MainDashboardViewModel(
 
         // Restore last search query
         val lastQuery = searchRepository.getLastSearchQuery()
-        _lastSearchQuery.value = lastQuery
+        _lastSearchQuery.value  = lastQuery
     }
 
     /**
@@ -182,7 +204,10 @@ class MainDashboardViewModel(
      * Handle Firestore port marker click
      */
     fun onFirestorePortMarkerClick(port: FirestorePort) {
-        _selectedMarkerDetail.value = MarkerDetail.FirestorePortDetail(port)
+        val portWithDynamicStatus = getPortWithDynamicStatus(port)
+        _selectedMarkerDetail.postValue(
+            MarkerDetail.FirestorePortDetail(portWithDynamicStatus)
+        )
     }
 
     /**
