@@ -295,7 +295,7 @@ class MainDashboard : AppCompatActivity() {
     private fun showBottomSheetForPort(port: com.example.aquaroute_system.data.models.Port) {
         tvSelectedTitle.text = port.name
         tvSelectedStatus.text = if (port.isPrimary) "MAIN TERMINAL" else "TERMINAL"
-        tvSelectedETA.text = "N/A"
+//        tvSelectedETA.text = "N/A"
         tvSelectedRoute.text = "Hub"
         tvSelectedDetails.text = "Location: ${port.lat}, ${port.lon}"
         bottomSheet.visibility = View.VISIBLE

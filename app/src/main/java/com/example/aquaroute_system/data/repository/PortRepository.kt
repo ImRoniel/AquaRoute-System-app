@@ -7,6 +7,9 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+//import kotlin.math.abs
 
 /**
  * Repository for handling Firestore port data operations
@@ -82,6 +85,7 @@ class PortRepository {
             val source = (data["source"] as? String)?.trim() ?: "Unknown"
             val createdAt = data["createdAt"] as? Timestamp ?: Timestamp.now()
 
+
             FirestorePort(
                 id = document.id,
                 name = name,
@@ -97,6 +101,8 @@ class PortRepository {
             null
         }
     }
+
+    // Generate fake but realistic operating hours
 
     /**
      * Helper function to safely parse numeric values from Firestore
