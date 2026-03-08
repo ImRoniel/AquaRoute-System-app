@@ -24,4 +24,57 @@
     <!-- Splash Screen Specific -->
     <color name="splash_background">#C4D7FF</color>
     <color name="splash_text">#87A2FF</color>
+
+
+    <!-- Primary Colors -->
+    <color name="primary">#0A4D8C</color>
+    <color name="primary_dark">#073B6B</color>
+    <color name="primary_light">#E3F2FD</color>
+
+    <!-- Accent Colors -->
+    <color name="accent">#00ACC1</color>
+    <color name="accent_light">#B2EBF2</color>
+
+    <!-- Status Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+
+    <!-- Neutral Colors -->
+    <color name="dark_text">#263238</color>
+    <color name="medium_text">#546E7A</color>
+    <color name="light_text">#90A4AE</color>
+    <color name="divider">#B0BEC5</color>
+    <color name="background">#F5F5F5</color>
+
+    <color name="transparent">#00000000</color>
+    <color name="semi_transparent">#80000000</color>
+
+
+    <!-- Primary Colors - Ocean Theme -->
+    <color name="primary_blue">#87A2FF</color>
+
+
+    <!-- Background & Surface -->
+    <color name="background_light">#C4D7FF</color>
+    <color name="card_background">#C4D7FF</color>
+
+    <!-- Text Colors -->
+    <color name="text_dark">#65676B</color>
+    <color name="text_medium">#546E7A</color>
+    <color name="text_light">#90A4AE</color>
+    <color name="text_hint">#B0BEC5</color>
+    <color name="text_primary">#FFF4B5</color>
+
+"
+
+
+
+    <!-- Gradients for Header -->
+    <color name="gradient_start">#87A2FF</color>
+    <color name="gradient_end">#87A2FF</color>
+
+
+
 </resources>

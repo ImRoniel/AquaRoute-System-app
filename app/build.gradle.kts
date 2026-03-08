@@ -35,9 +35,10 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-//    buildFeatures {
+    buildFeatures {
+        viewBinding = true
 //        compose = true
-//    }
+    }
 }
 
 
@@ -73,5 +74,9 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
 
+    //FOR LOCATION SERVICES
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 
 }

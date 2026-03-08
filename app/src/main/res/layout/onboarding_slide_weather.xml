@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\res\layout\onboarding_slide_weather.xml-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingHorizontal="32dp">
+
+    <!-- Spacer to push content to center -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Weather System Illustration -->
+    <ImageView
+        android:id="@+id/imgIllustration"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:src="@drawable/weather_3d"
+        android:scaleType="fitCenter"
+        android:elevation="8dp"
+        android:layout_marginBottom="32dp" />
+
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvOnboardingTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/onboarding_title_3"
+        android:textColor="@color/deep_ocean_blue"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-black"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Description -->
+    <TextView
+        android:id="@+id/tvOnboardingDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/onboarding_desc_3"
+        android:textColor="@color/medium_text"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:alpha="0.8"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Spacer to push content to center -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

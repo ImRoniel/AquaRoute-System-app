@@ -79,6 +79,49 @@ class MainDashboardViewModel(
     private val _currentHour = MutableLiveData<Int?>()
     val currentHour: LiveData<Int?> = _currentHour
 
+    //For Location Function to securely update the data
+    private val _userLocation = MutableLiveData<android.location.Location?>()
+    val userLocation: LiveData<android.location.Location?> = _userLocation
+
+    private val _isLocationLoading = MutableLiveData<Boolean>(false)
+    val isLocationLoading: LiveData<Boolean> = _isLocationLoading
+
+    private val _locationError = MutableLiveData<String?>()
+    val locationError: LiveData<String?> = _locationError
+
+
+    /**
+     * Request user location
+     */
+    fun requestUserLocation(context: android.content.Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLocationLoading.postValue(true)
+
+            try {
+                val location = com.example.aquaroute_system.util.LocationHelper.getLastLocation(context)
+
+                if (location != null) {
+                    _userLocation.postValue(location)
+                    _locationError.postValue(null)
+                    Log.d(TAG, "User location: ${location.latitude}, ${location.longitude}")
+                } else {
+                    _locationError.postValue("Could not get location")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error getting location", e)
+                _locationError.postValue("Error: ${e.message}")
+            } finally {
+                _isLocationLoading.postValue(false)
+            }
+        }
+    }
+
+    /**
+     * Clear location error
+     */
+    fun clearLocationError() {
+        _locationError.value = null
+    }
     // Static port data
     private val portData = listOf(
         Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),

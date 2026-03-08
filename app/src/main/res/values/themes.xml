@@ -1,22 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.AquaRouteSystem" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color -->
+
+    <!-- Base application theme -->
+    <style name="Base.Theme.AquaRouteSystem" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand colors -->
         <item name="colorPrimary">@color/deep_ocean_blue</item>
-        <item name="colorPrimaryVariant">@color/weather_teal</item>
         <item name="colorOnPrimary">@color/white</item>
 
-        <!-- Secondary brand color -->
-        <item name="colorSecondary">@color/sky_cyan</item>
-        <item name="colorSecondaryVariant">@color/weather_teal</item>
-        <item name="colorOnSecondary">@color/white</item>
+        <!-- Secondary brand colors -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <!-- Status bar color -->
         <item name="android:statusBarColor">@color/deep_ocean_blue</item>
-
-        <!-- Customize your theme here -->
-        <item name="android:windowFullscreen">false</item>
-        <item name="android:windowContentTransitions">true</item>
     </style>
+
+    <!-- MAIN THEME - This MUST be named exactly "Theme.AquaRouteSystem" -->
+    <style name="Theme.AquaRouteSystem" parent="Base.Theme.AquaRouteSystem" />
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.Splash" parent="Theme.AquaRouteSystem">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+
+    <!-- Onboarding Theme -->
+    <style name="Theme.Onboarding" parent="Theme.AquaRouteSystem">
+        <item name="android:windowBackground">@drawable/custom_backround1</item>
+    </style>
+
+    <!-- Auth Theme (Login/Signup) -->
+    <style name="Theme.Auth" parent="Theme.AquaRouteSystem">
+        <item name="android:windowBackground">@drawable/custom_backround1</item>
+    </style>
+
+    <!-- Dashboard Theme -->
+    <style name="Theme.Dashboard" parent="Theme.AquaRouteSystem">
+        <item name="android:windowBackground">@drawable/custom_background</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="Widget.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/button_primary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="Widget.Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/deep_ocean_blue</item>
+        <item name="strokeColor">@color/deep_ocean_blue</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <!-- Text Styles -->
+    <style name="TextAppearance.Title" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">@color/deep_ocean_blue</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+    </style>
+
+    <style name="TextAppearance.Body" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/medium_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <!-- EditText Style -->
+    <style name="Widget.EditText" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/white</item>
+        <item name="boxStrokeColor">@color/deep_ocean_blue</item>
+        <item name="hintTextColor">@color/medium_text</item>
+    </style>
+
+    <!-- CardView Style -->
+    <style name="Widget.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+    </style>
+
 </resources>

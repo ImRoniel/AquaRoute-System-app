@@ -1,3 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AquaRoute-System</string>
+    <string name="app_name">AquaRoute</string>
+
+    <!-- Navigation & Common -->
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+    <string name="back">BACK</string>
+    <string name="cancel">CANCEL</string>
+    <string name="next_arrow">NEXT →</string>
+
+
+
+    <!-- Auth Strings -->
+    <string name="splash_title">Aqua Route</string>
+    <string name="login_title">Log in to save routes &amp; alerts</string>
+    <string name="signup_title">Sign Up</string>
+    <string name="email_hint">Enter your email</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="fullname_hint">Full Name</string>
+    <string name="gender_hint">Gender</string>
+    <string name="age_hint">Age</string>
+    <string name="goal_hint">Goal</string>
+    <string name="ranker_hint">Ranker</string>
+    <string name="login_button">Login</string>
+    <string name="signup_button">Sign Up</string>
+    <string name="create_account">Create Account</string>
+    <string name="login_link">Login</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="or_continue_with">Or continue with</string>
+    <string name="guest_continue">Continue as Guest</string>
+    <string name="already_member">I\'m already a member</string>
+
+    <!-- Dashboard Strings -->
+    <string name="welcome_back">Welcome back, %s!</string>
+    <string name="member_since">Member since: %s</string>
+    <string name="my_shipments">My Shipments</string>
+    <string name="active_shipments">Active Shipments (%d)</string>
+    <string name="all">All</string>
+    <string name="active">Active</string>
+    <string name="delivered">Delivered</string>
+    <string name="delayed">Delayed</string>
+    <string name="search_shipments">Search shipments...</string>
+    <string name="new_shipment">+ NEW</string>
+    <string name="view_on_map">VIEW ON MAP</string>
+    <string name="details">DETAILS</string>
+    <string name="support">SUPPORT</string>
+    <string name="view_receipt">VIEW RECEIPT</string>
+    <string name="rate">RATE</string>
+    <string name="track">TRACK</string>
+
+    <!-- Tracking Strings -->
+    <string name="tracking_title">TRACKING: %s</string>
+    <string name="current_location">Current Location</string>
+    <string name="onboard">Onboard %s</string>
+    <string name="position" formatted="false">Position: %.2f°N, %.2f°E</string>
+    <string name="eta">ETA: %s</string>
+    <string name="journey_progress">Journey Progress</string>
+    <string name="journey_timeline">Journey Timeline</string>
+    <string name="loaded">LOADED</string>
+    <string name="in_transit">IN TRANSIT</string>
+    <string name="arriving">ARRIVING</string>
+    <string name="ferry_info">Ferry Information</string>
+    <string name="refresh">REFRESH</string>
+    <string name="contact_support">CONTACT SUPPORT</string>
+    <string name="back_to_shipments">BACK TO SHIPMENTS</string>
+
+    <!-- Shipment Details -->
+    <string name="shipment_details">Shipment Details: %s</string>
+    <string name="cargo_info">Cargo Information</string>
+    <string name="route_info">Route Information</string>
+    <string name="customer_info">Customer Information</string>
+    <string name="payment_info">Payment Information</string>
+    <string name="origin">Origin: %s</string>
+    <string name="destination">Destination: %s</string>
+    <string name="distance">Distance: %d km</string>
+    <string name="transit_time">Est. Transit Time: %d hours</string>
+    <string name="shipper">Shipper: %s</string>
+    <string name="recipient">Recipient: %s</string>
+    <string name="shipping_cost">Shipping Cost: ₱%.2f</string>
+    <string name="total">Total: ₱%.2f</string>
+    <string name="paid">✅ Paid</string>
+    <string name="documents">Documents</string>
+    <string name="download">DOWNLOAD</string>
+
+    <!-- Booking Strings -->
+    <string name="book_shipment">Book New Shipment</string>
+    <string name="step_1_of_3">Step 1 of 3</string>
+    <string name="step_2_of_3">Step 2 of 3</string>
+    <string name="step_3_of_3">Step 3 of 3</string>
+    <string name="shipment_details_title">Shipment Details</string>
+    <string name="route_selection">Route Selection</string>
+    <string name="recipient_info">Recipient Information</string>
+    <string name="cargo_type">Cargo Type</string>
+    <string name="weight_hint">Weight (kg)</string>
+    <string name="length_hint">Length (m)</string>
+    <string name="width_hint">Width (m)</string>
+    <string name="height_hint">Height (m)</string>
+    <string name="origin_port">Origin Port</string>
+    <string name="destination_port">Destination Port</string>
+    <string name="departure_date">Preferred Departure</string>
+    <string name="recipient_name">Recipient Name</string>
+    <string name="recipient_phone">Recipient Phone</string>
+    <string name="delivery_address">Delivery Address</string>
+    <string name="special_instructions">Special Instructions</string>
+    <string name="payment_summary">Payment Summary</string>
+    <string name="insurance">Insurance</string>
+    <string name="handling_fee">Handling Fee</string>
+    <string name="total_due">TOTAL AMOUNT DUE</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="credit_card">Credit Card</string>
+    <string name="gcash">GCash</string>
+    <string name="bank_transfer">Bank Transfer</string>
+    <string name="cash_on_delivery">Cash on Delivery</string>
+    <string name="terms_agree">I agree to the Terms and Conditions</string>
+    <string name="confirm_booking">CONFIRM BOOKING</string>
+
+    <!-- Profile Strings -->
+    <string name="my_account">My Account</string>
+    <string name="profile_settings">Profile Settings</string>
+    <string name="personal_info">Personal Information</string>
+    <string name="company">Company</string>
+    <string name="email">Email</string>
+    <string name="phone">Phone</string>
+    <string name="address">Address</string>
+    <string name="edit_profile">EDIT PROFILE</string>
+    <string name="notifications">Notifications</string>
+    <string name="email_notifications">Email notifications</string>
+    <string name="sms_alerts">SMS alerts</string>
+    <string name="promotional_emails">Promotional emails</string>
+    <string name="default_ports">Default Ports</string>
+    <string name="save_preferences">SAVE PREFERENCES</string>
+    <string name="shipping_stats">Shipping Statistics</string>
+    <string name="total_shipments">Total Shipments</string>
+    <string name="in_transit_count">In Transit</string>
+    <string name="delivered_count">Delivered</string>
+    <string name="delayed_count">Delayed</string>
+    <string name="view_full_history">VIEW FULL HISTORY</string>
+    <string name="logout">Logout</string>
+
+    <string name="onboarding_title_1">Explore Routes</string>
+    <string name="onboarding_desc_1">Discover the best shipping routes with real-time maps and navigation tools.</string>
+
+    <string name="onboarding_title_2">Manage Cargo</string>
+    <string name="onboarding_desc_2">Track and manage your cargo efficiently with our smart logistics system.</string>
+
+    <string name="onboarding_title_3">Weather Updates</string>
+    <string name="onboarding_desc_3">Stay informed with real-time weather conditions and forecasts for safe journeys.</string>
+
 </resources>

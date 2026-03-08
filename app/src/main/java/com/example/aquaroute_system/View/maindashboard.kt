@@ -1,5 +1,6 @@
 package com.example.aquaroute_system.View
 
+import android.Manifest
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
@@ -31,7 +32,12 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
+import android.widget.Button
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.location.Location
 import java.util.*
 
 class MainDashboard : AppCompatActivity() {
@@ -74,6 +80,19 @@ class MainDashboard : AppCompatActivity() {
     private val firestorePortMarkers = mutableMapOf<String, Marker>()
     private val routeLines = mutableListOf<Polyline>()
 
+    // location
+    private lateinit var btnMyLocation: ImageButton
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, get location
+            viewModel.requestUserLocation(this)
+        } else {
+            Toast.makeText(this, "Location permission needed to center map on your location", Toast.LENGTH_LONG).show()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -94,6 +113,7 @@ class MainDashboard : AppCompatActivity() {
         setupMap()
         setupEventListeners()
         setupViewModelObservers()
+        checkLocationPermission()
         viewModel.startLiveUpdates()
         viewModel.loadFirestorePorts()
     }
@@ -122,6 +142,9 @@ class MainDashboard : AppCompatActivity() {
         searchCard = findViewById(R.id.searchCard)
         etSearch = findViewById(R.id.etSearch)
         btnClearSearch = findViewById(R.id.btnClearSearch)
+
+        //Location
+        btnMyLocation = findViewById(R.id.btnMyLocation)
     }
 
     private fun setupMap() {
@@ -133,7 +156,7 @@ class MainDashboard : AppCompatActivity() {
 
             // Set initial view to Philippines
             val phCenter = GeoPoint(12.8797, 121.7740)
-            mapView.controller.setZoom(6.0)
+            mapView.controller.setZoom(8.0)
             mapView.controller.setCenter(phCenter)
 
             addPortMarkers()
@@ -225,6 +248,35 @@ class MainDashboard : AppCompatActivity() {
             if (query.isNotBlank() && etSearch.text.toString() != query) {
                 etSearch.setText(query)
                 etSearch.setSelection(query.length)
+            }
+        }
+
+        viewModel.userLocation.observe(this) { location ->
+            if (location != null) {
+                // Center map on user location
+                val geoPoint = GeoPoint(location.latitude, location.longitude)
+                mapView.controller.animateTo(geoPoint)
+                mapView.controller.setZoom(15.0) // Closer zoom for user location
+
+                // Optional: Add a marker for user location
+                addUserLocationMarker(geoPoint)
+
+                Toast.makeText(this, "Location found: ${location.latitude}, ${location.longitude}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // NEW: Observe location loading state
+        viewModel.isLocationLoading.observe(this) { isLoading ->
+            if (isLoading) {
+                Toast.makeText(this, "Getting your location...", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // NEW: Observe location errors
+        viewModel.locationError.observe(this) { error ->
+            if (error != null) {
+                Toast.makeText(this, "Location error: $error", Toast.LENGTH_SHORT).show()
+                viewModel.clearLocationError()
             }
         }
     }
@@ -381,6 +433,58 @@ class MainDashboard : AppCompatActivity() {
         tvSelectedRoute.text = ""
         tvSelectedDetails.text = ""
     }
+    // NEW: Check and request location permission
+    private fun checkLocationPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permission already granted
+                viewModel.requestUserLocation(this)
+            }
+            else -> {
+                // Request permission
+                requestPermissionLauncher.launch(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            }
+        }
+    }
+
+    // NEW: Add a marker for user location
+    private fun addUserLocationMarker(geoPoint: GeoPoint) {
+        // Remove old user location marker if exists
+        val oldMarkers = mapView.overlays.filter {
+            it is Marker && it.title == "You are here"
+        }
+        mapView.overlays.removeAll(oldMarkers)
+
+        // Add new marker
+        val marker = Marker(mapView).apply {
+            position = geoPoint
+            title = "You are here"
+            setTextIcon("📍") // Location emoji
+            setTextLabelForegroundColor(Color.parseColor("#2196F3")) // Blue
+            setTextLabelBackgroundColor(Color.parseColor("#E3F2FD")) // Light blue
+            setTextLabelFontSize(14)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        }
+
+        mapView.overlays.add(marker)
+        mapView.invalidate()
+    }
+
+    // NEW: Center map on user location (for button click)
+    private fun centerOnUserLocation() {
+        viewModel.userLocation.value?.let { location ->
+            mapView.controller.animateTo(GeoPoint(location.latitude, location.longitude))
+            mapView.controller.setZoom(15.0)
+        } ?: run {
+            // If no location yet, request it
+            checkLocationPermission()
+        }
+    }
 
     // ==================== EVENT LISTENERS ====================
 
@@ -424,6 +528,9 @@ class MainDashboard : AppCompatActivity() {
         mapView.setOnClickListener {
             if (bottomSheet.visibility == View.VISIBLE) {
                 viewModel.clearSelectedMarkerDetail()
+            }
+            btnMyLocation.setOnClickListener {
+                centerOnUserLocation()
             }
         }
 
