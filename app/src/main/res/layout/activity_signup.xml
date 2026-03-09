@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--    C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\res\layout\activity_signup.xml-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -83,19 +82,19 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="4dp" />
 
-                <!-- Age Field -->
                 <EditText
                     android:id="@+id/etGender"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
-                    android:layout_marginBottom="16dp"
                     android:background="@drawable/edittext_background"
                     android:hint="ex. Male/Female/Other"
+                    android:textColorHint="@color/text_hint"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:textColorHint="@color/text_hint"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:layout_marginBottom="16dp" />
 
+                <!-- Age Field -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -187,6 +186,29 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="16dp" />
 
+                <!-- Confirm Password Field (NEW) -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Confirm Password"
+                    android:textColor="@color/text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/etConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Re-enter password"
+                    android:textColorHint="@color/text_hint"
+                    android:inputType="textPassword"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="16dp" />
+
                 <!-- Terms Checkbox -->
                 <CheckBox
                     android:id="@+id/cbTerms"
@@ -213,16 +235,25 @@
                     android:textStyle="bold"
                     app:cornerRadius="28dp" />
 
+                <!-- Progress Bar (NEW) -->
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:layout_marginBottom="16dp" />
+
                 <!-- Login Link -->
                 <TextView
                     android:id="@+id/tvLogin"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:text="I'm already a member"
                     android:textColor="@color/primary_blue"
                     android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center_horizontal" />
+                    android:textStyle="bold" />
 
             </LinearLayout>
         </ScrollView>

@@ -62,7 +62,7 @@
 
         <!-- MAIN DASHBOARD -->
         <activity
-            android:name=".View.MainDashboard"
+            android:name=".View.LiveMapView"
             android:exported="false"
             android:theme="@style/Theme.Dashboard" />
 

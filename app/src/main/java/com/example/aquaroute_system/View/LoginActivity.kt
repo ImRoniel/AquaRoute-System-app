@@ -1,48 +1,108 @@
+//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\View\LoginActivity.kt
 package com.example.aquaroute_system.View
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.example.aquaroute_system.R
+import com.example.aquaroute_system.data.repository.AuthRepository
 import com.example.aquaroute_system.databinding.ActivityLoginBinding
+import com.example.aquaroute_system.ui.viewmodel.AuthState
+import com.example.aquaroute_system.ui.viewmodel.AuthViewModel
+import com.example.aquaroute_system.ui.viewmodel.AuthViewModelFactory
+import com.example.aquaroute_system.util.SessionManager
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private lateinit var authRepository: AuthRepository
+    private lateinit var sessionManager: SessionManager
+
+    private val authViewModel: AuthViewModel by viewModels {
+        AuthViewModelFactory(authRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        initializeDependencies()
+        setupObservers()
         setupClickListeners()
+
+        // Check if already logged in
+        if (sessionManager.isLoggedIn()) {
+            navigateToMainDashboard()
+        }
+    }
+
+    private fun initializeDependencies() {
+        sessionManager = SessionManager(this)
+
+        try {
+            FirebaseApp.initializeApp(this)
+            Log.d("LoginActivity", "Firebase initialized successfully")
+        } catch (e: Exception) {
+            Log.e("LoginActivity", "Firebase init failed", e)
+            Toast.makeText(this, "Firebase init error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+
+        authRepository = AuthRepository(
+            auth = FirebaseAuth.getInstance(),
+            firestore = FirebaseFirestore.getInstance(),
+            sessionManager = sessionManager
+        )
+    }
+
+    private fun setupObservers() {
+        authViewModel.authState.observe(this) { state ->
+            when (state) {
+                is AuthState.Authenticated -> {
+                    hideLoading()
+                    Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
+                    navigateToMainDashboard()
+                }
+                is AuthState.Loading -> showLoading()
+                is AuthState.Error -> {
+                    hideLoading()
+                    // Show the actual error message
+                    val error = authViewModel.errorMessage.value
+                    Toast.makeText(this, "Login failed: $error", Toast.LENGTH_LONG).show()
+                }
+                else -> {}
+            }
+        }
+
+        authViewModel.errorMessage.observe(this) { error ->
+            error?.let {
+                Toast.makeText(this, "Error details: $it", Toast.LENGTH_LONG).show()
+                authViewModel.clearError()
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        // Login button click
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
 
             if (validateInputs(email, password)) {
-                // TODO: Add your actual authentication logic here
-                // For now, just navigate to MainDashboard
-                Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                navigateToMainDashboard()
+                authViewModel.login(email, password)
             }
         }
 
-        // Guest button click
         binding.btnGuest.setOnClickListener {
-            // Navigate as guest
             Toast.makeText(this, "Continuing as Guest", Toast.LENGTH_SHORT).show()
             navigateToMainDashboard()
         }
 
-        // Create Account text click
         binding.tvCreateAccount.setOnClickListener {
-            // Navigate to SignupActivity
             startActivity(Intent(this, SignupActivity::class.java))
         }
     }
@@ -69,13 +129,23 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun showLoading() {
+        binding.btnLogin.isEnabled = false
+        binding.btnGuest.isEnabled = false
+        binding.progressBar?.visibility = android.view.View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        binding.btnLogin.isEnabled = true
+        binding.btnGuest.isEnabled = true
+        binding.progressBar?.visibility = android.view.View.GONE
+    }
+
     private fun navigateToMainDashboard() {
-        val intent = Intent(this, MainDashboard::class.java)
+        val intent = Intent(this, LiveMapView::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
-
-
 
 }

@@ -13,6 +13,7 @@ import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
 import com.example.aquaroute_system.data.repository.SearchRepository
+import com.example.aquaroute_system.util.LocationHelper  // Add this import
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -98,7 +99,8 @@ class MainDashboardViewModel(
             _isLocationLoading.postValue(true)
 
             try {
-                val location = com.example.aquaroute_system.util.LocationHelper.getLastLocation(context)
+                // Use LocationHelper from the util package
+                val location = LocationHelper.getLastLocation(context)
 
                 if (location != null) {
                     _userLocation.postValue(location)
@@ -122,6 +124,7 @@ class MainDashboardViewModel(
     fun clearLocationError() {
         _locationError.value = null
     }
+
     // Static port data
     private val portData = listOf(
         Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
@@ -150,6 +153,7 @@ class MainDashboardViewModel(
         // Return a copy with updated status
         return port.copy(status = dynamicStatus)
     }
+
     /**
      * Initialize data on ViewModel creation
      */
@@ -292,7 +296,7 @@ class MainDashboardViewModel(
         val ferries = _ferries.value ?: emptyList()
         val foundFerries = ferries.filter {
             it.name.contains(query, ignoreCase = true) ||
-            it.route.contains(query, ignoreCase = true)
+                    it.route.contains(query, ignoreCase = true)
         }
         count += foundFerries.size
 

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
+
+
     <!-- Existing colors -->
     <color name="purple_200">#FFBB86FC</color>
+    <color name="warning_orange">#F44336</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
@@ -12,6 +15,8 @@
 
     <!-- AquaRoute Color Palette -->
     <color name="deep_ocean_blue">#003366</color>
+    <color name="success_green">#0AF424</color>
+    <color name="error_red">#D11717</color>
     <color name="sky_cyan">#00A3E0</color>
     <color name="safety_green">#4CAF50</color>
     <color name="warning_amber">#FF9800</color>

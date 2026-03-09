@@ -1,9 +1,8 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        google ()
+        google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") } // REQUIRED for osmbonuspack
+        gradlePluginPortal()
     }
 }
 dependencyResolutionManagement {
@@ -15,7 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-
-rootProject.name = "AquaRoute-System"
+rootProject.name = "AquaRouteSystem"
 include(":app")
-

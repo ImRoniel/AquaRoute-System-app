@@ -6,37 +6,56 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.example.aquaroute_system.R
-import com.example.aquaroute_system.View.OnboardingActivity
-import com.example.aquaroute_system.View.LoginSignupActivity
+import com.example.aquaroute_system.util.SessionManager
 
 class SplashScreen : AppCompatActivity() {
 
     private val SPLASH_DELAY: Long = 2000 // 2 seconds
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        // Hide the action bar for full-screen splash
-        supportActionBar?.hide()
+        sessionManager = SessionManager(this)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            // Check if the user has already seen onboarding
-            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-            val isFirstRun = prefs.getBoolean("is_first_run", true)
-
-            // Decide where to navigate
-            val intent = if (isFirstRun) {
-                // First-time user: show onboarding
-                prefs.edit().putBoolean("is_first_run", false).apply() // mark as seen
-                Intent(this, OnboardingActivity::class.java)
+            // Check if user is already logged in
+            if (sessionManager.isSessionValid()) {
+                // User has valid session - go to MainDashboard
+                navigateToMainDashboard()
             } else {
-                // Returning user: go to login/signup
-                Intent(this, LoginSignupActivity::class.java)
-            }
+                // Check if first time user
+                val isFirstRun = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    .getBoolean("is_first_run", true)
 
-            startActivity(intent)
-            finish()
+                if (isFirstRun) {
+                    // First time user - show onboarding
+                    navigateToOnboarding()
+                } else {
+                    // Returning user - go to login
+                    navigateToLogin()
+                }
+            }
         }, SPLASH_DELAY)
+    }
+
+    private fun navigateToMainDashboard() {
+        val intent = Intent(this, LiveMapView::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToOnboarding() {
+        val intent = Intent(this, OnboardingActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginSignupActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 }

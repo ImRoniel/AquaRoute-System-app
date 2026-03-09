@@ -1,6 +1,7 @@
 package com.example.aquaroute_system.util
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -17,9 +18,6 @@ object LocationHelper {
 
     private const val TAG = "LocationHelper"
 
-    /**
-     * Check if location permission is granted
-     */
     fun hasLocationPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -34,13 +32,15 @@ object LocationHelper {
     /**
      * Get last known location (suspend function for coroutines)
      */
+    @SuppressLint("MissingPermission") // Safe because we check manually below
     suspend fun getLastLocation(context: Context): Location? {
         if (!hasLocationPermission(context)) {
             Log.d(TAG, "No location permission")
             return null
         }
 
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val fusedLocationClient: FusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(context)
 
         return suspendCancellableCoroutine { continuation ->
             val task: Task<Location> = fusedLocationClient.lastLocation
@@ -64,11 +64,8 @@ object LocationHelper {
                 }
             }
 
-            // Handle cancellation - we can't cancel the Task, but we can ignore the result
             continuation.invokeOnCancellation {
                 Log.d(TAG, "Location request was cancelled")
-                // Task will continue but we'll ignore its result
-                // No need to call task.cancel() as it's not available
             }
         }
     }

@@ -1,28 +1,84 @@
+//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\View\SignupActivity.kt
+
 package com.example.aquaroute_system.View
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.aquaroute_system.data.repository.AuthRepository
 import com.example.aquaroute_system.databinding.ActivitySignupBinding
+import com.example.aquaroute_system.ui.viewmodel.AuthState
+import com.example.aquaroute_system.ui.viewmodel.AuthViewModel
+import com.example.aquaroute_system.ui.viewmodel.AuthViewModelFactory
+import com.example.aquaroute_system.util.SessionManager
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
+    private lateinit var authRepository: AuthRepository
+    private lateinit var sessionManager: SessionManager
+
+    private val authViewModel: AuthViewModel by viewModels {
+        AuthViewModelFactory(authRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        initializeDependencies()
+        setupObservers()
         setupClickListeners()
+    }
+
+    private fun initializeDependencies() {
+        sessionManager = SessionManager(this)
+        authRepository = AuthRepository(
+            auth = FirebaseAuth.getInstance(),
+            firestore = FirebaseFirestore.getInstance(),
+            sessionManager = sessionManager
+        )
+    }
+
+    private fun setupObservers() {
+        authViewModel.authState.observe(this) { state ->
+            when (state) {
+                is AuthState.Authenticated -> {
+                    hideLoading()
+                    Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show()
+                    navigateToLogin()
+                }
+                is AuthState.Loading -> showLoading()
+                is AuthState.Error -> {
+                    hideLoading()
+                    Toast.makeText(this, "Signup failed", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
+            }
+        }
+
+        authViewModel.errorMessage.observe(this) { error ->
+            error?.let {
+                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                authViewModel.clearError()
+            }
+        }
     }
 
     private fun setupClickListeners() {
         binding.btnSignUp.setOnClickListener {
-            if (validateInputs()) {
-                Toast.makeText(this, "Registration successful! Please login.", Toast.LENGTH_LONG).show()
-                navigateToLogin()
+            val fullName = binding.etFullName.text.toString().trim()
+            val email = binding.etGmail.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+            val confirmPassword = binding.etConfirmPassword?.text.toString().trim()
+
+            if (validateInputs(fullName, email, password, confirmPassword)) {
+                authViewModel.signUp(email, password, fullName)
             }
         }
 
@@ -31,84 +87,60 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateInputs(): Boolean {
-        val fullName = binding.etFullName.text.toString().trim()
-        val gender = binding.etGender.text.toString().trim()
-        val age = binding.etAge.text.toString().trim()
-        val email = binding.etGmail.text.toString().trim()
-        val phone = binding.etNumber.text.toString().trim()
-        val password = binding.etPassword.text.toString().trim()
-        val isTermsChecked = binding.cbTerms.isChecked
-
-        var isValid = true
-
-        if (fullName.isEmpty()) {
-            binding.etFullName.error = "Full name is required"
-            isValid = false
-        }
-
-        if (gender.isEmpty()) {
-            binding.etGender.error = "Gender is required"
-            isValid = false
-        }
-
-        if (age.isEmpty()) {
-            binding.etAge.error = "Age is required"
-            isValid = false
-        } else {
-            try {
-                val ageInt = age.toInt()
-                if (ageInt < 1 || ageInt > 120) {
-                    binding.etAge.error = "Enter a valid age"
-                    isValid = false
-                }
-            } catch (e: NumberFormatException) {
-                binding.etAge.error = "Enter a valid number"
-                isValid = false
+    private fun validateInputs(
+        fullName: String,
+        email: String,
+        password: String,
+        confirmPassword: String
+    ): Boolean {
+        // Your existing validation logic...
+        return when {
+            fullName.isEmpty() -> {
+                binding.etFullName.error = "Full name is required"
+                false
             }
+            email.isEmpty() -> {
+                binding.etGmail.error = "Email is required"
+                false
+            }
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                binding.etGmail.error = "Enter a valid email"
+                false
+            }
+            password.isEmpty() -> {
+                binding.etPassword.error = "Password is required"
+                false
+            }
+            password.length < 6 -> {
+                binding.etPassword.error = "Password must be at least 6 characters"
+                false
+            }
+            password != confirmPassword -> {
+                binding.etConfirmPassword?.error = "Passwords do not match"
+                false
+            }
+            else -> true
         }
+    }
 
-        if (email.isEmpty()) {
-            binding.etGmail.error = "Email is required"
-            isValid = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.etGmail.error = "Enter a valid email"
-            isValid = false
-        }
+    private fun showLoading() {
+        binding.btnSignUp.isEnabled = false
+        binding.progressBar?.visibility = android.view.View.VISIBLE
+    }
 
-        if (phone.isEmpty()) {
-            binding.etNumber.error = "Phone number is required"
-            isValid = false
-        } else if (phone.length < 11) {
-            binding.etNumber.error = "Enter a valid phone number"
-            isValid = false
-        }
-
-        if (password.isEmpty()) {
-            binding.etPassword.error = "Password is required"
-            isValid = false
-        } else if (password.length < 6) {
-            binding.etPassword.error = "Password must be at least 6 characters"
-            isValid = false
-        }
-
-        if (!isTermsChecked) {
-            Toast.makeText(this, "Please agree to terms & conditions", Toast.LENGTH_SHORT).show()
-            isValid = false
-        }
-
-        return isValid
+    private fun hideLoading() {
+        binding.btnSignUp.isEnabled = true
+        binding.progressBar?.visibility = android.view.View.GONE
     }
 
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
-        finish( )
+        finish()
     }
 
-
     private fun navigateToMainDashboard() {
-        val intent = Intent(this, MainDashboard::class.java)
+        val intent = Intent(this, LiveMapView::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

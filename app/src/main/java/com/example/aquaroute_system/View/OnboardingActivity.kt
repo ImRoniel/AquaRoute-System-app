@@ -111,9 +111,8 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun navigateToAuth() {
-        // Mark onboarding as completed
-        getSharedPreferences("app_prefs", MODE_PRIVATE)
-            .edit()
+        // Mark that user has seen onboarding
+        getSharedPreferences("app_prefs", MODE_PRIVATE).edit()
             .putBoolean("is_first_run", false)
             .apply()
 
