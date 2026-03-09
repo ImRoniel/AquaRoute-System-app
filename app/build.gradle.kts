@@ -50,6 +50,8 @@ android {
 }
 
 dependencies {
+//    For fresh layout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))  // Using stable version
 

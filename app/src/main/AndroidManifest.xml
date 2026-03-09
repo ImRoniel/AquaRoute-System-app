@@ -60,7 +60,13 @@
             android:exported="false"
             android:theme="@style/Theme.Auth" />
 
-        <!-- MAIN DASHBOARD -->
+        <!-- MAIN DASHBOARD (Screen 6) -->
+        <activity
+            android:name=".View.MainDashboard"
+            android:exported="false"
+            android:theme="@style/Theme.Dashboard" />
+
+        <!-- LIVE MAP VIEW (Screen 7) -->
         <activity
             android:name=".View.LiveMapView"
             android:exported="false"

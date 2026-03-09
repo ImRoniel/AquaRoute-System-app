@@ -1,8 +1,8 @@
-//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\util\SessionManager.kt
 package com.example.aquaroute_system.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.example.aquaroute_system.data.models.User
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -24,6 +24,7 @@ class SessionManager(context: Context) {
     }
 
     fun saveUserSession(user: User, authToken: String = "") {
+        Log.d("SessionManager", "Saving user session for: ${user.email}")
         val editor = prefs.edit()
         editor.putString(KEY_USER_ID, user.uid)
         editor.putString(KEY_USER_EMAIL, user.email)
@@ -34,9 +35,15 @@ class SessionManager(context: Context) {
 
         // Save full user object as JSON
         val userJson = gson.toJson(user)
+        Log.d("SessionManager", "User JSON: $userJson")
         editor.putString(KEY_USER_DATA, userJson)
 
-        editor.apply()
+        // Use commit() for immediate write instead of apply()
+        val success = editor.commit()
+        Log.d("SessionManager", "Session saved successfully: $success")
+
+        // Verify immediately
+        debugPrintAllPrefs()
     }
 
     fun isLoggedIn(): Boolean {
@@ -60,6 +67,7 @@ class SessionManager(context: Context) {
         return try {
             gson.fromJson(userJson, User::class.java)
         } catch (e: Exception) {
+            Log.e("SessionManager", "Error parsing user data", e)
             null
         }
     }
@@ -69,17 +77,19 @@ class SessionManager(context: Context) {
     }
 
     fun clearSession() {
+        Log.d("SessionManager", "Clearing session")
         val editor = prefs.edit()
         editor.clear()
-        editor.apply()
+        editor.commit()
     }
 
     fun updateUserData(user: User) {
+        Log.d("SessionManager", "Updating user data for: ${user.email}")
         val editor = prefs.edit()
         val userJson = gson.toJson(user)
         editor.putString(KEY_USER_DATA, userJson)
         editor.putString(KEY_USER_NAME, user.displayName)
-        editor.apply()
+        editor.commit()
     }
 
     fun isSessionValid(): Boolean {
@@ -90,7 +100,6 @@ class SessionManager(context: Context) {
         return isLoggedIn() && sessionDuration < (30 * 24 * 60 * 60 * 1000)
     }
 
-    // Add these methods for recent searches
     fun saveRecentSearches(searches: List<String>) {
         val json = gson.toJson(searches)
         prefs.edit().putString(KEY_RECENT_SEARCHES, json).apply()
@@ -104,5 +113,20 @@ class SessionManager(context: Context) {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    fun getLoginTime(): Long? {
+        return prefs.getLong(KEY_LOGIN_TIME, 0)
+    }
+
+    fun debugPrintAllPrefs() {
+        Log.d("SessionManager", "=== ALL PREFERENCES ===")
+        Log.d("SessionManager", "KEY_USER_ID: ${getUserId()}")
+        Log.d("SessionManager", "KEY_USER_EMAIL: ${getUserEmail()}")
+        Log.d("SessionManager", "KEY_USER_NAME: ${getUserName()}")
+        Log.d("SessionManager", "KEY_IS_LOGGED_IN: ${isLoggedIn()}")
+        Log.d("SessionManager", "KEY_LOGIN_TIME: ${getLoginTime()}")
+        Log.d("SessionManager", "KEY_USER_DATA exists: ${prefs.contains(KEY_USER_DATA)}")
+        Log.d("SessionManager", "All keys: ${prefs.all.keys}")
     }
 }

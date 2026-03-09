@@ -1,4 +1,3 @@
-//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\ui\viewmodel\AuthViewModel.kt
 package com.example.aquaroute_system.ui.viewmodel
 
 import androidx.lifecycle.LiveData
@@ -28,17 +27,42 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         get() = authRepository.isUserLoggedIn
 
     init {
-        // Check if user is already logged in
         checkCurrentUser()
     }
 
     private fun checkCurrentUser() {
         viewModelScope.launch {
-            if (authRepository.isUserLoggedIn) {
-                _user.value = authRepository.getCurrentUser()
-                _authState.value = AuthState.Authenticated
+            _user.value = authRepository.getCurrentUser()
+            _authState.value = if (authRepository.isUserLoggedIn) {
+                AuthState.Authenticated
             } else {
-                _authState.value = AuthState.Unauthenticated
+                AuthState.Unauthenticated
+            }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            _authState.value = AuthState.Loading
+
+            try {
+                val result = authRepository.loginWithEmail(email, password)
+
+                result.onSuccess { user ->
+                    _user.value = user
+                    _authState.value = AuthState.Authenticated
+                    _errorMessage.value = null
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message
+                    _authState.value = AuthState.Error
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+                _authState.value = AuthState.Error
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -49,37 +73,22 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _errorMessage.value = null
             _authState.value = AuthState.Loading
 
-            val result = authRepository.signUpWithEmail(email, password, displayName)
+            try {
+                val result = authRepository.signUpWithEmail(email, password, displayName)
 
-            result.onSuccess { user ->
-                _user.value = user
-                _authState.value = AuthState.Authenticated
-            }.onFailure { exception ->
-                _errorMessage.value = exception.message
+                result.onSuccess { user ->
+                    _user.value = user
+                    _authState.value = AuthState.Authenticated
+                }.onFailure { exception ->
+                    _errorMessage.value = exception.message
+                    _authState.value = AuthState.Error
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
                 _authState.value = AuthState.Error
+            } finally {
+                _isLoading.value = false
             }
-
-            _isLoading.value = false
-        }
-    }
-
-    fun login(email: String, password: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            _authState.value = AuthState.Loading
-
-            val result = authRepository.loginWithEmail(email, password)
-
-            result.onSuccess { user ->
-                _user.value = user
-                _authState.value = AuthState.Authenticated
-            }.onFailure { exception ->
-                _errorMessage.value = exception.message
-                _authState.value = AuthState.Error
-            }
-
-            _isLoading.value = false
         }
     }
 
@@ -97,23 +106,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             val result = authRepository.sendPasswordResetEmail(email)
 
             result.onFailure { exception ->
-                _errorMessage.value = exception.message
-            }
-
-            _isLoading.value = false
-        }
-    }
-
-    fun updateUserPreferences(preferences: UserPreferences) {
-        viewModelScope.launch {
-            _isLoading.value = true
-
-            val result = authRepository.updateUserPreferences(preferences)
-
-            result.onSuccess {
-                // Refresh user data
-                _user.value = authRepository.getCurrentUser()
-            }.onFailure { exception ->
                 _errorMessage.value = exception.message
             }
 

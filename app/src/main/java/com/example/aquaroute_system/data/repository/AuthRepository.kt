@@ -1,4 +1,3 @@
-//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\data\repository\AuthRepository.kt
 package com.example.aquaroute_system.data.repository
 
 import android.util.Log
@@ -34,9 +33,10 @@ class AuthRepository(
         displayName: String
     ): Result<User> {
         return try {
-            // Create user in Firebase Auth
+            Log.d(TAG, "Attempting signup for: $email")
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("User creation failed")
+            Log.d(TAG, "Firebase Auth successful for UID: ${firebaseUser.uid}")
 
             // Update profile with display name
             val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
@@ -50,16 +50,20 @@ class AuthRepository(
                 email = email,
                 displayName = displayName,
                 createdAt = System.currentTimeMillis(),
+                lastLoginAt = System.currentTimeMillis(),
                 isEmailVerified = firebaseUser.isEmailVerified
             )
+            Log.d(TAG, "Created user object: $user")
 
             // Save user to Firestore
             firestore.collection(USERS_COLLECTION)
                 .document(firebaseUser.uid)
                 .set(user)
                 .await()
+            Log.d(TAG, "Saved user to Firestore")
 
             // Save session locally
+            Log.d(TAG, "Saving session for user: ${user.email}")
             sessionManager.saveUserSession(user, firebaseUser.uid)
 
             Result.success(user)
@@ -72,11 +76,14 @@ class AuthRepository(
     // Login with email and password
     suspend fun loginWithEmail(email: String, password: String): Result<User> {
         return try {
+            Log.d(TAG, "Attempting login for: $email")
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Login failed")
+            Log.d(TAG, "Firebase Auth successful for UID: ${firebaseUser.uid}")
 
             // Get user data from Firestore
             val user = getUserFromFirestore(firebaseUser.uid)
+            Log.d(TAG, "Got user from Firestore: $user")
 
             // Update last login time
             val updatedUser = user.copy(lastLoginAt = System.currentTimeMillis())
@@ -86,8 +93,10 @@ class AuthRepository(
                 .document(firebaseUser.uid)
                 .update("lastLoginAt", System.currentTimeMillis())
                 .await()
+            Log.d(TAG, "Updated lastLogin in Firestore")
 
-            // Save session locally
+            // CRITICAL: Save session locally
+            Log.d(TAG, "Saving session for user: ${updatedUser.email}")
             sessionManager.saveUserSession(updatedUser, firebaseUser.uid)
 
             Result.success(updatedUser)

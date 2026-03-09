@@ -1,12 +1,11 @@
-//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\View\LoginActivity.kt
 package com.example.aquaroute_system.View
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.aquaroute_system.data.repository.AuthRepository
 import com.example.aquaroute_system.databinding.ActivityLoginBinding
 import com.example.aquaroute_system.ui.viewmodel.AuthState
@@ -22,10 +21,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var authRepository: AuthRepository
     private lateinit var sessionManager: SessionManager
-
-    private val authViewModel: AuthViewModel by viewModels {
-        AuthViewModelFactory(authRepository)
-    }
+    private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,11 +29,13 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initializeDependencies()
+        setupViewModel()
         setupObservers()
         setupClickListeners()
 
         // Check if already logged in
         if (sessionManager.isLoggedIn()) {
+            Log.d("LoginActivity", "User already logged in, navigating to MainDashboard")
             navigateToMainDashboard()
         }
     }
@@ -60,18 +58,30 @@ class LoginActivity : AppCompatActivity() {
         )
     }
 
+    private fun setupViewModel() {
+        val factory = AuthViewModelFactory(authRepository)
+        authViewModel = ViewModelProvider(this, factory)[AuthViewModel::class.java]
+    }
+
     private fun setupObservers() {
         authViewModel.authState.observe(this) { state ->
             when (state) {
                 is AuthState.Authenticated -> {
                     hideLoading()
                     Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
+
+                    // DEBUG: Check what's in session
+                    Log.d("LoginActivity", "=== POST-LOGIN SESSION CHECK ===")
+                    Log.d("LoginActivity", "isLoggedIn: ${sessionManager.isLoggedIn()}")
+                    Log.d("LoginActivity", "UserId: ${sessionManager.getUserId()}")
+                    Log.d("LoginActivity", "UserEmail: ${sessionManager.getUserEmail()}")
+                    Log.d("LoginActivity", "UserData: ${sessionManager.getUserData()}")
+
                     navigateToMainDashboard()
                 }
                 is AuthState.Loading -> showLoading()
                 is AuthState.Error -> {
                     hideLoading()
-                    // Show the actual error message
                     val error = authViewModel.errorMessage.value
                     Toast.makeText(this, "Login failed: $error", Toast.LENGTH_LONG).show()
                 }
@@ -142,10 +152,9 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun navigateToMainDashboard() {
-        val intent = Intent(this, LiveMapView::class.java)
+        val intent = Intent(this, MainDashboard::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
-
 }
