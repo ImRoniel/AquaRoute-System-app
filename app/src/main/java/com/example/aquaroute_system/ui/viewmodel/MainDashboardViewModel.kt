@@ -1,3 +1,4 @@
+//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\ui\viewmodel\MainDashboardViewModel.kt
 package com.example.aquaroute_system.ui.viewmodel
 
 import android.util.Log
@@ -5,323 +6,194 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aquaroute_system.data.models.Ferry
-import com.example.aquaroute_system.data.models.FirestorePort
-import com.example.aquaroute_system.data.models.MarkerDetail
-import com.example.aquaroute_system.data.models.Port
-import com.example.aquaroute_system.data.models.Result
-import com.example.aquaroute_system.data.repository.FerryRepository
-import com.example.aquaroute_system.data.repository.PortRepository
-import com.example.aquaroute_system.data.repository.SearchRepository
-import com.example.aquaroute_system.util.LocationHelper  // Add this import
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import com.example.aquaroute_system.data.models.*
+import com.example.aquaroute_system.data.repository.*
+import com.example.aquaroute_system.util.SessionManager
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.Date
 
-/**
- * ViewModel for MainDashboard activity
- * Manages all UI state and business logic
- */
 class MainDashboardViewModel(
-    private val portRepository: PortRepository,
-    private val ferryRepository: FerryRepository,
-    private val searchRepository: SearchRepository
+    private val sessionManager: SessionManager,
+    private val dashboardRepository: DashboardRepository,
+    private val portStatusRepository: PortStatusRepository,
+    private val weatherRepository: WeatherRepository,
+    private val cargoRepository: CargoRepository
 ) : ViewModel() {
 
     companion object {
         private const val TAG = "MainDashboardViewModel"
-        private const val LIVE_UPDATE_INTERVAL = 3000L
     }
 
-    // Firestore ports data
-    private val _firestorePorts = MutableLiveData<Result<List<FirestorePort>>>()
-    val firestorePorts: LiveData<Result<List<FirestorePort>>> = _firestorePorts
+    // User data
+    private val _currentUser = MutableLiveData<User?>()
+    val currentUser: LiveData<User?> = _currentUser
 
-    // Local ferry data
-    private val _ferries = MutableLiveData<List<Ferry>>()
-    val ferries: LiveData<List<Ferry>> = _ferries
+    // Dashboard stats
+    private val _dashboardStats = MutableLiveData<DashboardStats?>()
+    val dashboardStats: LiveData<DashboardStats?> = _dashboardStats
 
-    // Local port data
-    private val _ports = MutableLiveData<List<Port>>()
-    val ports: LiveData<List<Port>> = _ports
+    // Port statuses
+    private val _portStatuses = MutableLiveData<List<PortStatus>>()
+    val portStatuses: LiveData<List<PortStatus>> = _portStatuses
 
-    // Selected marker details for bottom sheet
-    private val _selectedMarkerDetail = MutableLiveData<MarkerDetail?>()
-    val selectedMarkerDetail: LiveData<MarkerDetail?> = _selectedMarkerDetail
+    // Weather conditions
+    private val _weatherConditions = MutableLiveData<List<WeatherCondition>>()
+    val weatherConditions: LiveData<List<WeatherCondition>> = _weatherConditions
 
-    // Last update time
-    private val _lastUpdateTime = MutableLiveData<String>()
-    val lastUpdateTime: LiveData<String> = _lastUpdateTime
+    // Active cargo
+    private val _activeCargo = MutableLiveData<List<Cargo>>()
+    val activeCargo: LiveData<List<Cargo>> = _activeCargo
 
-    // Live status indicator
-    private val _liveIndicatorAlpha = MutableLiveData<Float>(1f)
-    val liveIndicatorAlpha: LiveData<Float> = _liveIndicatorAlpha
+    // Loading states
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
 
-    // Last search query
-    private val _lastSearchQuery = MutableLiveData<String>()
-    val lastSearchQuery: LiveData<String> = _lastSearchQuery
+    private val _isRefreshing = MutableLiveData(false)
+    val isRefreshing: LiveData<Boolean> = _isRefreshing
 
-    // Search results count
-    private val _searchResultsCount = MutableLiveData<Int>()
-    val searchResultsCount: LiveData<Int> = _searchResultsCount
-
-    // Error messages
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    // Live update job
-    private var liveUpdateJob: Job? = null
-
-    //current hour dynamic status
-    private val _currentHour = MutableLiveData<Int?>()
-    val currentHour: LiveData<Int?> = _currentHour
-
-    //For Location Function to securely update the data
-    private val _userLocation = MutableLiveData<android.location.Location?>()
-    val userLocation: LiveData<android.location.Location?> = _userLocation
-
-    private val _isLocationLoading = MutableLiveData<Boolean>(false)
-    val isLocationLoading: LiveData<Boolean> = _isLocationLoading
-
-    private val _locationError = MutableLiveData<String?>()
-    val locationError: LiveData<String?> = _locationError
-
-
-    /**
-     * Request user location
-     */
-    fun requestUserLocation(context: android.content.Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isLocationLoading.postValue(true)
-
-            try {
-                // Use LocationHelper from the util package
-                val location = LocationHelper.getLastLocation(context)
-
-                if (location != null) {
-                    _userLocation.postValue(location)
-                    _locationError.postValue(null)
-                    Log.d(TAG, "User location: ${location.latitude}, ${location.longitude}")
-                } else {
-                    _locationError.postValue("Could not get location")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error getting location", e)
-                _locationError.postValue("Error: ${e.message}")
-            } finally {
-                _isLocationLoading.postValue(false)
-            }
-        }
-    }
-
-    /**
-     * Clear location error
-     */
-    fun clearLocationError() {
-        _locationError.value = null
-    }
-
-    // Static port data
-    private val portData = listOf(
-        Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
-        Port("Manila Port", 14.594, 120.970, false),
-        Port("Cavite Port", 14.475, 120.915, false)
-    )
+    // Last update time
+    private val _lastUpdated = MutableLiveData<Long>()
+    val lastUpdated: LiveData<Long> = _lastUpdated
 
     init {
-        initializeData()
-        startTimeUpdates()
+        loadCurrentUser()
+        startRealTimeUpdates()
     }
 
-    private fun startTimeUpdates() {
+    private fun loadCurrentUser() {
+        _currentUser.value = sessionManager.getUserData()
+    }
+
+    private fun startRealTimeUpdates() {
+        val userId = sessionManager.getUserId() ?: return
+
         viewModelScope.launch {
-            while (true) {
-                _currentHour.postValue(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
-                delay(60000) // Update every minute
-            }
+            // Observe dashboard stats in real-time
+            dashboardRepository.observeUserStats(userId)
+                .catch { e ->
+                    Log.e(TAG, "Error observing stats", e)
+                    _errorMessage.value = "Failed to load stats: ${e.message}"
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _dashboardStats.value = result.data
+                            _lastUpdated.value = System.currentTimeMillis()
+                        }
+                        is Result.Error -> {
+                            _errorMessage.value = "Stats error: ${result.exception.message}"
+                        }
+                        is Result.Loading -> {
+                            // Optional: handle loading state
+                        }
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            // Observe port statuses in real-time
+            portStatusRepository.observeAllPortStatuses()
+                .catch { e ->
+                    Log.e(TAG, "Error observing ports", e)
+                    _errorMessage.value = "Failed to load ports: ${e.message}"
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _portStatuses.value = result.data
+                        }
+                        is Result.Error -> {
+                            _errorMessage.value = "Ports error: ${result.exception.message}"
+                        }
+                        else -> {}
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            // Observe weather conditions in real-time
+            weatherRepository.observeAllWeatherConditions()
+                .catch { e ->
+                    Log.e(TAG, "Error observing weather", e)
+                    _errorMessage.value = "Failed to load weather: ${e.message}"
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _weatherConditions.value = result.data
+                        }
+                        is Result.Error -> {
+                            _errorMessage.value = "Weather error: ${result.exception.message}"
+                        }
+                        else -> {}
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            // Observe active cargo in real-time
+            cargoRepository.observeUserActiveCargo(userId)
+                .catch { e ->
+                    Log.e(TAG, "Error observing cargo", e)
+                    _errorMessage.value = "Failed to load cargo: ${e.message}"
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _activeCargo.value = result.data
+                            updateStatsFromCargo(result.data)
+                        }
+                        is Result.Error -> {
+                            _errorMessage.value = "Cargo error: ${result.exception.message}"
+                        }
+                        else -> {}
+                    }
+                }
         }
     }
 
-    fun getPortWithDynamicStatus(port: FirestorePort): FirestorePort {
-        val currentHour = _currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val dynamicStatus = port.getCurrentStatus(currentHour)
+    private fun updateStatsFromCargo(cargoList: List<Cargo>) {
+        val currentStats = _dashboardStats.value ?: DashboardStats()
 
-        // Return a copy with updated status
-        return port.copy(status = dynamicStatus)
-    }
-
-    /**
-     * Initialize data on ViewModel creation
-     */
-    private fun initializeData() {
-        // Load ferries
-        _ferries.value = ferryRepository.getAllFerries()
-
-        // Load ports
-        _ports.value = portData
-
-        // Restore last search query
-        val lastQuery = searchRepository.getLastSearchQuery()
-        _lastSearchQuery.value  = lastQuery
-    }
-
-    /**
-     * Load all Firestore ports
-     */
-    fun loadFirestorePorts() {
-        _firestorePorts.value = Result.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = portRepository.loadPorts()
-            _firestorePorts.postValue(result)
-
-            if (result is Result.Error) {
-                _errorMessage.postValue("Failed to load ports: ${result.exception.message}")
-            }
-        }
-    }
-
-    /**
-     * Start live updates (3-second interval)
-     */
-    fun startLiveUpdates() {
-        // Cancel any existing job
-        liveUpdateJob?.cancel()
-
-        liveUpdateJob = viewModelScope.launch(Dispatchers.Main) {
-            while (isActive) {
-                updateFerryPositions()
-                updateStatusOverlay()
-                delay(LIVE_UPDATE_INTERVAL)
-            }
-        }
-    }
-
-    /**
-     * Stop live updates
-     */
-    fun stopLiveUpdates() {
-        liveUpdateJob?.cancel()
-        liveUpdateJob = null
-    }
-
-    /**
-     * Update ferry positions (simulation)
-     */
-    private fun updateFerryPositions() {
-        val ferries = _ferries.value ?: return
-        ferries.forEach { ferry ->
-            ferry.lat += (Math.random() - 0.5) * 0.001
-            ferry.lon += (Math.random() - 0.5) * 0.001
-            ferryRepository.updateFerryPosition(ferry.name, ferry.lat, ferry.lon)
-        }
-        _ferries.value = ferries
-    }
-
-    /**
-     * Update status overlay (time and live indicator)
-     */
-    private fun updateStatusOverlay() {
-        val timeString = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(Date())
-        _lastUpdateTime.value = timeString
-
-        // Toggle alpha for blinking effect
-        val currentAlpha = _liveIndicatorAlpha.value ?: 1f
-        _liveIndicatorAlpha.value = if (currentAlpha == 1f) 0.5f else 1f
-    }
-
-    /**
-     * Handle ferry marker click
-     */
-    fun onFerryMarkerClick(ferry: Ferry) {
-        _selectedMarkerDetail.value = MarkerDetail.FerryDetail(ferry)
-    }
-
-    /**
-     * Handle port marker click
-     */
-    fun onPortMarkerClick(port: Port) {
-        _selectedMarkerDetail.value = MarkerDetail.PortDetail(port)
-    }
-
-    /**
-     * Handle Firestore port marker click
-     */
-    fun onFirestorePortMarkerClick(port: FirestorePort) {
-        val portWithDynamicStatus = getPortWithDynamicStatus(port)
-        _selectedMarkerDetail.postValue(
-            MarkerDetail.FirestorePortDetail(portWithDynamicStatus)
+        val updatedStats = currentStats.copy(
+            totalShipments = cargoList.size,
+            inTransit = cargoList.count { it.status == "in_transit" },
+            delivered = cargoList.count { it.status == "delivered" },
+            delayed = cargoList.count { it.status == "delayed" }
         )
+
+        _dashboardStats.value = updatedStats
     }
 
-    /**
-     * Clear selected marker detail
-     */
-    fun clearSelectedMarkerDetail() {
-        _selectedMarkerDetail.value = null
+    fun refreshData() {
+        _isRefreshing.value = true
+        // Force refresh by reloading current user
+        loadCurrentUser()
+        _isRefreshing.value = false
     }
 
-    /**
-     * Perform search for ferries and ports
-     */
-    fun performSearch(query: String) {
-        if (query.isBlank()) {
-            _searchResultsCount.value = 0
-            return
-        }
-
-        // Save search query
-        searchRepository.saveSearchQuery(query)
-        _lastSearchQuery.value = query
-
-        var count = 0
-
-        // Search in Firestore ports
-        val firestorePorts = (_firestorePorts.value as? Result.Success)?.data ?: emptyList()
-        val foundFirestorePorts = firestorePorts.filter {
-            it.name.contains(query, ignoreCase = true)
-        }
-        count += foundFirestorePorts.size
-
-        // Search in local ports
-        val foundPorts = portData.filter {
-            it.name.contains(query, ignoreCase = true)
-        }
-        count += foundPorts.size
-
-        // Search in ferries
-        val ferries = _ferries.value ?: emptyList()
-        val foundFerries = ferries.filter {
-            it.name.contains(query, ignoreCase = true) ||
-                    it.route.contains(query, ignoreCase = true)
-        }
-        count += foundFerries.size
-
-        _searchResultsCount.value = count
-
-        // Navigate to first result if available
-        if (foundFerries.isNotEmpty()) {
-            onFerryMarkerClick(foundFerries.first())
-        } else if (foundPorts.isNotEmpty()) {
-            onPortMarkerClick(foundPorts.first())
-        } else if (foundFirestorePorts.isNotEmpty()) {
-            onFirestorePortMarkerClick(foundFirestorePorts.first())
-        }
+    fun getPortStatus(portName: String): PortStatus? {
+        return _portStatuses.value?.find { it.portName.contains(portName, ignoreCase = true) }
     }
 
-    /**
-     * Clear search query
-     */
-    fun clearSearch() {
-        _lastSearchQuery.value = ""
-        searchRepository.clearSearchHistory()
+    fun getWeatherForLocation(location: String): WeatherCondition? {
+        return _weatherConditions.value?.find { it.location.contains(location, ignoreCase = true) }
+    }
+
+    fun getActiveCargoCount(): Int {
+        return _activeCargo.value?.size ?: 0
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 
     override fun onCleared() {
         super.onCleared()
-        stopLiveUpdates()
+        // Clean up resources if needed
     }
 }

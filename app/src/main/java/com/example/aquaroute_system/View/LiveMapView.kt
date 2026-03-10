@@ -1,73 +1,72 @@
-//C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\java\com\example\aquaroute_system\View\MainDashboard.kt
 package com.example.aquaroute_system.View
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.MarkerDetail
 import com.example.aquaroute_system.data.models.Result
-import com.example.aquaroute_system.ui.viewmodel.MainDashboardViewModel
-import com.example.aquaroute_system.ui.viewmodel.MainDashboardViewModelFactory
+import com.example.aquaroute_system.data.repository.FerryRepository
+import com.example.aquaroute_system.data.repository.PortRepository
+import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModel
+import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModelFactory
 import com.example.aquaroute_system.util.MapHelper
+import com.example.aquaroute_system.util.SessionManager
+import com.google.firebase.firestore.FirebaseFirestore
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
-import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
 import java.util.*
 
 class LiveMapView : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "MainDashboard"
+        private const val TAG = "LiveMapView"
     }
 
     // ViewModel
-    private lateinit var viewModel: MainDashboardViewModel
+    private lateinit var viewModel: LiveMapViewModel
+    private lateinit var sessionManager: SessionManager
 
     // UI Components
     private lateinit var mapView: MapView
-    private lateinit var btnMenu: ImageButton
-    private lateinit var btnLayers: ImageButton
-    private lateinit var btnCompass: ImageButton
-    private lateinit var btnSearch: ImageButton
+    private lateinit var btnBack: ImageButton
+    private lateinit var btnSettings: ImageButton
     private lateinit var btnZoomIn: ImageButton
     private lateinit var btnZoomOut: ImageButton
+    private lateinit var btnMyLocation: ImageButton
+    private lateinit var btnSatellite: ImageButton
     private lateinit var tvLiveStatus: TextView
     private lateinit var tvLastUpdate: TextView
     private lateinit var tvConnection: TextView
     private lateinit var bottomSheet: View
-    private lateinit var ivSelectedIcon: ImageView
-    private lateinit var tvSelectedTitle: TextView
-    private lateinit var tvSelectedStatus: TextView
-    private lateinit var tvSelectedETA: TextView
-    private lateinit var tvSelectedRoute: TextView
-    private lateinit var tvSelectedDetails: TextView
+    private lateinit var tvVesselName: TextView
+    private lateinit var tvVesselEta: TextView
+    private lateinit var tvVesselRoute: TextView
+    private lateinit var tvVesselLocation: TextView
+    private lateinit var tvVesselStatus: TextView
+    private lateinit var tvVesselSpeed: TextView
     private lateinit var btnCloseSheet: ImageButton
-
-    // Search views
-    private lateinit var searchCard: CardView
+    private lateinit var btnPassengerView: TextView
+    private lateinit var btnCargoView: TextView
+    private lateinit var btnAlerts: TextView
     private lateinit var etSearch: EditText
-    private lateinit var btnClearSearch: ImageButton
 
     // Marker collections
     private val ferryMarkers = mutableMapOf<String, Marker>()
@@ -75,36 +74,29 @@ class LiveMapView : AppCompatActivity() {
     private val firestorePortMarkers = mutableMapOf<String, Marker>()
     private val routeLines = mutableListOf<Polyline>()
 
-    // location
-    private lateinit var btnMyLocation: ImageButton
-
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, get location
             viewModel.requestUserLocation(this)
         } else {
-            Toast.makeText(this, "Location permission needed to center map on your location", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Location permission needed", Toast.LENGTH_LONG).show()
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // MUST BE CALLED BEFORE setContentView
         Configuration.getInstance().apply {
             userAgentValue = packageName
             load(this@LiveMapView, getSharedPreferences("osmdroid", MODE_PRIVATE))
         }
 
-        setContentView(R.layout.maindashboard)
+        setContentView(R.layout.activity_livemap)
         supportActionBar?.hide()
 
-        // Initialize ViewModel
-        val factory = MainDashboardViewModelFactory(this)
-        viewModel = ViewModelProvider(this, factory).get(MainDashboardViewModel::class.java)
-
         initializeViews()
+        initializeViewModel()
         setupMap()
         setupEventListeners()
         setupViewModelObservers()
@@ -115,31 +107,41 @@ class LiveMapView : AppCompatActivity() {
 
     private fun initializeViews() {
         mapView = findViewById(R.id.mapView)
-        btnMenu = findViewById(R.id.btnMenu)
-        btnLayers = findViewById(R.id.btnLayers)
-        btnCompass = findViewById(R.id.btnCompass)
-        btnSearch = findViewById(R.id.btnSearch)
+        btnBack = findViewById(R.id.btnBack)
+        btnSettings = findViewById(R.id.btnSettings)
         btnZoomIn = findViewById(R.id.btnZoomIn)
         btnZoomOut = findViewById(R.id.btnZoomOut)
+        btnMyLocation = findViewById(R.id.btnMyLocation)
+        btnSatellite = findViewById(R.id.btnSatellite)
         tvLiveStatus = findViewById(R.id.tvLiveStatus)
         tvLastUpdate = findViewById(R.id.tvLastUpdate)
         tvConnection = findViewById(R.id.tvConnection)
         bottomSheet = findViewById(R.id.bottomSheet)
-        ivSelectedIcon = findViewById(R.id.ivSelectedIcon)
-        tvSelectedTitle = findViewById(R.id.tvSelectedTitle)
-        tvSelectedStatus = findViewById(R.id.tvSelectedStatus)
-        tvSelectedETA = findViewById(R.id.tvSelectedETA)
-        tvSelectedRoute = findViewById(R.id.tvSelectedRoute)
-        tvSelectedDetails = findViewById(R.id.tvSelectedDetails)
+        tvVesselName = findViewById(R.id.tvVesselName)
+        tvVesselEta = findViewById(R.id.tvVesselEta)
+        tvVesselRoute = findViewById(R.id.tvVesselRoute)
+        tvVesselLocation = findViewById(R.id.tvVesselLocation)
+        tvVesselStatus = findViewById(R.id.tvVesselStatus)
+        tvVesselSpeed = findViewById(R.id.tvVesselSpeed)
         btnCloseSheet = findViewById(R.id.btnCloseSheet)
-
-        // Search views
-        searchCard = findViewById(R.id.searchCard)
+        btnPassengerView = findViewById(R.id.btnPassengerView)
+        btnCargoView = findViewById(R.id.btnCargoView)
+        btnAlerts = findViewById(R.id.btnAlerts)
         etSearch = findViewById(R.id.etSearch)
-        btnClearSearch = findViewById(R.id.btnClearSearch)
+    }
 
-        //Location
-        btnMyLocation = findViewById(R.id.btnMyLocation)
+    private fun initializeViewModel() {
+        sessionManager = SessionManager(this)
+        val firestore = FirebaseFirestore.getInstance()
+
+        val portRepository = PortRepository()
+        val ferryRepository = FerryRepository(firestore)
+        val factory = LiveMapViewModelFactory(
+            sessionManager,
+            portRepository,
+            ferryRepository
+        )
+        viewModel = ViewModelProvider(this, factory).get(LiveMapViewModel::class.java)
     }
 
     private fun setupMap() {
@@ -149,61 +151,46 @@ class LiveMapView : AppCompatActivity() {
             mapView.minZoomLevel = 5.0
             mapView.maxZoomLevel = 19.0
 
-            // Set initial view to Philippines
             val phCenter = GeoPoint(12.8797, 121.7740)
-            mapView.controller.setZoom(8.0)
+            mapView.controller.setZoom(7.0)
             mapView.controller.setCenter(phCenter)
 
-            addPortMarkers()
-            addFerryMarkers()
-            drawRoutes()
-
+            // We'll add markers when data arrives from ViewModel
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
 
-    // ==================== VIEWMODEL OBSERVERS ====================
-
     private fun setupViewModelObservers() {
-        // MODIFIED: Observe Firestore ports with dynamic status
         viewModel.firestorePorts.observe(this) { result ->
             when (result) {
-                is Result.Loading -> {
-                    Toast.makeText(this, "Loading ports...", Toast.LENGTH_SHORT).show()
-                }
                 is Result.Success -> {
                     updateFirestorePortMarkers(result.data)
                 }
                 is Result.Error -> {
                     Toast.makeText(this, "Failed to load ports: ${result.exception.message}", Toast.LENGTH_LONG).show()
                 }
+                else -> {}
             }
         }
 
-        // MODIFIED: Observe current hour to refresh port markers
         viewModel.currentHour.observe(this) { hour ->
             Log.d(TAG, "Hour updated to: $hour - Refreshing port markers")
-            viewModel.firestorePorts.value?.let { result ->
-                if (result is Result.Success) {
-                    updateFirestorePortMarkers(result.data)
-                }
+            val currentResult = viewModel.firestorePorts.value
+            if (currentResult is Result.Success) {
+                updateFirestorePortMarkers(currentResult.data)
             }
         }
 
-        // Observe ferries
         viewModel.ferries.observe(this) { ferries ->
-            // Update ferry marker positions
-            ferries.forEach { ferry ->
-                ferryMarkers[ferry.name]?.let { marker ->
-                    MapHelper.updateMarkerPosition(marker, ferry.lat, ferry.lon)
-                }
-            }
-            mapView.invalidate()
+            updateFerryMarkers(ferries)
         }
 
-        // Observe selected marker detail
+        viewModel.ports.observe(this) { ports ->
+            updatePortMarkers(ports)
+        }
+
         viewModel.selectedMarkerDetail.observe(this) { detail ->
             if (detail != null) {
                 showBottomSheetForMarkerDetail(detail)
@@ -212,62 +199,35 @@ class LiveMapView : AppCompatActivity() {
             }
         }
 
-        // Observe last update time
         viewModel.lastUpdateTime.observe(this) { time ->
-            tvLastUpdate.text = time
+            tvLastUpdate.text = "Last update: $time"
         }
 
-        // Observe live indicator alpha
         viewModel.liveIndicatorAlpha.observe(this) { alpha ->
             tvLiveStatus.alpha = alpha
         }
 
-        // Observe error messages
         viewModel.errorMessage.observe(this) { message ->
             if (!message.isNullOrBlank()) {
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             }
         }
 
-        // Observe search results
-        viewModel.searchResultsCount.observe(this) { count ->
-            if (count == 0) {
-                Toast.makeText(this, "No results found", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Found $count results", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Restore search query
-        viewModel.lastSearchQuery.observe(this) { query ->
-            if (query.isNotBlank() && etSearch.text.toString() != query) {
-                etSearch.setText(query)
-                etSearch.setSelection(query.length)
-            }
-        }
-
         viewModel.userLocation.observe(this) { location ->
             if (location != null) {
-                // Center map on user location
                 val geoPoint = GeoPoint(location.latitude, location.longitude)
                 mapView.controller.animateTo(geoPoint)
-                mapView.controller.setZoom(15.0) // Closer zoom for user location
-
-                // Optional: Add a marker for user location
+                mapView.controller.setZoom(15.0)
                 addUserLocationMarker(geoPoint)
-
-                Toast.makeText(this, "Location found: ${location.latitude}, ${location.longitude}", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // NEW: Observe location loading state
         viewModel.isLocationLoading.observe(this) { isLoading ->
             if (isLoading) {
                 Toast.makeText(this, "Getting your location...", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // NEW: Observe location errors
         viewModel.locationError.observe(this) { error ->
             if (error != null) {
                 Toast.makeText(this, "Location error: $error", Toast.LENGTH_SHORT).show()
@@ -276,64 +236,66 @@ class LiveMapView : AppCompatActivity() {
         }
     }
 
-    // ==================== MARKER SETUP ====================
+    private fun updateFerryMarkers(ferries: List<com.example.aquaroute_system.data.models.Ferry>) {
+        // Clear existing markers
+        ferryMarkers.values.forEach { mapView.overlays.remove(it) }
+        ferryMarkers.clear()
 
-    private fun addPortMarkers() {
-        viewModel.ports.value?.forEach { port ->
-            val marker = MapHelper.createPortMarker(mapView, port) { selectedPort ->
-                viewModel.onPortMarkerClick(selectedPort)
-            }
-            mapView.overlays.add(marker)
-            portMarkers[port.name] = marker
-        }
-    }
-
-    private fun addFerryMarkers() {
-        viewModel.ferries.value?.forEach { ferry ->
+        // Add new markers
+        ferries.forEach { ferry ->
             val marker = MapHelper.createFerryMarker(mapView, ferry) { selectedFerry ->
                 viewModel.onFerryMarkerClick(selectedFerry)
             }
             mapView.overlays.add(marker)
             ferryMarkers[ferry.name] = marker
         }
+        mapView.invalidate()
     }
 
-    // NEW: Update Firestore port markers with dynamic status
+    private fun updatePortMarkers(ports: List<com.example.aquaroute_system.data.models.Port>) {
+        // Clear existing markers
+        portMarkers.values.forEach { mapView.overlays.remove(it) }
+        portMarkers.clear()
+
+        // Add new markers
+        ports.forEach { port ->
+            val marker = MapHelper.createPortMarker(mapView, port) { selectedPort ->
+                viewModel.onPortMarkerClick(selectedPort)
+            }
+            mapView.overlays.add(marker)
+            portMarkers[port.name] = marker
+        }
+        mapView.invalidate()
+    }
+
     private fun updateFirestorePortMarkers(ports: List<FirestorePort>) {
         // Clear existing markers
-        clearFirestoreMarkers()
+        firestorePortMarkers.values.forEach { mapView.overlays.remove(it) }
+        firestorePortMarkers.clear()
 
-        // Get current hour from ViewModel
         val currentHour = viewModel.currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
-        // Add new markers with dynamic status
         ports.forEach { port ->
-            // Get port with dynamic status
             val portWithStatus = viewModel.getPortWithDynamicStatus(port)
-
-            // Use your existing MapHelper function (we'll modify it next)
             val marker = MapHelper.createFirestorePortMarker(
                 mapView = mapView,
                 port = portWithStatus,
-                currentHour = currentHour,  // Pass current hour
+                currentHour = currentHour,
                 onMarkerClick = { clickedPort ->
                     viewModel.onFirestorePortMarkerClick(clickedPort)
                 }
             )
-
             mapView.overlays.add(marker)
             firestorePortMarkers[port.id] = marker
         }
-
         mapView.invalidate()
-        Log.d(TAG, "Updated ${ports.size} Firestore port markers with dynamic status")
     }
 
     private fun drawRoutes() {
         val northRoute = listOf(
-            GeoPoint(16.0431, 120.3339), // Dagupan
-            GeoPoint(15.8797, 119.7740), // Lingayen
-            GeoPoint(14.594, 120.970)    // Manila
+            GeoPoint(16.0431, 120.3339),
+            GeoPoint(15.8797, 119.7740),
+            GeoPoint(14.594, 120.970)
         )
 
         val polyline = Polyline().apply {
@@ -345,15 +307,6 @@ class LiveMapView : AppCompatActivity() {
         routeLines.add(polyline)
     }
 
-    private fun clearFirestoreMarkers() {
-        firestorePortMarkers.values.forEach { marker ->
-            mapView.overlays.remove(marker)
-        }
-        firestorePortMarkers.clear()
-    }
-
-    // ==================== BOTTOM SHEET ====================
-
     private fun showBottomSheetForMarkerDetail(detail: MarkerDetail) {
         when (detail) {
             is MarkerDetail.FerryDetail -> showBottomSheetForFerry(detail.ferry)
@@ -363,149 +316,121 @@ class LiveMapView : AppCompatActivity() {
     }
 
     private fun showBottomSheetForFerry(ferry: com.example.aquaroute_system.data.models.Ferry) {
-        tvSelectedTitle.text = ferry.name
-        tvSelectedStatus.text = ferry.status.replace("_", " ").uppercase()
-        tvSelectedETA.text = "${ferry.eta} min"
-        tvSelectedRoute.text = ferry.route
-        tvSelectedDetails.text = "Location: ${ferry.lat}, ${ferry.lon}"
+        tvVesselName.text = "🚢 ${ferry.name}"
+        tvVesselEta.text = "⏱️ ${ferry.eta} mins"
+        tvVesselRoute.text = "Route: ${ferry.route}"
+        tvVesselLocation.text = "📍 ${getLocationDescription(ferry.lat, ferry.lon)}"
+
+        val statusText = when (ferry.status.lowercase(Locale.getDefault())) {
+            "on_time" -> "🟢 ON TIME"
+            "delayed" -> "🟡 DELAYED"
+            "cancelled" -> "🔴 CANCELLED"
+            else -> "⚪ UNKNOWN"
+        }
+        tvVesselStatus.text = statusText
+        tvVesselSpeed.text = "⚡ ${(20..30).random()} knots"
+
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(ferry.lat, ferry.lon))
     }
 
     private fun showBottomSheetForPort(port: com.example.aquaroute_system.data.models.Port) {
-        tvSelectedTitle.text = port.name
-        tvSelectedStatus.text = if (port.isPrimary) "MAIN TERMINAL" else "TERMINAL"
-        tvSelectedRoute.text = "Hub"
-        tvSelectedDetails.text = "Location: ${port.lat}, ${port.lon}"
+        tvVesselName.text = "🏢 ${port.name}"
+        tvVesselEta.text = "⏱️ --"
+        tvVesselRoute.text = "Port"
+        tvVesselLocation.text = "📍 ${getLocationDescription(port.lat, port.lon)}"
+        tvVesselStatus.text = if (port.isPrimary) "MAIN TERMINAL" else "TERMINAL"
+        tvVesselSpeed.text = ""
+
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(port.lat, port.lon))
     }
 
-    // MODIFIED: Show ONLY name, status, type for Firestore ports
     private fun showBottomSheetForFirestorePort(port: com.example.aquaroute_system.data.models.FirestorePort) {
-        tvSelectedTitle.text = port.name
-
-        // Format type nicely (e.g., "ferry_terminal" -> "Ferry Terminal")
-        val displayType = port.type.split("_")
-            .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
-
-        // Show dynamic status
-        tvSelectedStatus.text = port.status
-
-        // Show type in ETA field (reusing existing UI)
-        tvSelectedETA.text = displayType
-
-        // Show source in route field
-        tvSelectedRoute.text = "Source: ${port.source}"
-
-        // MODIFIED: Remove createdAt and location details
-        // Show operating hours if available
-        tvSelectedDetails.text = if (port.openHour != null && port.closeHour != null) {
-            "Hours: ${formatHour(port.openHour)} - ${formatHour(port.closeHour)}"
-        } else {
-            "" // Empty string - no details shown
-        }
+        tvVesselName.text = "🏢 ${port.name}"
+        tvVesselEta.text = "⏱️ --"
+        tvVesselRoute.text = "Port"
+        tvVesselLocation.text = "📍 ${getLocationDescription(port.lat, port.lng)}"
+        tvVesselStatus.text = port.status
+        tvVesselSpeed.text = ""
 
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(port.lat, port.lng))
     }
 
-    // NEW: Helper to format hour
-    private fun formatHour(hour: Int): String {
+    private fun getLocationDescription(lat: Double, lon: Double): String {
         return when {
-            hour == 0 -> "12 AM"
-            hour == 12 -> "12 PM"
-            hour < 12 -> "${hour} AM"
-            else -> "${hour - 12} PM"
+            lat > 14.0 && lon > 120.0 -> "Off Nasugbu"
+            lat > 13.0 && lon > 120.0 -> "Near Batangas"
+            lat > 10.0 && lon > 123.0 -> "Off Cebu"
+            else -> "At sea"
         }
     }
 
     private fun hideBottomSheet() {
         bottomSheet.visibility = View.GONE
-        tvSelectedTitle.text = ""
-        tvSelectedStatus.text = ""
-        tvSelectedETA.text = ""
-        tvSelectedRoute.text = ""
-        tvSelectedDetails.text = ""
     }
-    // NEW: Check and request location permission
+
     private fun checkLocationPermission() {
         when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED -> {
                 viewModel.requestUserLocation(this)
             }
             else -> {
-                // Request permission
-                requestPermissionLauncher.launch(
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
 
-    // NEW: Add a marker for user location
     private fun addUserLocationMarker(geoPoint: GeoPoint) {
-        // Remove old user location marker if exists
         val oldMarkers = mapView.overlays.filter {
             it is Marker && it.title == "You are here"
         }
         mapView.overlays.removeAll(oldMarkers)
 
-        // Add new marker
         val marker = Marker(mapView).apply {
             position = geoPoint
             title = "You are here"
-            setTextIcon("📍") // Location emoji
-            setTextLabelForegroundColor(Color.parseColor("#2196F3")) // Blue
-            setTextLabelBackgroundColor(Color.parseColor("#E3F2FD")) // Light blue
+            setTextIcon("📍")
+            setTextLabelForegroundColor(Color.parseColor("#2196F3"))
+            setTextLabelBackgroundColor(Color.parseColor("#E3F2FD"))
             setTextLabelFontSize(14)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
         }
-
         mapView.overlays.add(marker)
         mapView.invalidate()
     }
 
-    // NEW: Center map on user location (for button click)
     private fun centerOnUserLocation() {
         viewModel.userLocation.value?.let { location ->
             mapView.controller.animateTo(GeoPoint(location.latitude, location.longitude))
             mapView.controller.setZoom(15.0)
         } ?: run {
-            // If no location yet, request it
             checkLocationPermission()
         }
     }
 
-    // ==================== EVENT LISTENERS ====================
+    private fun toggleLayers() {
+        val areRoutesVisible = routeLines.any { it.isEnabled }
+        val areFerriesVisible = ferryMarkers.values.any { it.isEnabled }
+        val areFirestorePortsVisible = firestorePortMarkers.values.any { it.isEnabled }
+
+        routeLines.forEach { it.isEnabled = !areRoutesVisible }
+        ferryMarkers.values.forEach { it.isEnabled = !areFerriesVisible }
+        firestorePortMarkers.values.forEach { it.isEnabled = !areFirestorePortsVisible }
+        mapView.invalidate()
+
+        val state = if (!areRoutesVisible && !areFerriesVisible && !areFirestorePortsVisible) "shown" else "hidden"
+        Toast.makeText(this, "Layers $state", Toast.LENGTH_SHORT).show()
+    }
 
     private fun setupEventListeners() {
-        btnMenu.setOnClickListener {
-            Toast.makeText(this, "You clicked menu", Toast.LENGTH_SHORT).show()
+        btnBack.setOnClickListener {
+            finish()
         }
 
-        btnLayers.setOnClickListener {
-            toggleLayers()
-        }
-
-        btnCompass.setOnClickListener {
-            mapView.mapOrientation = 0f
-            mapView.invalidate()
-            Toast.makeText(this, "North reset", Toast.LENGTH_SHORT).show()
-        }
-
-        btnSearch.setOnClickListener {
-            toggleSearchBar()
-        }
-
-        btnClearSearch.setOnClickListener {
-            etSearch.text.clear()
-            hideKeyboard()
-            btnClearSearch.visibility = View.GONE
+        btnSettings.setOnClickListener {
+            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show()
         }
 
         btnZoomIn.setOnClickListener {
@@ -516,92 +441,55 @@ class LiveMapView : AppCompatActivity() {
             mapView.controller.zoomOut()
         }
 
+        btnMyLocation.setOnClickListener {
+            centerOnUserLocation()
+        }
+
+        btnSatellite.setOnClickListener {
+            toggleMapLayer()
+        }
+
         btnCloseSheet.setOnClickListener {
             viewModel.clearSelectedMarkerDetail()
         }
 
+        btnPassengerView.setOnClickListener {
+            Toast.makeText(this, "Passenger view coming soon", Toast.LENGTH_SHORT).show()
+        }
+
+        btnCargoView.setOnClickListener {
+            Toast.makeText(this, "Cargo view coming soon", Toast.LENGTH_SHORT).show()
+        }
+
+        btnAlerts.setOnClickListener {
+            Toast.makeText(this, "Alerts coming soon", Toast.LENGTH_SHORT).show()
+        }
+
+        // Map click listener to hide bottom sheet
         mapView.setOnClickListener {
             if (bottomSheet.visibility == View.VISIBLE) {
                 viewModel.clearSelectedMarkerDetail()
             }
-            btnMyLocation.setOnClickListener {
-                centerOnUserLocation()
-            }
-        }
-
-        // Search text change listener
-        etSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                btnClearSearch.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        // Handle search action on keyboard
-        etSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                val query = etSearch.text.toString()
-                if (query.isNotBlank()) {
-                    viewModel.performSearch(query)
-                }
-                hideKeyboard()
-                return@setOnEditorActionListener true
-            }
-            false
         }
     }
 
-    // ==================== SEARCH FUNCTIONS ====================
+    private fun toggleMapLayer() {
+        // Check current tile source
+        val currentSource = mapView.tileProvider.tileSource
 
-    private fun toggleSearchBar() {
-        if (searchCard.visibility == View.VISIBLE) {
-            hideSearchBar()
+        if (currentSource == TileSourceFactory.MAPNIK) {
+            // Switch to another map style (using a different available tile source)
+            mapView.setTileSource(TileSourceFactory.HIKEBIKEMAP)
+            btnSatellite.setImageResource(R.drawable.ic_map_placeholder)
+            Toast.makeText(this, "Terrain view", Toast.LENGTH_SHORT).show()
         } else {
-            showSearchBar()
+            // Switch back to MAPNIK
+            mapView.setTileSource(TileSourceFactory.MAPNIK)
+            btnSatellite.setImageResource(R.drawable.ic_layers)
+            Toast.makeText(this, "Map view", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun showSearchBar() {
-        searchCard.visibility = View.VISIBLE
-        etSearch.requestFocus()
-
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(etSearch, InputMethodManager.SHOW_IMPLICIT)
-
-        btnClearSearch.visibility = if (etSearch.text.isNullOrEmpty()) View.GONE else View.VISIBLE
-    }
-
-    private fun hideSearchBar() {
-        searchCard.visibility = View.GONE
-        hideKeyboard()
-    }
-
-    private fun hideKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(etSearch.windowToken, 0)
-    }
-
-    // ==================== MAP FUNCTIONS ====================
-
-    private fun toggleLayers() {
-        val areRoutesVisible = routeLines.any { it.isEnabled }
-        val areFerriesVisible = ferryMarkers.values.any { it.isEnabled }
-        val areFirestorePortsVisible = firestorePortMarkers.values.any { it.isEnabled }
-
-        routeLines.forEach { it.isEnabled = !areRoutesVisible }
-        ferryMarkers.values.forEach { it.isEnabled = !areFerriesVisible }
-        firestorePortMarkers.values.forEach { it.isEnabled = !areFirestorePortsVisible }
-
         mapView.invalidate()
-
-        val state = if (!areRoutesVisible && !areFerriesVisible && !areFirestorePortsVisible) "shown" else "hidden"
-        Toast.makeText(this, "Layers $state", Toast.LENGTH_SHORT).show()
     }
-
-    // ==================== LIFECYCLE ====================
 
     override fun onResume() {
         super.onResume()
@@ -611,11 +499,6 @@ class LiveMapView : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mapView.onPause()
-        viewModel.stopLiveUpdates()
-    }
-
-    override fun onStop() {
-        super.onStop()
         viewModel.stopLiveUpdates()
     }
 
