@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvFerryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚢 OceanJet 8"
+            android:textColor="@color/deep_ocean_blue"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDestination"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="🏢 Manila Port"
+            android:textColor="@color/deep_ocean_blue"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:id="@+id/tvEta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="25 mins"
+            android:textColor="@color/medium_text"
+            android:textSize="12sp" />
+
+        <androidx.appcompat.widget.AppCompatSeekBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/teal_200"
+            android:enabled="false" />
+
+        <TextView
+            android:id="@+id/tvProgressPercent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textColor="@color/teal_200"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/light_gray" />
+</LinearLayout>

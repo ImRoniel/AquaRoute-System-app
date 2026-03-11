@@ -254,7 +254,6 @@
                                     app:cornerRadius="12dp" />
                             </LinearLayout>
 
-                            <!-- Simplified Map Preview -->
                             <FrameLayout
                                 android:id="@+id/mapPreviewContainer"
                                 android:layout_width="match_parent"
@@ -262,103 +261,12 @@
                                 android:background="@drawable/card_background"
                                 android:padding="8dp">
 
-                                <LinearLayout
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/rvFerryPreview"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:orientation="vertical"
-                                    android:gravity="center">
-
-                                    <!-- Route 1 -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginBottom="16dp">
-
-                                        <TextView
-                                            android:id="@+id/tvFerryName1"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="🚢 OceanJet 8"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text=" ●━━━━━━━━━━━━━━━━━━━● "
-                                            android:textColor="@color/teal_200"
-                                            android:gravity="center"
-                                            android:textSize="12sp" />
-
-                                        <TextView
-                                            android:id="@+id/tvDestination1"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="🏢 Manila Port"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-                                    </LinearLayout>
-
-                                    <TextView
-                                        android:id="@+id/tvEta1"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="25 mins to destination"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginBottom="16dp"
-                                        android:layout_marginStart="32dp" />
-
-                                    <!-- Route 2 -->
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="center_vertical"
-                                        android:layout_marginBottom="8dp">
-
-                                        <TextView
-                                            android:id="@+id/tvFerryName2"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="🚢 FastCat 1"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-
-                                        <TextView
-                                            android:layout_width="0dp"
-                                            android:layout_height="wrap_content"
-                                            android:layout_weight="1"
-                                            android:text=" ●━━━━━━━● "
-                                            android:textColor="@color/teal_200"
-                                            android:gravity="center"
-                                            android:textSize="12sp" />
-
-                                        <TextView
-                                            android:id="@+id/tvDestination2"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="🏢 Batangas"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="14sp"
-                                            android:textStyle="bold" />
-                                    </LinearLayout>
-
-                                    <TextView
-                                        android:id="@+id/tvEta2"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="15 mins to destination"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginStart="32dp" />
-                                </LinearLayout>
+                                    android:scrollbars="vertical"
+                                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
                             </FrameLayout>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>

@@ -1,9 +1,15 @@
 package com.example.aquaroute_system.View
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -11,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.aquaroute_system.data.repository.*
 import com.example.aquaroute_system.databinding.ActivityMainDashboardBinding
+import com.example.aquaroute_system.ui.adapter.FerryPreviewAdapter
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModel
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModelFactory
 import com.example.aquaroute_system.util.SessionManager
@@ -25,6 +32,7 @@ class MainDashboard : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var viewModel: UserDashboardViewModel
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var ferryAdapter: FerryPreviewAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +45,13 @@ class MainDashboard : AppCompatActivity() {
         initializeDependencies()
         checkUserSession()
         setupObservers()
+        requestUserLocation()
+        setupMapPreview()
         setupUserInfo()
         setupClickListeners()
     }
+
+
 
     private fun initializeDependencies() {
         sessionManager = SessionManager(this)
@@ -49,13 +61,15 @@ class MainDashboard : AppCompatActivity() {
         val portStatusRepository = PortStatusRepository(firestore)
         val weatherRepository = WeatherRepository(firestore)
         val cargoRepository = CargoRepository(firestore)
+        val ferryRepository = FerryRepository(firestore) // ADD THIS
 
         val factory = UserDashboardViewModelFactory(
             sessionManager,
             dashboardRepository,
             portStatusRepository,
             weatherRepository,
-            cargoRepository
+            cargoRepository,
+            ferryRepository // ADD THIS
         )
         viewModel = ViewModelProvider(this, factory).get(UserDashboardViewModel::class.java)
     }
@@ -125,6 +139,52 @@ class MainDashboard : AppCompatActivity() {
             }
         }
     }
+    private fun requestUserLocation() {
+        // Check if location permission is granted
+        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            // Permission granted, get location
+            getLastKnownLocation()
+        } else {
+            // Request permission
+            requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 100)
+        }
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun getLastKnownLocation() {
+        try {
+            val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+            if (location != null) {
+                viewModel.setUserLocation(location)
+                Log.d("MainDashboard", "Location found: ${location.latitude}, ${location.longitude}")
+            } else {
+                // Use default location (Manila)
+                val defaultLocation = Location("").apply {
+                    latitude = 14.5995 // Manila
+                    longitude = 120.9842
+                }
+                viewModel.setUserLocation(defaultLocation)
+                Log.d("MainDashboard", "Using default Manila location")
+            }
+        } catch (e: Exception) {
+            Log.e("MainDashboard", "Error getting location", e)
+        }
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getLastKnownLocation()
+        }
+    }
 
     private fun setupUserInfo() {
         val user = sessionManager.getUserData()
@@ -154,6 +214,16 @@ class MainDashboard : AppCompatActivity() {
             binding.drawerUserName.text = "GUEST USER"
             binding.drawerUserEmail.text = "guest@aquaroute.com"
             binding.drawerLogout.visibility = android.view.View.GONE
+        }
+    }
+    private fun setupMapPreview() {
+        // Initialize RecyclerView
+        ferryAdapter = FerryPreviewAdapter()
+        binding.rvFerryPreview.adapter = ferryAdapter
+
+        // Observe nearby ferries from ViewModel
+        viewModel.nearbyFerries.observe(this) { ferries ->
+            ferryAdapter.submitList(ferries)
         }
     }
 
@@ -272,6 +342,9 @@ class MainDashboard : AppCompatActivity() {
 
         binding.tvNoCargo.visibility = if (cargoList.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
     }
+
+    // REMOVED THE updateMapPreview() function since the views don't exist in your layout
+    // Your layout already has static text for the map preview
 
     private fun getStatusEmoji(status: String): String {
         return when (status) {
