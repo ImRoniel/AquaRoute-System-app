@@ -32,11 +32,15 @@ class LiveMapViewModel(
     private val _firestorePorts = MutableLiveData<Result<List<FirestorePort>>>()
     val firestorePorts: LiveData<Result<List<FirestorePort>>> = _firestorePorts
 
-    // Local ferry data
+    // Real ferry data from Firebase
     private val _ferries = MutableLiveData<List<Ferry>>()
     val ferries: LiveData<List<Ferry>> = _ferries
 
-    // Local port data
+    // Nearby ferries (filtered by location)
+    private val _nearbyFerries = MutableLiveData<List<Ferry>>()
+    val nearbyFerries: LiveData<List<Ferry>> = _nearbyFerries
+
+    // Local port data (for demo)
     private val _ports = MutableLiveData<List<Port>>()
     val ports: LiveData<List<Port>> = _ports
 
@@ -81,7 +85,7 @@ class LiveMapViewModel(
     // Live update job
     private var liveUpdateJob: Job? = null
 
-    // Static port data for demo
+    // Static port data for demo (fallback)
     private val portData = listOf(
         Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
         Port("Manila Port", 14.594, 120.970, false),
@@ -100,7 +104,23 @@ class LiveMapViewModel(
     }
 
     fun loadFerries() {
-        _ferries.value = ferryRepository.getAllFerries()
+        viewModelScope.launch {
+            _ferries.value = ferryRepository.getAllFerries()
+            filterNearbyFerries()
+        }
+    }
+
+    private fun filterNearbyFerries() {
+        val userLoc = _userLocation.value
+        if (userLoc != null) {
+            viewModelScope.launch {
+                val nearby = ferryRepository.getFerriesNearLocation(
+                    userLoc.latitude,
+                    userLoc.longitude
+                )
+                _nearbyFerries.value = nearby
+            }
+        }
     }
 
     private fun startTimeUpdates() {
@@ -119,10 +139,17 @@ class LiveMapViewModel(
         liveUpdateJob?.cancel()
         liveUpdateJob = viewModelScope.launch {
             while (isActive) {
-                updateFerryPositions()
+                refreshFerries()
                 updateStatusOverlay()
                 delay(LIVE_UPDATE_INTERVAL)
             }
+        }
+    }
+
+    private fun refreshFerries() {
+        viewModelScope.launch {
+            _ferries.value = ferryRepository.getAllFerries()
+            filterNearbyFerries()
         }
     }
 
@@ -151,11 +178,7 @@ class LiveMapViewModel(
      */
     fun getPortWithDynamicStatus(port: FirestorePort): FirestorePort {
         val currentHour = _currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val dynamicStatus = when {
-            currentHour in 6..18 -> "Open"
-            currentHour in 19..22 -> "Closing Soon"
-            else -> "Closed"
-        }
+        val dynamicStatus = port.getCurrentStatus(currentHour)
         return port.copy(status = dynamicStatus)
     }
 
@@ -239,6 +262,7 @@ class LiveMapViewModel(
                 if (location != null) {
                     _userLocation.value = location
                     _locationError.value = null
+                    filterNearbyFerries()
                 } else {
                     _locationError.value = "Could not get location"
                 }
@@ -256,18 +280,6 @@ class LiveMapViewModel(
      */
     fun clearLocationError() {
         _locationError.value = null
-    }
-
-    /**
-     * Update ferry positions (simulation)
-     */
-    private fun updateFerryPositions() {
-        val ferries = _ferries.value ?: return
-        ferries.forEach { ferry ->
-            ferry.lat += (Math.random() - 0.5) * 0.001
-            ferry.lon += (Math.random() - 0.5) * 0.001
-        }
-        _ferries.value = ferries
     }
 
     /**

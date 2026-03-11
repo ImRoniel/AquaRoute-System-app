@@ -1,5 +1,6 @@
 package com.example.aquaroute_system.ui.viewmodel
 
+import android.location.Location
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -7,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aquaroute_system.data.models.*
 import com.example.aquaroute_system.data.repository.*
+import com.example.aquaroute_system.util.LocationHelper
 import com.example.aquaroute_system.util.SessionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -19,7 +21,8 @@ class UserDashboardViewModel(
     private val dashboardRepository: DashboardRepository,
     private val portStatusRepository: PortStatusRepository,
     private val weatherRepository: WeatherRepository,
-    private val cargoRepository: CargoRepository
+    private val cargoRepository: CargoRepository,
+    private val ferryRepository: FerryRepository  // ADD THIS
 ) : ViewModel() {
 
     companion object {
@@ -45,6 +48,14 @@ class UserDashboardViewModel(
     // Active cargo
     private val _activeCargo = MutableLiveData<List<Cargo>>()
     val activeCargo: LiveData<List<Cargo>> = _activeCargo
+
+    // NEARBY FERRIES for live map preview
+    private val _nearbyFerries = MutableLiveData<List<Ferry>>()
+    val nearbyFerries: LiveData<List<Ferry>> = _nearbyFerries
+
+    // User location
+    private val _userLocation = MutableLiveData<Location?>()
+    val userLocation: LiveData<Location?> = _userLocation
 
     // Loading states
     private val _isLoading = MutableLiveData(false)
@@ -146,6 +157,46 @@ class UserDashboardViewModel(
                     }
                 }
         }
+
+        // Load nearby ferries periodically
+        loadNearbyFerries()
+    }
+
+    fun loadNearbyFerries() {
+        viewModelScope.launch {
+            val userLoc = _userLocation.value
+            if (userLoc != null) {
+                val allFerries = ferryRepository.getAllFerries()
+                // Filter to nearby (within 100km)
+                val nearby = allFerries.filter { ferry ->
+                    calculateDistance(
+                        userLoc.latitude, userLoc.longitude,
+                        ferry.lat, ferry.lon
+                    ) <= 100
+                }
+                _nearbyFerries.value = nearby
+            } else {
+                // If no location, show all or top few
+                val allFerries = ferryRepository.getAllFerries()
+                _nearbyFerries.value = allFerries.take(3)
+            }
+        }
+    }
+
+    fun setUserLocation(location: Location) {
+        _userLocation.value = location
+        loadNearbyFerries()
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val R = 6371 // Earth's radius in km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
     }
 
     private fun updateStatsFromCargo(cargoList: List<Cargo>) {
@@ -162,6 +213,7 @@ class UserDashboardViewModel(
     fun refreshData() {
         _isLoading.value = true
         loadCurrentUser()
+        loadNearbyFerries()
         _isLoading.value = false
     }
 

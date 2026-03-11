@@ -10,7 +10,8 @@ class UserDashboardViewModelFactory(
     private val dashboardRepository: DashboardRepository,
     private val portStatusRepository: PortStatusRepository,
     private val weatherRepository: WeatherRepository,
-    private val cargoRepository: CargoRepository
+    private val cargoRepository: CargoRepository,
+    private val ferryRepository: FerryRepository  // ADD THIS
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -21,7 +22,8 @@ class UserDashboardViewModelFactory(
                 dashboardRepository,
                 portStatusRepository,
                 weatherRepository,
-                cargoRepository
+                cargoRepository,
+                ferryRepository  // ADD THIS
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

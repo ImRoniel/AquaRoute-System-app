@@ -277,6 +277,7 @@
                                         android:layout_marginBottom="16dp">
 
                                         <TextView
+                                            android:id="@+id/tvFerryName1"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:text="🚢 OceanJet 8"
@@ -294,6 +295,7 @@
                                             android:textSize="12sp" />
 
                                         <TextView
+                                            android:id="@+id/tvDestination1"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:text="🏢 Manila Port"
@@ -303,6 +305,7 @@
                                     </LinearLayout>
 
                                     <TextView
+                                        android:id="@+id/tvEta1"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="25 mins to destination"
@@ -320,6 +323,7 @@
                                         android:layout_marginBottom="8dp">
 
                                         <TextView
+                                            android:id="@+id/tvFerryName2"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:text="🚢 FastCat 1"
@@ -337,6 +341,7 @@
                                             android:textSize="12sp" />
 
                                         <TextView
+                                            android:id="@+id/tvDestination2"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
                                             android:text="🏢 Batangas"
@@ -346,6 +351,7 @@
                                     </LinearLayout>
 
                                     <TextView
+                                        android:id="@+id/tvEta2"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="15 mins to destination"
