@@ -1,11 +1,12 @@
 package com.example.aquaroute_system.data.repository
 
 import com.example.aquaroute_system.data.models.Ferry
+import com.google.firebase.firestore.FirebaseFirestore
 
 /**
  * Repository for managing ferry data (local storage)
  */
-class FerryRepository {
+class FerryRepository(private val firestore: FirebaseFirestore) {
 
     private val ferryData = listOf(
         Ferry("MV Star Express", "Manila-Cavite", 14.55, 120.96, "on_time", 15),

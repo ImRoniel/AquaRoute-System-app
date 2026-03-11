@@ -72,5 +72,11 @@
             android:exported="false"
             android:theme="@style/Theme.Dashboard" />
 
+        <!-- CARGO TRACKER (Screen 8) -->
+        <activity
+            android:name=".View.CargoTrackerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Dashboard" />
+
     </application>
 </manifest>

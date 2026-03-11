@@ -1,55 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/custom_backround1">
+    android:background="@drawable/splashscreen"
+    android:orientation="vertical"
+    tools:context=".View.CargoTrackerActivity">
 
-    <LinearLayout
+    <!-- Top Bar -->
+    <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/deep_ocean_blue"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <!-- Top Bar -->
-        <androidx.appcompat.widget.Toolbar
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/deep_ocean_blue"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_close"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/white"
+                android:padding="12dp"
+                android:contentDescription="Back" />
 
-                <ImageButton
-                    android:id="@+id/btnBack"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_close"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    app:tint="@color/white"
-                    android:padding="12dp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📦 CARGO TRACKER"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="📦 CARGO TRACKER"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
-            </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
+    <!-- Main Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:fillViewport="true">
 
-        <!-- Main Content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
             <!-- Search Card -->
             <androidx.cardview.widget.CardView
@@ -58,7 +62,7 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/text_primary">
+                app:cardBackgroundColor="@color/white">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -69,11 +73,11 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔍 Enter Reference Number"
+                        android:text="🔍 ENTER REFERENCE NUMBER"
                         android:textColor="@color/deep_ocean_blue"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="12dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -82,19 +86,20 @@
                         android:gravity="center_vertical">
 
                         <EditText
-                            android:id="@+id/etReferenceNumber"
+                            android:id="@+id/etSearch"
                             android:layout_width="0dp"
                             android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:hint="AQR-2026-001"
-                            android:background="@drawable/card_background"
+                            android:hint="e.g., CRG-56215413-6451"
+                            android:background="@drawable/edittext_background"
                             android:paddingHorizontal="12dp"
                             android:imeOptions="actionSearch"
                             android:inputType="text"
-                            android:maxLines="1" />
+                            android:maxLines="1"
+                            android:textSize="14sp" />
 
                         <ImageButton
-                            android:id="@+id/btnClear"
+                            android:id="@+id/btnClearSearch"
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
                             android:src="@drawable/ic_close"
@@ -108,47 +113,71 @@
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
                             android:text="TRACK"
-                            android:background="@drawable/button_primary_small"
+                            android:background="@drawable/button_primary"
                             android:textColor="@color/white"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:paddingHorizontal="16dp" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/searchInstruction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enter the reference number provided by the shipping company"
+                        android:textColor="@color/medium_text"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Recent Searches -->
-            <TextView
-                android:id="@+id/tvRecentSearches"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📋 RECENT SEARCHES"
-                android:textColor="@color/deep_ocean_blue"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"
-                android:visibility="gone" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvRecentSearches"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:layout_marginBottom="16dp" />
-
             <!-- Progress Bar -->
             <ProgressBar
-
-                android:id="@+id/cargoProgressBar"
+                android:id="@+id/loadingProgressBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:visibility="gone"
                 android:layout_marginVertical="20dp" />
 
-            <!-- Cargo Details Card -->
+            <!-- Empty State (Not Found) -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_cargo_placeholder"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cargo Not Found"
+                    android:textColor="@color/deep_ocean_blue"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No cargo found with this reference number"
+                    android:textColor="@color/medium_text"
+                    android:textSize="14sp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- Result Card -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/cargoDetailsCard"
+                android:id="@+id/resultCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
@@ -165,315 +194,339 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CARGO DETAILS:"
+                        android:text="📦 CARGO DETAILS"
                         android:textColor="@color/deep_ocean_blue"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Tracking Number -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Reference:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvTrackingNumberValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="CRG-56215413-6451"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Cargo Type -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Cargo Type:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvCargoTypeValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Electronics"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Description -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Description:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvDescriptionValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Electronics equipment"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Weight -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Weight:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvWeightValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="500 kg"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/light_gray"
+                        android:layout_marginVertical="12dp" />
+
+                    <!-- Route -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚢 ROUTE INFORMATION"
+                        android:textColor="@color/deep_ocean_blue"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- Cargo Information -->
-                    <androidx.cardview.widget.CardView
+                    <!-- Origin -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="2dp"
-                        android:layout_marginBottom="12dp"
-                        app:cardBackgroundColor="@color/light_gray">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="12dp">
+                            android:text="Origin:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📦 CARGO INFORMATION"
-                                android:textColor="@color/deep_ocean_blue"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:id="@+id/tvOriginValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Manila"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
-                            <GridLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:columnCount="2"
-                                android:rowCount="2">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Type:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvCargoTypeValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Perishable Goods"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Weight:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvWeightValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="500 kg"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Volume:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvVolumeValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="2.5 m³"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Value:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvValueValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="₱150,000"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-                            </GridLayout>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Vessel Information -->
-                    <androidx.cardview.widget.CardView
+                    <!-- Destination -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="2dp"
-                        android:layout_marginBottom="12dp"
-                        app:cardBackgroundColor="@color/light_gray">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="12dp">
+                            android:text="Destination:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="🚢 VESSEL INFORMATION"
-                                android:textColor="@color/deep_ocean_blue"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:id="@+id/tvDestinationValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Cebu"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
-                            <GridLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:columnCount="2"
-                                android:rowCount="3">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Ferry:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvFerryValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="MV OceanJet 8"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Route:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvRouteValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Manila → Cebu"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Departure:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvDepartureValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Feb 22, 2026 · 10:00 AM"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="ETA:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
-
-                                <TextView
-                                    android:id="@+id/tvEtaValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Feb 22, 2026 · 2:30 PM"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
-                            </GridLayout>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Current Location -->
-                    <androidx.cardview.widget.CardView
+                    <!-- Assigned Ferry -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="2dp"
-                        android:layout_marginBottom="16dp"
-                        app:cardBackgroundColor="@color/light_gray">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="12dp">
+                            android:text="Ferry:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📍 CURRENT LOCATION"
-                                android:textColor="@color/deep_ocean_blue"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:id="@+id/tvFerryNameValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="MV OceanJet 8"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
-                            <GridLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:columnCount="2"
-                                android:rowCount="2">
+                    <!-- Status -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Position:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Status:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
 
-                                <TextView
-                                    android:id="@+id/tvPositionValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="14.5°N, 120.9°E"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:padding="4dp" />
+                        <TextView
+                            android:id="@+id/tvFerryStatusValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="IN TRANSIT"
+                            android:textColor="@color/success_green"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="Status:"
-                                    android:textColor="@color/medium_text"
-                                    android:padding="4dp" />
+                    <!-- ETA -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                                <TextView
-                                    android:id="@+id/tvStatusValue"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_columnWeight="1"
-                                    android:text="IN TRANSIT"
-                                    android:textColor="@color/success_green"
-                                    android:textStyle="bold"
-                                    android:padding="4dp" />
-                            </GridLayout>
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="ETA:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Progress:"
-                                android:textColor="@color/medium_text"
-                                android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvEtaValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Mar 10, 2026 · 2:30 PM"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
-                            <ProgressBar
-                                android:id="@+id/loadingProgressBar"
-                                style="?android:attr/progressBarStyleHorizontal"
-                                android:layout_width="match_parent"
-                                android:layout_height="8dp"
-                                android:progress="45"
-                                android:progressTint="@color/deep_ocean_blue"
-                                android:layout_marginTop="4dp" />
+                    <!-- Progress (for in transit) -->
+                    <LinearLayout
+                        android:id="@+id/progressLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
 
-                            <TextView
-                                android:id="@+id/tvProgressValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="45%"
-                                android:textColor="@color/deep_ocean_blue"
-                                android:textSize="12sp"
-                                android:layout_gravity="end" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Progress:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="4dp" />
 
-                            <TextView
-                                android:id="@+id/tvLastUpdateValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Last update: 2 minutes ago"
-                                android:textColor="@color/medium_text"
-                                android:textSize="12sp"
-                                android:layout_marginTop="8dp" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                        <ProgressBar
+                            android:id="@+id/progressBar"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:progress="45"
+                            android:progressTint="@color/deep_ocean_blue"
+                            android:layout_marginBottom="4dp" />
+
+                        <TextView
+                            android:id="@+id/tvProgressValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="45%"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="12sp"
+                            android:layout_gravity="end" />
+                    </LinearLayout>
+
+                    <!-- Delay Reason -->
+                    <LinearLayout
+                        android:id="@+id/delayReasonLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Delay Reason:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvDelayReason"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Severe weather"
+                            android:textColor="@color/error_red"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Recipient -->
+                    <LinearLayout
+                        android:id="@+id/recipientLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:text="Recipient:"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvRecipientValue"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Maria Santos"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/light_gray"
+                        android:layout_marginVertical="16dp" />
 
                     <!-- Action Buttons -->
                     <LinearLayout
@@ -509,12 +562,12 @@
                             android:layout_marginHorizontal="4dp" />
 
                         <TextView
-                            android:id="@+id/btnNotifyMe"
+                            android:id="@+id/btnNewSearch"
                             android:layout_width="0dp"
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_primary"
-                            android:text="🔔 NOTIFY ME"
+                            android:text="🔄 NEW SEARCH"
                             android:textColor="@color/white"
                             android:textSize="12sp"
                             android:textStyle="bold"
@@ -524,5 +577,5 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</LinearLayout>

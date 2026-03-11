@@ -5,12 +5,14 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class DashboardStats(
+    val userId: String = "",
     val totalShipments: Int = 0,
     val inTransit: Int = 0,
     val delivered: Int = 0,
     val delayed: Int = 0,
     val activeVessels: Int = 0,
-    var portsOpen: Int = 0,
+    val portsOpen: Int = 0,
     val portsLimited: Int = 0,
-    val portsClosed: Int = 0
+    val portsClosed: Int = 0,
+    val lastUpdated: Long = System.currentTimeMillis()
 ) : Parcelable

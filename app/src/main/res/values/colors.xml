@@ -30,6 +30,9 @@
     <color name="splash_background">#C4D7FF</color>
     <color name="splash_text">#87A2FF</color>
 
+<!--    MEE -->
+    <color name="openMap_button">#87A2FF</color>
+
 
     <!-- Primary Colors -->
     <color name="primary">#0A4D8C</color>

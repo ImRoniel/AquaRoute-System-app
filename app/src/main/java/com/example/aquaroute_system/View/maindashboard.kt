@@ -251,7 +251,7 @@ class MainDashboard : AppCompatActivity() {
         if (cargoList.isNotEmpty()) {
             val cargo1 = cargoList[0]
             binding.cargoItem1.visibility = android.view.View.VISIBLE
-            binding.tvCargoTitle1.text = "${cargo1.trackingNumber} │ ${cargo1.origin} → ${cargo1.destination}"
+            binding.tvCargoTitle1.text = "${cargo1.getDisplayReference()} │ ${cargo1.origin} → ${cargo1.destination}"
             binding.tvCargoStatus1.text = "Status: ${getStatusEmoji(cargo1.status)} ${cargo1.status.replace("_", " ").uppercase()}"
             binding.tvCargoDetails1.text = "Cargo: ${cargo1.cargoType} (${cargo1.weight} kg)"
 
@@ -262,7 +262,7 @@ class MainDashboard : AppCompatActivity() {
         if (cargoList.size > 1) {
             val cargo2 = cargoList[1]
             binding.cargoItem2.visibility = android.view.View.VISIBLE
-            binding.tvCargoTitle2.text = "${cargo2.trackingNumber} │ ${cargo2.origin} → ${cargo2.destination}"
+            binding.tvCargoTitle2.text = "${cargo2.getDisplayReference()} │ ${cargo2.origin} → ${cargo2.destination}"
             binding.tvCargoStatus2.text = "Status: ${getStatusEmoji(cargo2.status)} ${cargo2.status.replace("_", " ").uppercase()}"
             binding.tvCargoDetails2.text = "Cargo: ${cargo2.cargoType} (${cargo2.weight} kg)"
 

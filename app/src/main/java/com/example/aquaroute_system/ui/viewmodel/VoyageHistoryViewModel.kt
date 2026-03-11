@@ -25,14 +25,13 @@ class VoyageHistoryViewModel(
     val errorMessage: LiveData<String?> = _errorMessage
 
     private var allVoyages = listOf<VoyageRecord>()
-    var currentFilter = "all"
-    private set
+    private var _currentFilter = "all"
+    val currentFilter: String get() = _currentFilter
 
     fun loadVoyageHistory() {
         viewModelScope.launch {
             _isLoading.value = true
 
-            // Get current user ID from session
             val userId = sessionManager.getUserId()
             if (userId == null) {
                 _errorMessage.value = "User not logged in"
@@ -40,11 +39,10 @@ class VoyageHistoryViewModel(
                 return@launch
             }
 
-            // Fetch from repository (you'll need to add this method to CargoRepository)
             when (val result = cargoRepository.getUserVoyageHistory(userId)) {
                 is Result.Success -> {
                     allVoyages = result.data
-                    applyFilter(currentFilter)
+                    applyFilter(_currentFilter)
                 }
                 is Result.Error -> {
                     _errorMessage.value = result.exception.message
@@ -57,7 +55,7 @@ class VoyageHistoryViewModel(
     }
 
     fun filterVoyages(filter: String) {
-        currentFilter = filter
+        _currentFilter = filter
         applyFilter(filter)
     }
 
@@ -66,7 +64,7 @@ class VoyageHistoryViewModel(
             "active" -> allVoyages.filter { it.status == "active" || it.status == "in_transit" }
             "completed" -> allVoyages.filter { it.status == "completed" }
             "delayed" -> allVoyages.filter { it.status == "delayed" }
-            else -> allVoyages // "all"
+            else -> allVoyages
         }
     }
 

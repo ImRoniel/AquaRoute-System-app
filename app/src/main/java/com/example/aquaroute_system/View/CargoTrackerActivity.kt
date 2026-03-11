@@ -2,15 +2,14 @@ package com.example.aquaroute_system.View
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.Cargo
 import com.example.aquaroute_system.data.repository.CargoRepository
 import com.example.aquaroute_system.databinding.ActivityCargoTrackerBinding
@@ -27,84 +26,61 @@ class CargoTrackerActivity : AppCompatActivity() {
     private lateinit var viewModel: CargoTrackerViewModel
     private lateinit var sessionManager: SessionManager
     private lateinit var cargoRepository: CargoRepository
-    private lateinit var recentSearchesAdapter: RecentSearchesAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCargoTrackerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initializeDependencies()
-        setupViews()
-        setupObservers()
-        loadRecentSearches()
-    }
-
-    private fun initializeDependencies() {
         sessionManager = SessionManager(this)
         cargoRepository = CargoRepository(FirebaseFirestore.getInstance())
 
+        initializeViewModel()
+
+        // Test Firebase connection
+        viewModel.testConnection()
+
+        setupViews()
+        setupObservers()
+        setupClickListeners()
+    }
+
+    private fun initializeViewModel() {
         val factory = CargoTrackerViewModelFactory(cargoRepository, sessionManager)
         viewModel = ViewModelProvider(this, factory)[CargoTrackerViewModel::class.java]
     }
 
     private fun setupViews() {
-        // Back button
-        binding.btnBack.setOnClickListener {
-            finish()
-        }
+        // Show search-focused UI
+        binding.searchInstruction.visibility = View.VISIBLE
+        binding.resultCard.visibility = View.GONE
+        binding.emptyState.visibility = View.GONE
 
-        // Track button
-        binding.btnTrack.setOnClickListener {
-            val referenceNumber = binding.etReferenceNumber.text.toString().trim()
-            if (referenceNumber.isNotEmpty()) {
-                viewModel.trackCargo(referenceNumber)
-                saveRecentSearch(referenceNumber)
-            } else {
-                binding.etReferenceNumber.error = "Enter reference number"
-            }
-        }
-
-        // Clear button visibility based on text
-        binding.etReferenceNumber.addTextChangedListener(object : android.text.TextWatcher {
+        // Setup search text changes
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                binding.btnClear.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+                binding.btnClearSearch.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
             }
-            override fun afterTextChanged(s: android.text.Editable?) {}
+            override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Search on enter
-        binding.etReferenceNumber.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                binding.btnTrack.performClick()
-                true
-            } else {
-                false
-            }
-        }
-
-        // Clear button
-        binding.btnClear.setOnClickListener {
-            binding.etReferenceNumber.text.clear()
-        }
-
-        // Setup recent searches RecyclerView
-        recentSearchesAdapter = RecentSearchesAdapter { referenceNumber ->
-            binding.etReferenceNumber.setText(referenceNumber)
-            viewModel.trackCargo(referenceNumber)
-        }
-
-        binding.rvRecentSearches.apply {
-            layoutManager = LinearLayoutManager(this@CargoTrackerActivity)
-            adapter = recentSearchesAdapter
+        binding.btnClearSearch.setOnClickListener {
+            binding.etSearch.text.clear()
         }
     }
 
     private fun setupObservers() {
-        viewModel.cargoDetails.observe(this) { cargo ->
+        viewModel.searchResult.observe(this) { cargo ->
             if (cargo != null) {
+                // Cargo found - show details
                 showCargoDetails(cargo)
+                binding.emptyState.visibility = View.GONE
+                binding.resultCard.visibility = View.VISIBLE
+                Log.d("CARGO_TRACKER", "Cargo found: ${cargo.reference}")
+            } else {
+                // No result or search not performed
+                binding.resultCard.visibility = View.GONE
             }
         }
 
@@ -117,130 +93,124 @@ class CargoTrackerActivity : AppCompatActivity() {
             error?.let {
                 Toast.makeText(this, it, Toast.LENGTH_LONG).show()
                 viewModel.clearError()
+                binding.emptyState.visibility = View.VISIBLE
+                binding.resultCard.visibility = View.GONE
+                Log.e("CARGO_TRACKER", "Error: $it")
             }
         }
 
-        viewModel.recentSearches.observe(this) { searches ->
-            recentSearchesAdapter.submitList(searches)
-            binding.tvRecentSearches.visibility = if (searches.isEmpty()) View.GONE else View.VISIBLE
-            binding.rvRecentSearches.visibility = if (searches.isEmpty()) View.GONE else View.VISIBLE
+        viewModel.notFound.observe(this) { notFound ->
+            if (notFound) {
+                binding.emptyState.visibility = View.VISIBLE
+                binding.resultCard.visibility = View.GONE
+                Log.d("CARGO_TRACKER", "Cargo not found")
+            }
+        }
+    }
+
+    private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
+
+        binding.btnTrack.setOnClickListener {
+            val referenceNumber = binding.etSearch.text.toString().trim()
+            if (referenceNumber.isNotEmpty()) {
+                Log.d("CARGO_TRACKER", "Searching for: $referenceNumber")
+                viewModel.searchCargoByReference(referenceNumber)
+            } else {
+                binding.etSearch.error = "Enter reference number"
+            }
+        }
+
+        binding.btnViewOnMap.setOnClickListener {
+            viewModel.searchResult.value?.let { cargo ->
+                val intent = Intent(this, LiveMapView::class.java)
+                intent.putExtra("FOCUS_ON_FERRY_ID", cargo.ferryId)
+                intent.putExtra("CARGO_ID", cargo.id)
+                startActivity(intent)
+            }
+        }
+
+        binding.btnFullDetails.setOnClickListener {
+            viewModel.searchResult.value?.let { cargo ->
+                val intent = Intent(this, CargoDetailsActivity::class.java)
+                intent.putExtra("CARGO_ID", cargo.id)
+                startActivity(intent)
+            }
+        }
+
+        binding.btnNewSearch.setOnClickListener {
+            // Clear search and show search box
+            binding.etSearch.text.clear()
+            binding.resultCard.visibility = View.GONE
+            binding.emptyState.visibility = View.GONE
+            binding.etSearch.requestFocus()
         }
     }
 
     private fun showCargoDetails(cargo: Cargo) {
-        binding.cargoDetailsCard.visibility = View.VISIBLE
+        // Display the reference number
+        binding.tvTrackingNumberValue.text = cargo.reference
 
-        // Cargo Information
-        binding.tvCargoTypeValue.text = cargo.cargoType
-        binding.tvWeightValue.text = "${cargo.weight} kg"
-        binding.tvVolumeValue.text = "${cargo.volume} m³"
-        binding.tvValueValue.text = "₱${cargo.value?.toString() ?: "N/A"}"
+        // Description
+        binding.tvDescriptionValue.text = cargo.description.ifEmpty { "No description provided" }
 
-        // Vessel Information
-        binding.tvFerryValue.text = cargo.assignedFerryName ?: "Not assigned"
-        binding.tvRouteValue.text = "${cargo.origin} → ${cargo.destination}"
+        // Weight
+        binding.tvWeightValue.text = String.format(Locale.US, "%.1f kg", cargo.weight)
 
-        val dateFormat = SimpleDateFormat("MMM dd, yyyy · hh:mm a", Locale.getDefault())
-        binding.tvDepartureValue.text = cargo.departureTime?.let { dateFormat.format(Date(it)) } ?: "TBD"
-        binding.tvEtaValue.text = cargo.eta?.let { dateFormat.format(Date(it)) } ?: "TBD"
+        // Status
+        binding.tvFerryStatusValue.text = cargo.getStatusDisplay()
 
-        // Current Location
-        binding.tvPositionValue.text = cargo.currentLocation?.let {
-            String.format("%.1f°N, %.1f°E", it.latitude, it.longitude)
-        } ?: "Unknown"
-
-        binding.tvStatusValue.text = cargo.status.replace("_", " ").uppercase()
-        binding.tvStatusValue.setTextColor(
-            when (cargo.status) {
-                "in_transit" -> getColor(android.R.color.holo_green_dark)
-                "delivered" -> getColor(android.R.color.holo_blue_dark)
-                "delayed" -> getColor(android.R.color.holo_orange_dark)
-                else -> getColor(android.R.color.darker_gray)
-            }
-        )
-
-        binding.tvProgressValue.text = "${cargo.progress}%"
-        binding.cargoProgressBar.progress = cargo.progress
-        binding.tvLastUpdateValue.text = "Last update: ${getTimeAgo(cargo.updatedAt)}"
-
-        // Button listeners
-        binding.btnViewOnMap.setOnClickListener {
-            val intent = Intent(this, LiveMapView::class.java)
-            intent.putExtra("CARGO_ID", cargo.id)
-            intent.putExtra("FOCUS_ON_CARGO", true)
-            startActivity(intent)
+        // Set status color
+        val statusColor = when (cargo.status.lowercase()) {
+            "in_transit" -> getColor(R.color.success_green)
+            "delivered" -> getColor(R.color.deep_ocean_blue)
+            "delayed" -> getColor(R.color.error_red)
+            "processing", "pending" -> getColor(R.color.warning_orange)
+            else -> getColor(R.color.medium_text)
         }
+        binding.tvFerryStatusValue.setTextColor(statusColor)
 
-        binding.btnFullDetails.setOnClickListener {
-            val intent = Intent(this, CargoDetailsActivity::class.java)
-            intent.putExtra("CARGO_ID", cargo.id)
-            startActivity(intent)
-        }
+        // Ferry information
+        binding.tvFerryNameValue.text = cargo.ferryId?.let {
+            "Ferry ID: $it"
+        } ?: "Not assigned"
 
-        binding.btnNotifyMe.setOnClickListener {
-            Toast.makeText(this, "Notifications enabled for ${cargo.trackingNumber}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun saveRecentSearch(referenceNumber: String) {
-        viewModel.saveRecentSearch(referenceNumber)
-    }
-
-    private fun loadRecentSearches() {
-        viewModel.loadRecentSearches()
-    }
-
-    private fun getTimeAgo(timestamp: Long): String {
-        val now = System.currentTimeMillis()
-        val diff = now - timestamp
-
-        return when {
-            diff < 60000 -> "Just now"
-            diff < 3600000 -> "${diff / 60000} minutes ago"
-            diff < 86400000 -> "${diff / 3600000} hours ago"
-            else -> SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(timestamp))
-        }
-    }
-}
-
-// Adapter for recent searches
-class RecentSearchesAdapter(
-    private val onItemClick: (String) -> Unit
-) : RecyclerView.Adapter<RecentSearchesAdapter.ViewHolder>() {
-
-    private var searches = listOf<String>()
-
-    fun submitList(list: List<String>) {
-        searches = list
-        notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(android.R.layout.simple_list_item_2, parent, false)
-        return ViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val search = searches[position]
-        holder.bind(search)
-    }
-
-    override fun getItemCount() = searches.size
-
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val text1 = itemView.findViewById<TextView>(android.R.id.text1)
-        private val text2 = itemView.findViewById<TextView>(android.R.id.text2)
-
-        init {
-            itemView.setOnClickListener {
-                onItemClick(searches[adapterPosition])
+        // Origin & Destination (if available)
+        binding.tvOriginValue.text = cargo.origin.ifEmpty {
+            when (cargo.ferryId) {
+                "D893D5IGv3JW1m8ilZer" -> "Manila"
+                else -> "Unknown"
             }
         }
 
-        fun bind(search: String) {
-            text1.text = search
-            text2.text = "Tap to track"
+        binding.tvDestinationValue.text = cargo.destination.ifEmpty {
+            when (cargo.ferryId) {
+                "D893D5IGv3JW1m8ilZer" -> "Cebu"
+                else -> "Unknown"
+            }
         }
+
+        // Cargo Type (use description as fallback)
+        binding.tvCargoTypeValue.text = cargo.cargoType.ifEmpty {
+            cargo.description.take(20) + if (cargo.description.length > 20) "..." else ""
+        }
+
+        // ETA (if available)
+        binding.tvEtaValue.text = cargo.eta?.let {
+            val etaDate = Date(it)
+            val dateFormat = SimpleDateFormat("MMM dd, yyyy · hh:mm a", Locale.US)
+            dateFormat.format(etaDate)
+        } ?: "TBD"
+
+        // Progress (hide by default)
+        binding.progressLayout.visibility = View.GONE
+
+        // Delay reason (hide by default)
+        binding.delayReasonLayout.visibility = View.GONE
+
+        // Recipient (hide by default)
+        binding.recipientLayout.visibility = View.GONE
     }
 }

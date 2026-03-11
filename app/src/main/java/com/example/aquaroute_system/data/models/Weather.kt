@@ -5,8 +5,8 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class WeatherCondition(
-    val location: String = "",
     val locationId: String = "",
+    val location: String = "",
     val condition: String = "", // sunny, cloudy, rainy, stormy
     val icon: String = "☀️",
     val temperature: Double = 0.0,
@@ -21,9 +21,18 @@ data class WeatherCondition(
     val advisoryMessage: String? = null,
     val updatedAt: Long = System.currentTimeMillis()
 ) : Parcelable {
+
     val displayText: String
         get() = "$location: $icon $condition · Waves: $waves · Wind: $windSpeed"
 
     val detailedDisplay: String
         get() = "$location: $icon $condition\nWaves: $waves · Wind: $windSpeed\nHumidity: $humidity% · Visibility: $visibility"
+
+    fun getAdvisoryText(): String {
+        return if (hasAdvisory) {
+            "[ADVISORY: $advisoryMessage]"
+        } else {
+            ""
+        }
+    }
 }

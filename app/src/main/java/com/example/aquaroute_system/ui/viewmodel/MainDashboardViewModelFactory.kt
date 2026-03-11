@@ -1,28 +1,27 @@
 package com.example.aquaroute_system.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.aquaroute_system.data.repository.FerryRepository
-import com.example.aquaroute_system.data.repository.PortRepository
-import com.example.aquaroute_system.data.repository.SearchRepository
+import com.example.aquaroute_system.data.repository.*
+import com.example.aquaroute_system.util.SessionManager
 
-/**
- * Factory for creating MainDashboardViewModel instances
- */
-class MainDashboardViewModelFactory(context: Context) : ViewModelProvider.Factory {
+class MainDashboardViewModelFactory(
+    private val sessionManager: SessionManager,
+    private val dashboardRepository: DashboardRepository,
+    private val portStatusRepository: PortStatusRepository,
+    private val weatherRepository: WeatherRepository,
+    private val cargoRepository: CargoRepository
+) : ViewModelProvider.Factory {
 
-    private val portRepository = PortRepository()
-    private val ferryRepository = FerryRepository()
-    private val searchRepository = SearchRepository(context)
-
-    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainDashboardViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
             return MainDashboardViewModel(
-                portRepository = portRepository,
-                ferryRepository = ferryRepository,
-                searchRepository = searchRepository
+                sessionManager,
+                dashboardRepository,
+                portStatusRepository,
+                weatherRepository,
+                cargoRepository
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

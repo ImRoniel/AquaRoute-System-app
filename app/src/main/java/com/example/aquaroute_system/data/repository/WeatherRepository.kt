@@ -4,7 +4,10 @@ import android.util.Log
 import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.models.WeatherCondition
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
@@ -15,6 +18,7 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
         private const val WEATHER_COLLECTION = "weather"
     }
 
+    // Single fetch (non-real-time)
     fun getAllWeatherConditions(): Flow<Result<List<WeatherCondition>>> = flow {
         try {
             emit(Result.Loading)
@@ -31,6 +35,38 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
         } catch (e: Exception) {
             Log.e(TAG, "Error getting weather conditions", e)
             emit(Result.Error(e))
+        }
+    }
+
+    // REAL-TIME observer for weather conditions
+    fun observeAllWeatherConditions(): Flow<Result<List<WeatherCondition>>> = callbackFlow {
+        var listener: ListenerRegistration? = null
+
+        try {
+            trySend(Result.Loading)
+
+            listener = firestore.collection(WEATHER_COLLECTION)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e(TAG, "Error observing weather", error)
+                        trySend(Result.Error(error))
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        val weatherList = snapshot.documents.mapNotNull { doc ->
+                            doc.toObject(WeatherCondition::class.java)?.copy(locationId = doc.id)
+                        }
+                        trySend(Result.Success(weatherList))
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up listener", e)
+            trySend(Result.Error(e))
+        }
+
+        awaitClose {
+            listener?.remove()
         }
     }
 

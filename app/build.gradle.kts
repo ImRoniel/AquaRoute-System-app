@@ -61,6 +61,9 @@ dependencies {
     // Firebase Firestore - THIS WAS MISSING!
     implementation("com.google.firebase:firebase-firestore-ktx")
 
+    //Osm Andrid
+    implementation ("org.osmdroid:osmdroid-android:6.1.16")
+
     // Coroutines support for Firebase
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 

@@ -5,14 +5,16 @@ import com.example.aquaroute_system.data.models.Cargo
 import com.example.aquaroute_system.data.models.CargoStatus
 import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.models.VoyageRecord
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.tasks.await
 
 class CargoRepository(private val firestore: FirebaseFirestore) {
 
@@ -22,49 +24,89 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
         private const val CARGO_STATUS_COLLECTION = "cargo_status"
     }
 
-    fun getUserCargo(userId: String): Flow<Result<List<Cargo>>> = flow {
-        try {
-            emit(Result.Loading)
+    // Get user's cargo with REAL-TIME updates - FILTERED BY USER ID
+    fun observeUserCargo(userId: String): Flow<Result<List<Cargo>>> = callbackFlow {
+        var listener: ListenerRegistration? = null
 
-            val snapshot = firestore.collection(CARGO_COLLECTION)
+        try {
+            trySend(Result.Loading)
+
+            listener = firestore.collection(CARGO_COLLECTION)
                 .whereEqualTo("userId", userId)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .await()
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e(TAG, "Error observing cargo", error)
+                        trySend(Result.Error(error))
+                        return@addSnapshotListener
+                    }
 
-            val cargoList = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
-            }
-
-            emit(Result.Success(cargoList))
+                    if (snapshot != null) {
+                        val cargoList = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing cargo: ${e.message}")
+                                null
+                            }
+                        }
+                        trySend(Result.Success(cargoList))
+                        Log.d(TAG, "Found ${cargoList.size} cargo items for user $userId")
+                    }
+                }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting user cargo", e)
-            emit(Result.Error(e))
+            Log.e(TAG, "Error setting up listener", e)
+            trySend(Result.Error(e))
+        }
+
+        awaitClose {
+            listener?.remove()
         }
     }
 
-    fun getUserActiveCargo(userId: String): Flow<Result<List<Cargo>>> = flow {
+    // Get user's ACTIVE cargo with REAL-TIME updates - FILTERED BY USER ID
+    fun observeUserActiveCargo(userId: String): Flow<Result<List<Cargo>>> = callbackFlow {
+        var listener: ListenerRegistration? = null
+
         try {
-            val snapshot = firestore.collection(CARGO_COLLECTION)
+            trySend(Result.Loading)
+
+            listener = firestore.collection(CARGO_COLLECTION)
                 .whereEqualTo("userId", userId)
                 .whereIn("status", listOf("processing", "in_transit"))
                 .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .await()
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e(TAG, "Error observing active cargo", error)
+                        trySend(Result.Error(error))
+                        return@addSnapshotListener
+                    }
 
-            val cargoList = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
-            }
-
-            emit(Result.Success(cargoList))
+                    if (snapshot != null) {
+                        val cargoList = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing active cargo: ${e.message}")
+                                null
+                            }
+                        }
+                        trySend(Result.Success(cargoList))
+                    }
+                }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting active cargo", e)
-            emit(Result.Error(e))
+            Log.e(TAG, "Error setting up listener", e)
+            trySend(Result.Error(e))
+        }
+
+        awaitClose {
+            listener?.remove()
         }
     }
 
-    fun getCargoStatistics(userId: String): Flow<Result<Map<String, Int>>> = flow {
-        try {
+    // Get user's cargo statistics - FILTERED BY USER ID
+    suspend fun getUserCargoStatistics(userId: String): Result<Map<String, Int>> {
+        return try {
             val snapshot = firestore.collection(CARGO_COLLECTION)
                 .whereEqualTo("userId", userId)
                 .get()
@@ -80,25 +122,59 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
 
             snapshot.documents.forEach { doc ->
                 val status = doc.getString("status") ?: ""
-                when (status) {
-                    "processing" -> stats["processing"] = stats["processing"]!! + 1
+                when (status.lowercase()) {
+                    "processing", "pending" -> stats["processing"] = stats["processing"]!! + 1
                     "in_transit" -> stats["in_transit"] = stats["in_transit"]!! + 1
                     "delivered" -> stats["delivered"] = stats["delivered"]!! + 1
                     "delayed" -> stats["delayed"] = stats["delayed"]!! + 1
                 }
             }
 
-            emit(Result.Success(stats))
+            Result.Success(stats)
         } catch (e: Exception) {
             Log.e(TAG, "Error getting cargo statistics", e)
-            emit(Result.Error(e))
+            Result.Error(e)
         }
     }
 
-    suspend fun createCargo(cargo: Cargo): Result<String> {
+    // Track cargo by reference number - PUBLIC ACCESS (no userId needed)
+    suspend fun getCargoByReference(referenceNumber: String): Result<Cargo> {
         return try {
+            Log.d(TAG, "Searching for cargo with reference: $referenceNumber")
+
+            val snapshot = firestore.collection(CARGO_COLLECTION)
+                .whereEqualTo("reference", referenceNumber)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                val document = snapshot.documents[0]
+                val cargo = document.toObject(Cargo::class.java)?.copy(id = document.id)
+
+                if (cargo != null) {
+                    Log.d(TAG, "Cargo found: ${cargo.reference}")
+                    Result.Success(cargo)
+                } else {
+                    Log.d(TAG, "Cargo found but couldn't parse")
+                    Result.Error(Exception("Cargo data is corrupted"))
+                }
+            } else {
+                Log.d(TAG, "No cargo found with reference: $referenceNumber")
+                Result.Error(Exception("No cargo found with reference: $referenceNumber"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting cargo by reference", e)
+            Result.Error(e)
+        }
+    }
+
+    // Create cargo - MUST set userId from current session
+    suspend fun createCargo(cargo: Cargo, userId: String): Result<String> {
+        return try {
+            val cargoWithUserId = cargo.copy(userId = userId)
             val docRef = firestore.collection(CARGO_COLLECTION).document()
-            val cargoWithId = cargo.copy(id = docRef.id)
+            val cargoWithId = cargoWithUserId.copy(id = docRef.id)
             docRef.set(cargoWithId).await()
             Result.Success(docRef.id)
         } catch (e: Exception) {
@@ -107,53 +183,91 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
-    suspend fun updateCargoStatus(cargoId: String, status: CargoStatus): Result<Boolean> {
+    // Get cargo by ID - MUST verify ownership
+    suspend fun getCargoById(cargoId: String, userId: String): Result<Cargo> {
         return try {
-            firestore.collection(CARGO_COLLECTION)
+            val doc = firestore.collection(CARGO_COLLECTION)
                 .document(cargoId)
-                .update(
-                    mapOf(
-                        "status" to status.status,
-                        "updatedAt" to System.currentTimeMillis()
+                .get()
+                .await()
+
+            if (doc.exists()) {
+                val cargo = doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                if (cargo != null && cargo.userId == userId) {
+                    Result.Success(cargo)
+                } else {
+                    Result.Error(Exception("Unauthorized access to cargo"))
+                }
+            } else {
+                Result.Error(Exception("Cargo not found"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting cargo", e)
+            Result.Error(e)
+        }
+    }
+
+    // Update cargo status - MUST verify ownership
+    suspend fun updateCargoStatus(cargoId: String, userId: String, status: CargoStatus): Result<Boolean> {
+        return try {
+            val cargoResult = getCargoById(cargoId, userId)
+            if (cargoResult is Result.Success) {
+                firestore.collection(CARGO_COLLECTION)
+                    .document(cargoId)
+                    .update(
+                        mapOf(
+                            "status" to status.status,
+                            "updatedAt" to System.currentTimeMillis()
+                        )
                     )
-                )
-                .await()
+                    .await()
 
-            // Add to status history
-            firestore.collection(CARGO_STATUS_COLLECTION)
-                .add(status)
-                .await()
+                firestore.collection(CARGO_STATUS_COLLECTION)
+                    .add(status)
+                    .await()
 
-            Result.Success(true)
+                Result.Success(true)
+            } else {
+                Result.Error(Exception("Unauthorized or cargo not found"))
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating cargo status", e)
             Result.Error(e)
         }
     }
+
+    // Get user's voyage history - FILTERED BY USER ID
     suspend fun getUserVoyageHistory(userId: String): Result<List<VoyageRecord>> {
         return try {
-            val snapshot = firestore.collection("cargo")
+            val snapshot = firestore.collection(CARGO_COLLECTION)
                 .whereEqualTo("userId", userId)
+                .whereIn("status", listOf("delivered", "delayed"))
                 .orderBy("deliveryDate", Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             val voyages = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Cargo::class.java)?.let { cargo ->
-                    VoyageRecord(
-                        id = cargo.id,
-                        trackingNumber = cargo.trackingNumber,
-                        origin = cargo.origin,
-                        destination = cargo.destination,
-                        cargoType = cargo.cargoType,
-                        weight = "${cargo.weight} ${if (cargo.weight > 0) "kg" else "units"}",
-                        status = cargo.status,
-                        statusIcon = getStatusIcon(cargo.status),
-                        deliveryDate = formatDate(cargo.deliveryDate ?: 0),
-                        deliveryTime = formatTime(cargo.deliveryDate ?: 0),
-                        isOnTime = cargo.isOnTime ?: true,
-                        delayMinutes = cargo.delayMinutes ?: 0
-                    )
+                try {
+                    val cargo = doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                    cargo?.let {
+                        VoyageRecord(
+                            id = it.id,
+                            trackingNumber = it.getDisplayReference(),
+                            origin = it.origin,
+                            destination = it.destination,
+                            cargoType = it.cargoType,
+                            weight = "${it.weight} ${if (it.weight > 0) "kg" else "units"}",
+                            status = it.status,
+                            statusIcon = getStatusIcon(it.status),
+                            deliveryDate = formatDate(it.deliveryDate ?: 0),
+                            deliveryTime = formatTime(it.deliveryDate ?: 0),
+                            isOnTime = it.isOnTime ?: true,
+                            delayMinutes = it.delayMinutes ?: 0
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing voyage record: ${e.message}")
+                    null
                 }
             }
 
@@ -164,10 +278,9 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
     }
 
     private fun getStatusIcon(status: String): String {
-        return when (status) {
-            "completed" -> "🟢"
-            "active", "in_transit" -> "🚢"
-            "delayed" -> "🟡"
+        return when (status.lowercase()) {
+            "delivered" -> "✅"
+            "delayed" -> "⚠️"
             else -> "📦"
         }
     }
@@ -186,22 +299,20 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
         return format.format(date)
     }
 
-    fun getCargoStatusHistory(cargoId: String): Flow<Result<List<CargoStatus>>> = flow {
-        try {
-            val snapshot = firestore.collection(CARGO_STATUS_COLLECTION)
-                .whereEqualTo("cargoId", cargoId)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
-                .await()
-
-            val history = snapshot.documents.mapNotNull { doc ->
-                doc.toObject(CargoStatus::class.java)
+    // Test Firebase connection
+    suspend fun testFirebaseConnection(): Result<String> {
+        return try {
+            val snapshot = firestore.collection(CARGO_COLLECTION).limit(1).get().await()
+            if (!snapshot.isEmpty) {
+                val doc = snapshot.documents[0]
+                val data = doc.data
+                val fieldNames = data?.keys?.joinToString(", ") ?: "no fields"
+                Result.Success("Connected! Found document with fields: $fieldNames")
+            } else {
+                Result.Success("Connected but no documents found in 'cargo' collection")
             }
-
-            emit(Result.Success(history))
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting status history", e)
-            emit(Result.Error(e))
+            Result.Error(e)
         }
     }
 }
