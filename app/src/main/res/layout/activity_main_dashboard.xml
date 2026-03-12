@@ -753,31 +753,28 @@
                                 android:textStyle="bold"
                                 android:layout_marginBottom="12dp" />
 
-                            <TextView
-                                android:id="@+id/tvWeatherManila"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Loading..."
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:layout_marginBottom="8dp" />
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
 
-                            <TextView
-                                android:id="@+id/tvWeatherBatangas"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text=""
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:layout_marginBottom="8dp" />
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/rvWeather"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:nestedScrollingEnabled="false"
+                                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-                            <TextView
-                                android:id="@+id/tvWeatherCebu"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text=""
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp" />
+                                <TextView
+                                    android:id="@+id/tvWeatherEmpty"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="No weather data available"
+                                    android:textColor="@color/medium_text"
+                                    android:textSize="14sp"
+                                    android:gravity="center"
+                                    android:padding="16dp"
+                                    android:visibility="gone" />
+                            </FrameLayout>
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 

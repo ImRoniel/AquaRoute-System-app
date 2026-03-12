@@ -52,6 +52,27 @@ class PortRepository {
         }
     }
 
+    //get port with the bounding box of user location
+    suspend fun getPortsInBounds(
+        minLat: Double, maxLat: Double,
+        minLon: Double, maxLon: Double
+    ): List<FirestorePort> {
+        return try {
+            val snapshot = firestore.collection("ports")
+                .whereGreaterThanOrEqualTo("lat", minLat)
+                .whereLessThanOrEqualTo("lat", maxLat)
+                .whereGreaterThanOrEqualTo("lng", minLon)
+                .whereLessThanOrEqualTo("lng", maxLon)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { doc ->
+                doc.toObject(FirestorePort::class.java)?.copy(id = doc.id)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     /**
      * Parse a Firestore document snapshot into a FirestorePort object
      */

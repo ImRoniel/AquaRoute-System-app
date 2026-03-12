@@ -86,4 +86,12 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
             emit(Result.Error(e))
         }
     }
+    suspend fun getWeatherLastUpdated(portId: String): Long? {
+        return try {
+            val doc = firestore.collection(WEATHER_COLLECTION).document(portId).get().await()
+            doc.getLong("updatedAt")
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

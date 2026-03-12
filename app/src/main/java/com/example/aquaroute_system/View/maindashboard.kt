@@ -1,6 +1,7 @@
 package com.example.aquaroute_system.View
 
 import android.Manifest
+//import android.R
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -18,6 +19,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.aquaroute_system.data.repository.*
 import com.example.aquaroute_system.databinding.ActivityMainDashboardBinding
 import com.example.aquaroute_system.ui.adapter.FerryPreviewAdapter
+import com.example.aquaroute_system.ui.adapter.WeatherAdapter
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModel
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModelFactory
 import com.example.aquaroute_system.util.SessionManager
@@ -33,6 +35,7 @@ class MainDashboard : AppCompatActivity() {
     private lateinit var viewModel: UserDashboardViewModel
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var ferryAdapter: FerryPreviewAdapter
+    private lateinit var weatherAdapter: WeatherAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class MainDashboard : AppCompatActivity() {
         initializeDependencies()
         checkUserSession()
         setupObservers()
+        setupWeatherRecyclerView()
         requestUserLocation()
         setupMapPreview()
         setupUserInfo()
@@ -62,6 +66,13 @@ class MainDashboard : AppCompatActivity() {
         val weatherRepository = WeatherRepository(firestore)
         val cargoRepository = CargoRepository(firestore)
         val ferryRepository = FerryRepository(firestore) // ADD THIS
+        val portRepository = PortRepository()
+
+        val backend_base_url = " https://aquaroute-system-web.onrender.com"
+//        val weatherRefreshRepository = WeatherRefreshRepository(baseUrl)
+
+//        val baseUrl = "http://dummy.url"
+        val weatherRefreshRepository = WeatherRefreshRepository(backend_base_url)
 
         val factory = UserDashboardViewModelFactory(
             sessionManager,
@@ -69,7 +80,9 @@ class MainDashboard : AppCompatActivity() {
             portStatusRepository,
             weatherRepository,
             cargoRepository,
-            ferryRepository // ADD THIS
+            ferryRepository,
+            portRepository,
+            weatherRefreshRepository
         )
         viewModel = ViewModelProvider(this, factory).get(UserDashboardViewModel::class.java)
     }
@@ -120,9 +133,7 @@ class MainDashboard : AppCompatActivity() {
             updatePortStatuses(ports)
         }
 
-        viewModel.weatherConditions.observe(this) { weather ->
-            updateWeatherConditions(weather)
-        }
+
 
         viewModel.activeCargo.observe(this) { cargoList ->
             updateCargoItems(cargoList)
@@ -136,6 +147,21 @@ class MainDashboard : AppCompatActivity() {
             error?.let {
                 Toast.makeText(this, it, Toast.LENGTH_LONG).show()
                 viewModel.clearError()
+            }
+        }
+    }
+    private fun setupWeatherRecyclerView() {
+        weatherAdapter = WeatherAdapter()
+        binding.rvWeather.adapter = weatherAdapter
+
+        viewModel.weatherConditions.observe(this) { weatherList ->
+            if (weatherList.isEmpty()) {
+                binding.tvWeatherEmpty.visibility = View.VISIBLE
+                binding.rvWeather.visibility = View.GONE
+            } else {
+                binding.tvWeatherEmpty.visibility = View.GONE
+                binding.rvWeather.visibility = View.VISIBLE
+                weatherAdapter.submitList(weatherList)
             }
         }
     }
@@ -296,24 +322,7 @@ class MainDashboard : AppCompatActivity() {
         }
     }
 
-    private fun updateWeatherConditions(weatherList: List<com.example.aquaroute_system.data.models.WeatherCondition>) {
-        weatherList.forEach { weather ->
-            when {
-                weather.location.contains("Manila", ignoreCase = true) -> {
-                    binding.tvWeatherManila.text = weather.displayText
-                }
-                weather.location.contains("Batangas", ignoreCase = true) -> {
-                    binding.tvWeatherBatangas.text = weather.displayText
-                }
-                weather.location.contains("Cebu", ignoreCase = true) -> {
-                    binding.tvWeatherCebu.text = weather.displayText
-                    if (weather.hasAdvisory) {
-                        binding.tvWeatherCebu.setTextColor(getColor(com.example.aquaroute_system.R.color.error_red))
-                    }
-                }
-            }
-        }
-    }
+
 
     private fun updateCargoItems(cargoList: List<com.example.aquaroute_system.data.models.Cargo>) {
         binding.btnViewAllCargo.text = "[VIEW ALL (${cargoList.size})]"

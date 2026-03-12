@@ -22,7 +22,9 @@ class UserDashboardViewModel(
     private val portStatusRepository: PortStatusRepository,
     private val weatherRepository: WeatherRepository,
     private val cargoRepository: CargoRepository,
-    private val ferryRepository: FerryRepository  // ADD THIS
+    private val ferryRepository: FerryRepository,
+    private val portRepository: PortRepository,               // ADDED
+    private val weatherRefreshRepository: WeatherRefreshRepository  // ADDED
 ) : ViewModel() {
 
     companion object {
@@ -68,6 +70,9 @@ class UserDashboardViewModel(
     private val _lastUpdated = MutableLiveData<Long>()
     val lastUpdated: LiveData<Long> = _lastUpdated
 
+    //live data for refreshing state
+    private val _isRefreshingWeather = MutableLiveData(false)
+    val isRefreshingWeather: LiveData<Boolean> = _isRefreshingWeather
     init {
         loadCurrentUser()
         startRealTimeUpdates()
@@ -186,6 +191,7 @@ class UserDashboardViewModel(
     fun setUserLocation(location: Location) {
         _userLocation.value = location
         loadNearbyFerries()
+        checkNearbyWeather(location)
     }
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
@@ -215,6 +221,37 @@ class UserDashboardViewModel(
         loadCurrentUser()
         loadNearbyFerries()
         _isLoading.value = false
+    }
+    // New function to check nearby weather
+    private fun checkNearbyWeather(location: Location) {
+        viewModelScope.launch {
+            val lat = location.latitude
+            val lon = location.longitude
+            val range = 5.0 // ~500km radius
+
+            val ports = portRepository.getPortsInBounds(
+                lat - range, lat + range,
+                lon - range, lon + range
+            )
+            if (ports.isEmpty()) return@launch
+
+            val stalePortIds = mutableListOf<String>()
+            for (port in ports) {
+                val lastUpdated = weatherRepository.getWeatherLastUpdated(port.id)
+                if (lastUpdated == null || System.currentTimeMillis() - lastUpdated > 60 * 60 * 1000) {
+                    stalePortIds.add(port.id)
+                }
+            }
+
+            if (stalePortIds.isNotEmpty()) {
+                _isRefreshingWeather.value = true
+                val result = weatherRefreshRepository.requestRefresh(stalePortIds)
+                if (result is Result.Error) {
+                    _errorMessage.value = "Weather refresh failed: ${result.exception.message}"
+                }
+                _isRefreshingWeather.value = false
+            }
+        }
     }
 
     fun getPortStatus(portName: String): PortStatus? {

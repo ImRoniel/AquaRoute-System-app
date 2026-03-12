@@ -148,4 +148,6 @@
     <string name="onboarding_title_3">Weather Updates</string>
     <string name="onboarding_desc_3">Stay informed with real-time weather conditions and forecasts for safe journeys.</string>
 
+<!--    for weather map base url string -->
+    <string name="backend_base_url">http://192.168.18.14:3000</string>
 </resources>
