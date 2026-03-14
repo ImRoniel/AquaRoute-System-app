@@ -1,7 +1,10 @@
 package com.example.aquaroute_system.data.models
 
 import android.os.Parcelable
+
 import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.IgnoredOnParcel
+import org.osmdroid.util.GeoPoint
 
 /**
  * Data class representing a ferry matching Firebase structure
@@ -10,17 +13,21 @@ import kotlinx.parcelize.Parcelize
 data class Ferry(
     val id: String = "",
     val name: String = "",
-    var lat: Double = 0.0,           // Maps to current_lat in Firebase
-    var lon: Double = 0.0,           // Maps to current_lng in Firebase
-    val status: String = "",          // Maps to status in Firebase (on_time, delayed, etc.)
-    val eta: Int = 0,                 // Maps to eta in Firebase (minutes)
-    val route: String = "",           // Maps to route in Firebase (e.g., "Batangas - Cebu")
-    val speed_knots: Int = 0,         // NEW: from Firebase
-    val pointA: List<Double>? = null, // NEW: [lat, lng] from Firebase
-    val pointB: List<Double>? = null, // NEW: [lat, lng] from Firebase
-    val source: String = "",          // NEW: from Firebase
-    val created_at: String? = null,   // NEW: from Firebase
-    val last_updated: String? = null  // NEW: from Firebase
+    var lat: Double = 0.0,
+    var lon: Double = 0.0,
+    val status: String = "",
+    val eta: Int = 0,
+    val route: String = "",
+    val speed_knots: Int = 0,
+    val pointA: List<Double>? = null,
+    val pointB: List<Double>? = null,
+    val source: String = "",
+    val created_at: String? = null,
+    val last_updated: String? = null,
+    @IgnoredOnParcel
+    val routePoints: List<GeoPoint>? = null,
+    val startTime: Long? = null,
+    val endTime: Long? = null         // Timestamp when journey ends (ms)// NEW: from Firebase
 ) : Parcelable {
 
     // Helper to get destination from route
@@ -40,5 +47,6 @@ data class Ferry(
             "Unknown"
         }
     }
+
 
 }

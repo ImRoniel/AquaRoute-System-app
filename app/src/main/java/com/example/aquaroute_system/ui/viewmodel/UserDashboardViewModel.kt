@@ -169,20 +169,26 @@ class UserDashboardViewModel(
 
     fun loadNearbyFerries() {
         viewModelScope.launch {
+            val allFerries = ferryRepository.getAllFerries()
             val userLoc = _userLocation.value
             if (userLoc != null) {
-                val allFerries = ferryRepository.getAllFerries()
-                // Filter to nearby (within 100km)
-                val nearby = allFerries.filter { ferry ->
-                    calculateDistance(
+                // Compute distance for every ferry and sort
+                val ferriesWithDistance = allFerries.map { ferry ->
+                    ferry to calculateDistance(
                         userLoc.latitude, userLoc.longitude,
                         ferry.lat, ferry.lon
-                    ) <= 100
+                    )
+                }.sortedBy { it.second }
+
+                // Filter those within 100km
+                val nearby = ferriesWithDistance.filter { it.second <= 100 }.map { it.first }
+                _nearbyFerries.value = if (nearby.isNotEmpty()) {
+                    nearby
+                } else {
+                    ferriesWithDistance.take(2).map { it.first }
                 }
-                _nearbyFerries.value = nearby
             } else {
-                // If no location, show all or top few
-                val allFerries = ferryRepository.getAllFerries()
+                // No location: fallback to first few ferries
                 _nearbyFerries.value = allFerries.take(3)
             }
         }

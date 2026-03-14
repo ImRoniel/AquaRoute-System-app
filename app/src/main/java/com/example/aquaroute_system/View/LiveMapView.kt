@@ -1,6 +1,7 @@
 package com.example.aquaroute_system.View
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
@@ -15,10 +16,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.MarkerDetail
 import com.example.aquaroute_system.data.models.Result
+import com.example.aquaroute_system.data.repository.FerryRefreshRepository
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
 import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModel
@@ -26,6 +29,7 @@ import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModelFactory
 import com.example.aquaroute_system.util.MapHelper
 import com.example.aquaroute_system.util.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -74,6 +78,9 @@ class LiveMapView : AppCompatActivity() {
     private val firestorePortMarkers = mutableMapOf<String, Marker>()
     private val routeLines = mutableListOf<Polyline>()
 
+    // Animation job
+    private var animationJob: Job? = null
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -103,6 +110,8 @@ class LiveMapView : AppCompatActivity() {
         checkLocationPermission()
         viewModel.startLiveUpdates()
         viewModel.loadFirestorePorts()
+        // Trigger initial ferry refresh
+        viewModel.refreshFerries()
     }
 
     private fun initializeViews() {
@@ -133,13 +142,17 @@ class LiveMapView : AppCompatActivity() {
     private fun initializeViewModel() {
         sessionManager = SessionManager(this)
         val firestore = FirebaseFirestore.getInstance()
+        val baseUrl = "val baseUrl = \"http://[216.24.57.7]:3000\"" // Replace with your Render URL
 
         val portRepository = PortRepository()
         val ferryRepository = FerryRepository(firestore)
+        val ferryRefreshRepository = FerryRefreshRepository(baseUrl)
+
         val factory = LiveMapViewModelFactory(
             sessionManager,
             portRepository,
-            ferryRepository
+            ferryRepository,
+            ferryRefreshRepository
         )
         viewModel = ViewModelProvider(this, factory).get(LiveMapViewModel::class.java)
     }
@@ -154,8 +167,6 @@ class LiveMapView : AppCompatActivity() {
             val phCenter = GeoPoint(12.8797, 121.7740)
             mapView.controller.setZoom(7.0)
             mapView.controller.setCenter(phCenter)
-
-            // We'll add markers when data arrives from ViewModel
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
@@ -185,6 +196,7 @@ class LiveMapView : AppCompatActivity() {
 
         viewModel.ferries.observe(this) { ferries ->
             updateFerryMarkers(ferries)
+            startFerryAnimation() // Start animation when ferries load
         }
 
         viewModel.ports.observe(this) { ports ->
@@ -237,11 +249,9 @@ class LiveMapView : AppCompatActivity() {
     }
 
     private fun updateFerryMarkers(ferries: List<com.example.aquaroute_system.data.models.Ferry>) {
-        // Clear existing markers
         ferryMarkers.values.forEach { mapView.overlays.remove(it) }
         ferryMarkers.clear()
 
-        // Add new markers
         ferries.forEach { ferry ->
             val marker = MapHelper.createFerryMarker(mapView, ferry) { selectedFerry ->
                 viewModel.onFerryMarkerClick(selectedFerry)
@@ -253,11 +263,9 @@ class LiveMapView : AppCompatActivity() {
     }
 
     private fun updatePortMarkers(ports: List<com.example.aquaroute_system.data.models.Port>) {
-        // Clear existing markers
         portMarkers.values.forEach { mapView.overlays.remove(it) }
         portMarkers.clear()
 
-        // Add new markers
         ports.forEach { port ->
             val marker = MapHelper.createPortMarker(mapView, port) { selectedPort ->
                 viewModel.onPortMarkerClick(selectedPort)
@@ -269,7 +277,6 @@ class LiveMapView : AppCompatActivity() {
     }
 
     private fun updateFirestorePortMarkers(ports: List<FirestorePort>) {
-        // Clear existing markers
         firestorePortMarkers.values.forEach { mapView.overlays.remove(it) }
         firestorePortMarkers.clear()
 
@@ -291,22 +298,45 @@ class LiveMapView : AppCompatActivity() {
         mapView.invalidate()
     }
 
-    private fun drawRoutes() {
-        val northRoute = listOf(
-            GeoPoint(16.0431, 120.3339),
-            GeoPoint(15.8797, 119.7740),
-            GeoPoint(14.594, 120.970)
-        )
-
-        val polyline = Polyline().apply {
-            setPoints(northRoute)
-            color = Color.parseColor("#5500A3E0")
-            width = 3.0f
+    // ================= Ferry Animation =================
+    private fun startFerryAnimation() {
+        animationJob?.cancel()
+        animationJob = viewModel.viewModelScope.launch {
+            while (isActive) {
+                updateFerryPositions()
+                delay(30_000) // Move every 30 seconds
+            }
         }
-        mapView.overlays.add(polyline)
-        routeLines.add(polyline)
     }
 
+    private fun updateFerryPositions() {
+        val ferries = viewModel.ferries.value ?: return
+        val now = System.currentTimeMillis()
+        ferries.forEach { ferry ->
+            val start = ferry.startTime ?: return@forEach
+            val end = ferry.endTime ?: return@forEach
+            val route = ferry.routePoints ?: return@forEach
+            if (route.size < 2) return@forEach // need at least start and end
+
+            val fraction = ((now - start).toFloat() / (end - start)).coerceIn(0f, 1f)
+            val currentPos = interpolateOnRoute(route, fraction)
+
+            val marker = ferryMarkers[ferry.name]
+            marker?.position = GeoPoint(currentPos.first, currentPos.second)
+        }
+        mapView.invalidate()
+    }
+
+    // Interpolate between two points (straight line)
+    private fun interpolateOnRoute(route: List<GeoPoint>, fraction: Float): Pair<Double, Double> {
+        val start = route.first()
+        val end = route.last()
+        val lat = start.latitude + (end.latitude - start.latitude) * fraction
+        val lng = start.longitude + (end.longitude - start.longitude) * fraction
+        return Pair(lat, lng)
+    }
+
+    // ================= Bottom Sheet =================
     private fun showBottomSheetForMarkerDetail(detail: MarkerDetail) {
         when (detail) {
             is MarkerDetail.FerryDetail -> showBottomSheetForFerry(detail.ferry)
@@ -371,6 +401,7 @@ class LiveMapView : AppCompatActivity() {
         bottomSheet.visibility = View.GONE
     }
 
+    // ================= Location =================
     private fun checkLocationPermission() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED -> {
@@ -410,27 +441,14 @@ class LiveMapView : AppCompatActivity() {
         }
     }
 
-    private fun toggleLayers() {
-        val areRoutesVisible = routeLines.any { it.isEnabled }
-        val areFerriesVisible = ferryMarkers.values.any { it.isEnabled }
-        val areFirestorePortsVisible = firestorePortMarkers.values.any { it.isEnabled }
-
-        routeLines.forEach { it.isEnabled = !areRoutesVisible }
-        ferryMarkers.values.forEach { it.isEnabled = !areFerriesVisible }
-        firestorePortMarkers.values.forEach { it.isEnabled = !areFirestorePortsVisible }
-        mapView.invalidate()
-
-        val state = if (!areRoutesVisible && !areFerriesVisible && !areFirestorePortsVisible) "shown" else "hidden"
-        Toast.makeText(this, "Layers $state", Toast.LENGTH_SHORT).show()
-    }
-
+    // ================= Event Listeners =================
     private fun setupEventListeners() {
         btnBack.setOnClickListener {
             finish()
         }
 
         btnSettings.setOnClickListener {
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show()
+            showSettingsDialog()
         }
 
         btnZoomIn.setOnClickListener {
@@ -465,7 +483,6 @@ class LiveMapView : AppCompatActivity() {
             Toast.makeText(this, "Alerts coming soon", Toast.LENGTH_SHORT).show()
         }
 
-        // Map click listener to hide bottom sheet
         mapView.setOnClickListener {
             if (bottomSheet.visibility == View.VISIBLE) {
                 viewModel.clearSelectedMarkerDetail()
@@ -473,17 +490,24 @@ class LiveMapView : AppCompatActivity() {
         }
     }
 
-    private fun toggleMapLayer() {
-        // Check current tile source
-        val currentSource = mapView.tileProvider.tileSource
+    private fun showSettingsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setItems(arrayOf("Reload Ferries")) { _, which ->
+                if (which == 0) {
+                    viewModel.refreshFerries()
+                }
+            }
+            .show()
+    }
 
+    private fun toggleMapLayer() {
+        val currentSource = mapView.tileProvider.tileSource
         if (currentSource == TileSourceFactory.MAPNIK) {
-            // Switch to another map style (using a different available tile source)
             mapView.setTileSource(TileSourceFactory.HIKEBIKEMAP)
             btnSatellite.setImageResource(R.drawable.ic_map_placeholder)
             Toast.makeText(this, "Terrain view", Toast.LENGTH_SHORT).show()
         } else {
-            // Switch back to MAPNIK
             mapView.setTileSource(TileSourceFactory.MAPNIK)
             btnSatellite.setImageResource(R.drawable.ic_layers)
             Toast.makeText(this, "Map view", Toast.LENGTH_SHORT).show()
@@ -500,10 +524,12 @@ class LiveMapView : AppCompatActivity() {
         super.onPause()
         mapView.onPause()
         viewModel.stopLiveUpdates()
+        animationJob?.cancel()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         viewModel.stopLiveUpdates()
+        animationJob?.cancel()
     }
 }

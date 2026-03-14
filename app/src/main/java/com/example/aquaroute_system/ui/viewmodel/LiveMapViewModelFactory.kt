@@ -8,7 +8,8 @@ import com.example.aquaroute_system.util.SessionManager
 class LiveMapViewModelFactory(
     private val sessionManager: SessionManager,
     private val portRepository: PortRepository,
-    private val ferryRepository: FerryRepository
+    private val ferryRepository: FerryRepository,
+    private val ferryRefreshRepository: FerryRefreshRepository   // ADDED
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -17,7 +18,8 @@ class LiveMapViewModelFactory(
             return LiveMapViewModel(
                 sessionManager,
                 portRepository,
-                ferryRepository
+                ferryRepository,
+                ferryRefreshRepository   // PASSED HERE
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
