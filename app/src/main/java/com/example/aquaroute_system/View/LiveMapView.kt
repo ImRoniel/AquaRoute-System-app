@@ -28,9 +28,13 @@ import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModel
 import com.example.aquaroute_system.ui.viewmodel.LiveMapViewModelFactory
 import com.example.aquaroute_system.util.MapHelper
 import com.example.aquaroute_system.util.SessionManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.*
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -81,6 +85,11 @@ class LiveMapView : AppCompatActivity() {
     // Animation job
     private var animationJob: Job? = null
 
+    // Viewport tracking
+    private var isMapMoving = false
+    private var loadPortsJob: Job? = null
+
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -109,8 +118,6 @@ class LiveMapView : AppCompatActivity() {
         setupViewModelObservers()
         checkLocationPermission()
         viewModel.startLiveUpdates()
-        viewModel.loadFirestorePorts()
-        // Trigger initial ferry refresh
         viewModel.refreshFerries()
     }
 
@@ -142,7 +149,7 @@ class LiveMapView : AppCompatActivity() {
     private fun initializeViewModel() {
         sessionManager = SessionManager(this)
         val firestore = FirebaseFirestore.getInstance()
-        val baseUrl = "val baseUrl = \"http://[216.24.57.7]:3000\"" // Replace with your Render URL
+        val baseUrl = "http://216.24.57.7:3000"
 
         val portRepository = PortRepository()
         val ferryRepository = FerryRepository(firestore)
@@ -154,6 +161,7 @@ class LiveMapView : AppCompatActivity() {
             ferryRepository,
             ferryRefreshRepository
         )
+
         viewModel = ViewModelProvider(this, factory).get(LiveMapViewModel::class.java)
     }
 
@@ -167,36 +175,88 @@ class LiveMapView : AppCompatActivity() {
             val phCenter = GeoPoint(12.8797, 121.7740)
             mapView.controller.setZoom(7.0)
             mapView.controller.setCenter(phCenter)
+
+            setupMapScrollListener()
+            loadVisiblePorts()
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
 
-    private fun setupViewModelObservers() {
-        viewModel.firestorePorts.observe(this) { result ->
-            when (result) {
-                is Result.Success -> {
-                    updateFirestorePortMarkers(result.data)
+    private fun setupMapScrollListener() {
+        mapView.addMapListener(object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                if (!isMapMoving) {
+                    isMapMoving = true
+                    loadPortsJob?.cancel()
+                    loadPortsJob = viewModel.viewModelScope.launch {
+                        delay(500)
+                        loadVisiblePorts()
+                        isMapMoving = false
+                    }
                 }
-                is Result.Error -> {
-                    Toast.makeText(this, "Failed to load ports: ${result.exception.message}", Toast.LENGTH_LONG).show()
-                }
-                else -> {}
+                return true
             }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                loadPortsJob?.cancel()
+                loadPortsJob = viewModel.viewModelScope.launch {
+                    delay(500)
+                    loadVisiblePorts()
+                }
+                return true
+            }
+        })
+    }
+
+    private fun loadVisiblePorts() {
+        val boundingBox = mapView.boundingBox
+        val minLat = boundingBox.latSouth
+        val maxLat = boundingBox.latNorth
+        val minLon = boundingBox.lonWest
+        val maxLon = boundingBox.lonEast
+
+        Log.d(TAG, "Loading ports in bounds: lat[$minLat, $maxLat], lon[$minLon, $maxLon]")
+
+        val latPadding = (maxLat - minLat) * 0.2
+        val lonPadding = (maxLon - minLon) * 0.2
+
+        viewModel.loadPortsInBounds(
+            minLat = minLat - latPadding,
+            maxLat = maxLat + latPadding,
+            minLon = minLon - lonPadding,
+            maxLon = maxLon + lonPadding
+        )
+    }
+
+    private fun setupViewModelObservers() {
+        viewModel.visiblePorts.observe(this) { ports ->
+            Log.d(TAG, "Received ${ports.size} ports from viewModel")
+            updateFirestorePortMarkers(ports)
         }
 
         viewModel.currentHour.observe(this) { hour ->
             Log.d(TAG, "Hour updated to: $hour - Refreshing port markers")
-            val currentResult = viewModel.firestorePorts.value
-            if (currentResult is Result.Success) {
-                updateFirestorePortMarkers(currentResult.data)
+            viewModel.visiblePorts.value?.let { ports ->
+                updateFirestorePortMarkers(ports)
             }
         }
 
         viewModel.ferries.observe(this) { ferries ->
-            updateFerryMarkers(ferries)
-            startFerryAnimation() // Start animation when ferries load
+            if (ferries.isNotEmpty()) {
+                val firstFerry = ferries.first()
+                Log.d(TAG, "Ferry loaded: ${firstFerry.name}")
+                Log.d(TAG, "  startTime: ${firstFerry.startTime}")
+                Log.d(TAG, "  endTime: ${firstFerry.endTime}")
+                Log.d(TAG, "  routePoints: ${firstFerry.routePoints?.size}")
+                Log.d(TAG, "  lat/lon: ${firstFerry.lat}, ${firstFerry.lon}")
+
+                updateFerryMarkers(ferries)
+                startFerryAnimation()
+            } else {
+                Log.d(TAG, "No ferries loaded")
+            }
         }
 
         viewModel.ports.observe(this) { ports ->
@@ -304,7 +364,7 @@ class LiveMapView : AppCompatActivity() {
         animationJob = viewModel.viewModelScope.launch {
             while (isActive) {
                 updateFerryPositions()
-                delay(30_000) // Move every 30 seconds
+                delay(30_000)
             }
         }
     }
@@ -313,10 +373,14 @@ class LiveMapView : AppCompatActivity() {
         val ferries = viewModel.ferries.value ?: return
         val now = System.currentTimeMillis()
         ferries.forEach { ferry ->
-            val start = ferry.startTime ?: return@forEach
-            val end = ferry.endTime ?: return@forEach
-            val route = ferry.routePoints ?: return@forEach
-            if (route.size < 2) return@forEach // need at least start and end
+            if (ferry.startTime == null || ferry.endTime == null || ferry.routePoints == null) {
+                Log.d(TAG, "Ferry ${ferry.name} missing animation data")
+                return@forEach
+            }
+            val start = ferry.startTime
+            val end = ferry.endTime
+            val route = ferry.routePoints
+            if (route.size < 2) return@forEach
 
             val fraction = ((now - start).toFloat() / (end - start)).coerceIn(0f, 1f)
             val currentPos = interpolateOnRoute(route, fraction)
@@ -327,7 +391,6 @@ class LiveMapView : AppCompatActivity() {
         mapView.invalidate()
     }
 
-    // Interpolate between two points (straight line)
     private fun interpolateOnRoute(route: List<GeoPoint>, fraction: Float): Pair<Double, Double> {
         val start = route.first()
         val end = route.last()
@@ -358,7 +421,7 @@ class LiveMapView : AppCompatActivity() {
             else -> "⚪ UNKNOWN"
         }
         tvVesselStatus.text = statusText
-        tvVesselSpeed.text = "⚡ ${(20..30).random()} knots"
+        tvVesselSpeed.text = "⚡ ${ferry.speed_knots} knots"
 
         bottomSheet.visibility = View.VISIBLE
         mapView.controller.animateTo(GeoPoint(ferry.lat, ferry.lon))
@@ -493,9 +556,10 @@ class LiveMapView : AppCompatActivity() {
     private fun showSettingsDialog() {
         AlertDialog.Builder(this)
             .setTitle("Settings")
-            .setItems(arrayOf("Reload Ferries")) { _, which ->
-                if (which == 0) {
-                    viewModel.refreshFerries()
+            .setItems(arrayOf("Reload Ferries", "Refresh Ports")) { _, which ->
+                when (which) {
+                    0 -> viewModel.refreshFerries()
+                    1 -> loadVisiblePorts()
                 }
             }
             .show()
@@ -515,9 +579,21 @@ class LiveMapView : AppCompatActivity() {
         mapView.invalidate()
     }
 
+    private fun setupBottomSheet() {
+        bottomSheet.post {
+            try {
+                val behavior = BottomSheetBehavior.from(bottomSheet)
+                behavior.state = BottomSheetBehavior.STATE_HIDDEN
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up bottom sheet: ${e.message}")
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
+        setupBottomSheet()
     }
 
     override fun onPause() {

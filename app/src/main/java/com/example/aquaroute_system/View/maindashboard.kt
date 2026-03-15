@@ -68,7 +68,7 @@ class MainDashboard : AppCompatActivity() {
         val ferryRepository = FerryRepository(firestore) // ADD THIS
         val portRepository = PortRepository()
 
-        val backend_base_url = " http://[216.24.57.7]:3000"
+        val backend_base_url = "http://216.24.57.7:3000"
 //        val weatherRefreshRepository = WeatherRefreshRepository(baseUrl)
 
 //        val baseUrl = "http://dummy.url"

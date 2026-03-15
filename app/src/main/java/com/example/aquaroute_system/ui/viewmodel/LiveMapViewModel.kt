@@ -90,6 +90,8 @@
         // Live update job
         private var liveUpdateJob: Job? = null
 
+        private val _visiblePorts = MutableLiveData<List<FirestorePort>>()
+        val visiblePorts: LiveData<List<FirestorePort>> = _visiblePorts
         // Static port data for demo (fallback)
         private val portData = listOf(
             Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
@@ -168,13 +170,19 @@
                 _isLoading.value = false
             }
         }
+        fun loadPortsInBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double) {
+            viewModelScope.launch {
+                val ports = portRepository.getPortsInBounds(minLat, maxLat, minLon, maxLon)
+                _visiblePorts.postValue(ports)
+            }
+        }
 
         fun loadFirestorePorts() {
-            _firestorePorts.value = Result.Loading
-            viewModelScope.launch {
-                val result = portRepository.loadPorts()
-                _firestorePorts.value = result
-            }
+//            _firestorePorts.value = Result.Loading
+//            viewModelScope.launch {
+//                val result = portRepository.loadPorts()
+//                _firestorePorts.value = result
+//            }
         }
 
         fun getPortWithDynamicStatus(port: FirestorePort): FirestorePort {
