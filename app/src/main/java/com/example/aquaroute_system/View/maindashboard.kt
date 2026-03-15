@@ -68,7 +68,7 @@ class MainDashboard : AppCompatActivity() {
         val ferryRepository = FerryRepository(firestore) // ADD THIS
         val portRepository = PortRepository()
 
-        val backend_base_url = "http://216.24.57.7:3000"
+        val backend_base_url = "https://aquaroute-system-web.onrender.com/"
 //        val weatherRefreshRepository = WeatherRefreshRepository(baseUrl)
 
 //        val baseUrl = "http://dummy.url"
@@ -123,21 +123,21 @@ class MainDashboard : AppCompatActivity() {
             }
         }
 
-        viewModel.dashboardStats.observe(this) { stats ->
-            if (stats != null) {
-                updateStatistics(stats)
-            }
-        }
+//        viewModel.dashboardStats.observe(this) { stats ->
+//            if (stats != null) {
+//                updateStatistics(stats)
+//            }
+//        }
+//
+//        viewModel.portStatuses.observe(this) { ports ->
+//            updatePortStatuses(ports)
+//        }
 
-        viewModel.portStatuses.observe(this) { ports ->
-            updatePortStatuses(ports)
-        }
 
 
-
-        viewModel.activeCargo.observe(this) { cargoList ->
-            updateCargoItems(cargoList)
-        }
+//        viewModel.activeCargo.observe(this) { cargoList ->
+//            updateCargoItems(cargoList)
+//        }
 
         viewModel.isLoading.observe(this) { isLoading ->
             swipeRefreshLayout.isRefreshing = isLoading
@@ -291,66 +291,66 @@ class MainDashboard : AppCompatActivity() {
         binding.drawerUserEmail.text = user.email
     }
 
-    private fun updateStatistics(stats: com.example.aquaroute_system.data.models.DashboardStats) {
-        binding.tvTotalShipments.text = stats.totalShipments.toString()
-        binding.tvInTransit.text = stats.inTransit.toString()
-        binding.tvDelivered.text = stats.delivered.toString()
-        binding.tvDelayed.text = stats.delayed.toString()
-        binding.tvActiveVessels.text = "${stats.activeVessels} vessels active"
-    }
+//    private fun updateStatistics(stats: com.example.aquaroute_system.data.models.DashboardStats) {
+//        binding.tvTotalShipments.text = stats.totalShipments.toString()
+//        binding.tvInTransit.text = stats.inTransit.toString()
+//        binding.tvDelivered.text = stats.delivered.toString()
+//        binding.tvDelayed.text = stats.delayed.toString()
+//        binding.tvActiveVessels.text = "${stats.activeVessels} vessels active"
+//    }
 
-    private fun updatePortStatuses(ports: List<com.example.aquaroute_system.data.models.PortStatus>) {
-        ports.forEach { port ->
-            when {
-                port.portName.contains("Manila", ignoreCase = true) -> {
-                    binding.tvPortManila.text = port.getDisplayText()
-                    binding.tvPortManila.setTextColor(getStatusColor(port.status))
-                }
-                port.portName.contains("Batangas", ignoreCase = true) -> {
-                    binding.tvPortBatangas.text = port.getDisplayText()
-                    binding.tvPortBatangas.setTextColor(getStatusColor(port.status))
-                }
-                port.portName.contains("Cebu", ignoreCase = true) -> {
-                    binding.tvPortCebu.text = port.getDisplayText()
-                    binding.tvPortCebu.setTextColor(getStatusColor(port.status))
-                }
-                port.portName.contains("Davao", ignoreCase = true) -> {
-                    binding.tvPortDavao.text = port.getDisplayText()
-                    binding.tvPortDavao.setTextColor(getStatusColor(port.status))
-                }
-            }
-        }
-    }
+//    private fun updatePortStatuses(ports: List<com.example.aquaroute_system.data.models.PortStatus>) {
+//        ports.forEach { port ->
+//            when {
+//                port.portName.contains("Manila", ignoreCase = true) -> {
+//                    binding.tvPortManila.text = port.getDisplayText()
+//                    binding.tvPortManila.setTextColor(getStatusColor(port.status))
+//                }
+//                port.portName.contains("Batangas", ignoreCase = true) -> {
+//                    binding.tvPortBatangas.text = port.getDisplayText()
+//                    binding.tvPortBatangas.setTextColor(getStatusColor(port.status))
+//                }
+//                port.portName.contains("Cebu", ignoreCase = true) -> {
+//                    binding.tvPortCebu.text = port.getDisplayText()
+//                    binding.tvPortCebu.setTextColor(getStatusColor(port.status))
+//                }
+//                port.portName.contains("Davao", ignoreCase = true) -> {
+//                    binding.tvPortDavao.text = port.getDisplayText()
+//                    binding.tvPortDavao.setTextColor(getStatusColor(port.status))
+//                }
+//            }
+//        }
+//    }
 
 
 
-    private fun updateCargoItems(cargoList: List<com.example.aquaroute_system.data.models.Cargo>) {
-        binding.btnViewAllCargo.text = "[VIEW ALL (${cargoList.size})]"
-
-        if (cargoList.isNotEmpty()) {
-            val cargo1 = cargoList[0]
-            binding.cargoItem1.visibility = android.view.View.VISIBLE
-            binding.tvCargoTitle1.text = "${cargo1.getDisplayReference()} │ ${cargo1.origin} → ${cargo1.destination}"
-            binding.tvCargoStatus1.text = "Status: ${getStatusEmoji(cargo1.status)} ${cargo1.status.replace("_", " ").uppercase()}"
-            binding.tvCargoDetails1.text = "Cargo: ${cargo1.cargoType} (${cargo1.weight} kg)"
-
-            binding.btnTrackCargo1.tag = cargo1.id
-            binding.btnDetailsCargo1.tag = cargo1.id
-        }
-
-        if (cargoList.size > 1) {
-            val cargo2 = cargoList[1]
-            binding.cargoItem2.visibility = android.view.View.VISIBLE
-            binding.tvCargoTitle2.text = "${cargo2.getDisplayReference()} │ ${cargo2.origin} → ${cargo2.destination}"
-            binding.tvCargoStatus2.text = "Status: ${getStatusEmoji(cargo2.status)} ${cargo2.status.replace("_", " ").uppercase()}"
-            binding.tvCargoDetails2.text = "Cargo: ${cargo2.cargoType} (${cargo2.weight} kg)"
-
-            binding.btnEditCargo2.tag = cargo2.id
-            binding.btnDetailsCargo2.tag = cargo2.id
-        }
-
-        binding.tvNoCargo.visibility = if (cargoList.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-    }
+//    private fun updateCargoItems(cargoList: List<com.example.aquaroute_system.data.models.Cargo>) {
+//        binding.btnViewAllCargo.text = "[VIEW ALL (${cargoList.size})]"
+//
+//        if (cargoList.isNotEmpty()) {
+//            val cargo1 = cargoList[0]
+//            binding.cargoItem1.visibility = android.view.View.VISIBLE
+//            binding.tvCargoTitle1.text = "${cargo1.getDisplayReference()} │ ${cargo1.origin} → ${cargo1.destination}"
+//            binding.tvCargoStatus1.text = "Status: ${getStatusEmoji(cargo1.status)} ${cargo1.status.replace("_", " ").uppercase()}"
+//            binding.tvCargoDetails1.text = "Cargo: ${cargo1.cargoType} (${cargo1.weight} kg)"
+//
+//            binding.btnTrackCargo1.tag = cargo1.id
+//            binding.btnDetailsCargo1.tag = cargo1.id
+//        }
+//
+//        if (cargoList.size > 1) {
+//            val cargo2 = cargoList[1]
+//            binding.cargoItem2.visibility = android.view.View.VISIBLE
+//            binding.tvCargoTitle2.text = "${cargo2.getDisplayReference()} │ ${cargo2.origin} → ${cargo2.destination}"
+//            binding.tvCargoStatus2.text = "Status: ${getStatusEmoji(cargo2.status)} ${cargo2.status.replace("_", " ").uppercase()}"
+//            binding.tvCargoDetails2.text = "Cargo: ${cargo2.cargoType} (${cargo2.weight} kg)"
+//
+//            binding.btnEditCargo2.tag = cargo2.id
+//            binding.btnDetailsCargo2.tag = cargo2.id
+//        }
+//
+//        binding.tvNoCargo.visibility = if (cargoList.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+//    }
 
     // REMOVED THE updateMapPreview() function since the views don't exist in your layout
     // Your layout already has static text for the map preview
@@ -391,35 +391,35 @@ class MainDashboard : AppCompatActivity() {
             startActivity(Intent(this, LiveMapView::class.java))
         }
 
-        binding.btnViewAllCargo.setOnClickListener {
-            startActivity(Intent(this, CargoTrackerActivity::class.java))
-        }
+//        binding.btnViewAllCargo.setOnClickListener {
+//            startActivity(Intent(this, CargoTrackerActivity::class.java))
+//        }
 
-        binding.btnViewAllPorts.setOnClickListener {
-            Toast.makeText(this, "All ports coming soon", Toast.LENGTH_SHORT).show()
-        }
+//        binding.btnViewAllPorts.setOnClickListener {
+//            Toast.makeText(this, "All ports coming soon", Toast.LENGTH_SHORT).show()
+//        }
 
-        binding.btnQuickTrack.setOnClickListener {
-            startActivity(Intent(this, CargoTrackerActivity::class.java))
-        }
-
-        binding.btnTrackCargo1.setOnClickListener {
-            val cargoId = binding.btnTrackCargo1.tag as? String
-            if (cargoId != null) {
-                val intent = Intent(this, CargoTrackerActivity::class.java)
-                intent.putExtra("CARGO_ID", cargoId)
-                startActivity(intent)
-            }
-        }
-
-        binding.btnDetailsCargo1.setOnClickListener {
-            val cargoId = binding.btnDetailsCargo1.tag as? String
-            if (cargoId != null) {
-                val intent = Intent(this, CargoDetailsActivity::class.java)
-                intent.putExtra("CARGO_ID", cargoId)
-                startActivity(intent)
-            }
-        }
+//        binding.btnQuickTrack.setOnClickListener {
+//            startActivity(Intent(this, CargoTrackerActivity::class.java))
+//        }
+//
+//        binding.btnTrackCargo1.setOnClickListener {
+//            val cargoId = binding.btnTrackCargo1.tag as? String
+//            if (cargoId != null) {
+//                val intent = Intent(this, CargoTrackerActivity::class.java)
+//                intent.putExtra("CARGO_ID", cargoId)
+//                startActivity(intent)
+//            }
+//        }
+//
+//        binding.btnDetailsCargo1.setOnClickListener {
+//            val cargoId = binding.btnDetailsCargo1.tag as? String
+//            if (cargoId != null) {
+//                val intent = Intent(this, CargoDetailsActivity::class.java)
+//                intent.putExtra("CARGO_ID", cargoId)
+//                startActivity(intent)
+//            }
+//        }
 
         binding.drawerDashboard.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
@@ -435,10 +435,10 @@ class MainDashboard : AppCompatActivity() {
             startActivity(Intent(this, CargoTrackerActivity::class.java))
         }
 
-        binding.drawerVoyageHistory.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            startActivity(Intent(this, VoyageHistoryActivity::class.java))
-        }
+//        binding.drawerVoyageHistory.setOnClickListener {
+//            drawerLayout.closeDrawer(GravityCompat.START)
+//            startActivity(Intent(this, VoyageHistoryActivity::class.java))
+//        }
 
         binding.drawerLogout.setOnClickListener {
             logout()

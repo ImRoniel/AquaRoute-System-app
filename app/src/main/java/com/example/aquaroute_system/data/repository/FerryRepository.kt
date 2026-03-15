@@ -15,9 +15,14 @@ class FerryRepository(private val firestore: FirebaseFirestore) {
     companion object {
         private const val TAG = "FerryRepository"
         private const val FERRIES_COLLECTION = "ferries"
+
+        // Counter to track how many times getAllFerries() is called
+        var getAllFerriesCallCount = 0
     }
 
     suspend fun getAllFerries(): List<Ferry> {
+        getAllFerriesCallCount++
+        Log.d(TAG, "getAllFerries() called #$getAllFerriesCallCount")
         return try {
             val snapshot = firestore.collection(FERRIES_COLLECTION)
                 .get()
@@ -74,7 +79,7 @@ class FerryRepository(private val firestore: FirebaseFirestore) {
                             }
                             else -> 0
                         },
-                         route = data["route"] as? String ?: "",
+                        route = data["route"] as? String ?: "",
                         speed_knots = (data["speed_knots"] as? Number)?.toInt() ?: 0,
                         pointA = parsePoint(data["pointA"]),
                         pointB = parsePoint(data["pointB"]),
@@ -116,6 +121,8 @@ class FerryRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // This method is no longer used in the ViewModel (cached filtering is used),
+    // but kept for potential future use. It still calls getAllFerries() each time.
     suspend fun getFerriesNearLocation(lat: Double, lon: Double, radiusKm: Double = 100.0): List<Ferry> {
         val allFerries = getAllFerries()
         return allFerries.filter { ferry ->

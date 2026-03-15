@@ -271,463 +271,7 @@
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
-                    <!-- Active Cargo Shipments Card -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="4dp"
-                        android:layout_marginBottom="16dp"
-                        app:cardBackgroundColor="@color/white">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:layout_marginBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="📦 ACTIVE CARGO SHIPMENTS"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/btnViewAllCargo"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="48dp"
-                                    android:text="View All"
-                                    android:textAllCaps="false"
-                                    android:textColor="@color/white"
-                                    android:textSize="14sp"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
-                                    android:backgroundTint="@color/openMap_button"
-                                    app:rippleColor="@color/teal_200"
-                                    app:cornerRadius="12dp" />
-                            </LinearLayout>
-
-                            <!-- Cargo Item 1 -->
-                            <androidx.cardview.widget.CardView
-                                android:id="@+id/cargoItem1"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:cardCornerRadius="8dp"
-                                app:cardElevation="2dp"
-                                android:layout_marginBottom="8dp"
-                                app:cardBackgroundColor="@color/light_gray">
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:padding="12dp">
-
-                                    <TextView
-                                        android:id="@+id/tvCargoTitle1"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Loading..."
-                                        android:textColor="@color/deep_ocean_blue"
-                                        android:textSize="14sp"
-                                        android:textStyle="bold" />
-
-                                    <TextView
-                                        android:id="@+id/tvCargoStatus1"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="@color/success_green"
-                                        android:textSize="12sp"
-                                        android:layout_marginTop="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvCargoDetails1"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginTop="2dp" />
-
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="end"
-                                        android:layout_marginTop="8dp">
-
-                                        <TextView
-                                            android:id="@+id/btnTrackCargo1"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="[TRACK]"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="12sp"
-                                            android:textStyle="bold"
-                                            android:background="?attr/selectableItemBackground"
-                                            android:padding="4dp" />
-
-                                        <TextView
-                                            android:id="@+id/btnDetailsCargo1"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="[DETAILS]"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="12sp"
-                                            android:textStyle="bold"
-                                            android:background="?attr/selectableItemBackground"
-                                            android:padding="4dp"
-                                            android:layout_marginStart="12dp" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </androidx.cardview.widget.CardView>
-
-                            <!-- Cargo Item 2 -->
-                            <androidx.cardview.widget.CardView
-                                android:id="@+id/cargoItem2"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:cardCornerRadius="8dp"
-                                app:cardElevation="2dp"
-                                android:layout_marginBottom="8dp"
-                                app:cardBackgroundColor="@color/light_gray"
-                                android:visibility="gone">
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:padding="12dp">
-
-                                    <TextView
-                                        android:id="@+id/tvCargoTitle2"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="@color/deep_ocean_blue"
-                                        android:textSize="14sp"
-                                        android:textStyle="bold" />
-
-                                    <TextView
-                                        android:id="@+id/tvCargoStatus2"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="@color/success_green"
-                                        android:textSize="12sp"
-                                        android:layout_marginTop="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvCargoDetails2"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=""
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginTop="2dp" />
-
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal"
-                                        android:gravity="end"
-                                        android:layout_marginTop="8dp">
-
-                                        <TextView
-                                            android:id="@+id/btnEditCargo2"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="[EDIT]"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="12sp"
-                                            android:textStyle="bold"
-                                            android:background="?attr/selectableItemBackground"
-                                            android:padding="4dp" />
-
-                                        <TextView
-                                            android:id="@+id/btnDetailsCargo2"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="[DETAILS]"
-                                            android:textColor="@color/deep_ocean_blue"
-                                            android:textSize="12sp"
-                                            android:textStyle="bold"
-                                            android:background="?attr/selectableItemBackground"
-                                            android:padding="4dp"
-                                            android:layout_marginStart="12dp" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </androidx.cardview.widget.CardView>
-
-                            <!-- No cargo message -->
-                            <TextView
-                                android:id="@+id/tvNoCargo"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="No active cargo shipments"
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:gravity="center"
-                                android:padding="16dp"
-                                android:visibility="gone" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Quick Statistics Card -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="4dp"
-                        android:layout_marginBottom="16dp"
-                        app:cardBackgroundColor="@color/white">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📊 QUICK STATISTICS"
-                                android:textColor="@color/deep_ocean_blue"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:layout_marginBottom="12dp" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center">
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center"
-                                    android:padding="8dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="TOTAL"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="SHIPMENTS"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginBottom="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvTotalShipments"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="0"
-                                        android:textColor="@color/deep_ocean_blue"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center"
-                                    android:padding="8dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="IN"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="TRANSIT"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginBottom="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvInTransit"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="0"
-                                        android:textColor="@color/success_green"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center"
-                                    android:padding="8dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="DE-"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="LIVERED"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginBottom="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvDelivered"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="0"
-                                        android:textColor="@color/deep_ocean_blue"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center"
-                                    android:padding="8dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="DE-"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="LAYED"
-                                        android:textColor="@color/medium_text"
-                                        android:textSize="12sp"
-                                        android:layout_marginBottom="4dp" />
-
-                                    <TextView
-                                        android:id="@+id/tvDelayed"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="0"
-                                        android:textColor="@color/error_red"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-                            </LinearLayout>
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                    <!-- Port Status Card -->
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="4dp"
-                        android:layout_marginBottom="16dp"
-                        app:cardBackgroundColor="@color/white">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:layout_marginBottom="12dp">
-
-                                <TextView
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="⚓ PORT STATUS UPDATES"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/btnViewAllPorts"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="[VIEW ALL]"
-                                    android:textColor="@color/deep_ocean_blue"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:background="?attr/selectableItemBackground"
-                                    android:padding="8dp" />
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/tvPortManila"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Loading..."
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:layout_marginBottom="8dp" />
-
-                            <TextView
-                                android:id="@+id/tvPortBatangas"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text=""
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:layout_marginBottom="8dp" />
-
-                            <TextView
-                                android:id="@+id/tvPortCebu"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text=""
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp"
-                                android:layout_marginBottom="8dp" />
-
-                            <TextView
-                                android:id="@+id/tvPortDavao"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text=""
-                                android:textColor="@color/medium_text"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
 
                     <!-- Weather Card -->
                     <androidx.cardview.widget.CardView
@@ -779,65 +323,65 @@
                     </androidx.cardview.widget.CardView>
 
                     <!-- Quick Actions -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginBottom="16dp">
+<!--                    <LinearLayout-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:orientation="horizontal"-->
+<!--                        android:gravity="center"-->
+<!--                        android:layout_marginBottom="16dp">-->
 
-                        <TextView
-                            android:id="@+id/btnQuickTrack"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_outline"
-                            android:text="🔍 TRACK CARGO"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginEnd="4dp" />
+<!--                        <TextView-->
+<!--                            android:id="@+id/btnQuickTrack"-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="40dp"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:background="@drawable/button_outline"-->
+<!--                            android:text="🔍 TRACK CARGO"-->
+<!--                            android:textColor="@color/deep_ocean_blue"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:gravity="center"-->
+<!--                            android:layout_marginEnd="4dp" />-->
 
-                        <TextView
-                            android:id="@+id/btnQuickFindFerry"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_outline"
-                            android:text="🚢 FIND FERRY"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginHorizontal="4dp" />
+<!--                        <TextView-->
+<!--                            android:id="@+id/btnQuickFindFerry"-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="40dp"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:background="@drawable/button_outline"-->
+<!--                            android:text="🚢 FIND FERRY"-->
+<!--                            android:textColor="@color/deep_ocean_blue"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:gravity="center"-->
+<!--                            android:layout_marginHorizontal="4dp" />-->
 
-                        <TextView
-                            android:id="@+id/btnQuickPortStatus"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_outline"
-                            android:text="⚓ PORT STATUS"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginHorizontal="4dp" />
+<!--                        <TextView-->
+<!--                            android:id="@+id/btnQuickPortStatus"-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="40dp"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:background="@drawable/button_outline"-->
+<!--                            android:text="⚓ PORT STATUS"-->
+<!--                            android:textColor="@color/deep_ocean_blue"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:gravity="center"-->
+<!--                            android:layout_marginHorizontal="4dp" />-->
 
-                        <TextView
-                            android:id="@+id/btnQuickSupport"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_outline"
-                            android:text="📞 SUPPORT"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginStart="4dp" />
-                    </LinearLayout>
+<!--                        <TextView-->
+<!--                            android:id="@+id/btnQuickSupport"-->
+<!--                            android:layout_width="0dp"-->
+<!--                            android:layout_height="40dp"-->
+<!--                            android:layout_weight="1"-->
+<!--                            android:background="@drawable/button_outline"-->
+<!--                            android:text="📞 SUPPORT"-->
+<!--                            android:textColor="@color/deep_ocean_blue"-->
+<!--                            android:textSize="12sp"-->
+<!--                            android:textStyle="bold"-->
+<!--                            android:gravity="center"-->
+<!--                            android:layout_marginStart="4dp" />-->
+<!--                    </LinearLayout>-->
                 </LinearLayout>
             </ScrollView>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
@@ -915,7 +459,7 @@
                     android:id="@+id/drawerDashboard"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="🗺️  [DASHBOARD]"
+                    android:text="🗺️  DASHBOARD"
                     android:textColor="@color/deep_ocean_blue"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -926,7 +470,7 @@
                     android:id="@+id/drawerLiveMap"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="🚢  [LIVE MAP]"
+                    android:text="🚢  LIVE MAP"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -937,51 +481,51 @@
                     android:id="@+id/drawerMyCargo"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="📦  [MY CARGO]"
+                    android:text="📦  MY CARGO"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:background="?attr/selectableItemBackground" />
 
-                <TextView
-                    android:id="@+id/drawerPorts"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="⚓  [PORTS &amp; STATUS]"
-                    android:textColor="@color/medium_text"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
+<!--                <TextView-->
+<!--                    android:id="@+id/drawerPorts"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="48dp"-->
+<!--                    android:text="⚓  [PORTS &amp; STATUS]"-->
+<!--                    android:textColor="@color/medium_text"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:paddingStart="16dp"-->
+<!--                    android:background="?attr/selectableItemBackground" />-->
 
-                <TextView
-                    android:id="@+id/drawerVoyageHistory"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="📊  [VOYAGE HISTORY]"
-                    android:textColor="@color/medium_text"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
+<!--                <TextView-->
+<!--                    android:id="@+id/drawerVoyageHistory"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="48dp"-->
+<!--                    android:text="📊  [VOYAGE HISTORY]"-->
+<!--                    android:textColor="@color/medium_text"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:paddingStart="16dp"-->
+<!--                    android:background="?attr/selectableItemBackground" />-->
 
-                <TextView
-                    android:id="@+id/drawerSavedRoutes"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="⭐  [SAVED ROUTES]"
-                    android:textColor="@color/medium_text"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
+<!--                <TextView-->
+<!--                    android:id="@+id/drawerSavedRoutes"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="48dp"-->
+<!--                    android:text="⭐  [SAVED ROUTES]"-->
+<!--                    android:textColor="@color/medium_text"-->
+<!--                    android:textSize="16sp"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:paddingStart="16dp"-->
+<!--                    android:background="?attr/selectableItemBackground" />-->
 
                 <TextView
                     android:id="@+id/drawerWeather"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="⛈️  [WEATHER ADVISORIES]"
+                    android:text="⛈️  WEATHER ADVISORIES"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -992,7 +536,7 @@
                     android:id="@+id/drawerSupport"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="📞  [SUPPORT &amp; HELP]"
+                    android:text="📞  SUPPORT &amp; HELP"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -1003,7 +547,7 @@
                     android:id="@+id/drawerSettings"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="⚙️  [SETTINGS]"
+                    android:text="⚙️  SETTINGS"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"

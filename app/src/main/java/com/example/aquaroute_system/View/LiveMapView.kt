@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
@@ -20,7 +19,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.MarkerDetail
-import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.repository.FerryRefreshRepository
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
@@ -85,14 +83,9 @@ class LiveMapView : AppCompatActivity() {
     // Animation job
     private var animationJob: Job? = null
 
-    // Viewport tracking
-    private var isMapMoving = false
-    private var loadPortsJob: Job? = null
-
-
+    // Ports visibility
     private var portsVisible = true
     private lateinit var btnTogglePorts: ImageButton
-
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -154,7 +147,7 @@ class LiveMapView : AppCompatActivity() {
     private fun initializeViewModel() {
         sessionManager = SessionManager(this)
         val firestore = FirebaseFirestore.getInstance()
-        val baseUrl = "http://216.24.57.7:3000"
+        val baseUrl = "https://aquaroute-system-web.onrender.com/"
 
         val portRepository = PortRepository()
         val ferryRepository = FerryRepository(firestore)
@@ -177,68 +170,15 @@ class LiveMapView : AppCompatActivity() {
             mapView.minZoomLevel = 5.0
             mapView.maxZoomLevel = 19.0
 
-            // Start at a lower zoom to see more ports
             val phCenter = GeoPoint(12.8797, 121.7740)
-            mapView.controller.setZoom(6.0) // Changed from 7.0 to 6.0
+            mapView.controller.setZoom(6.0)
             mapView.controller.setCenter(phCenter)
 
-            setupMapScrollListener()
-
-            // Load ports after map is ready
-            mapView.post {
-                loadVisiblePorts()
-            }
+            // No scroll listener – ports load only once per location
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
-    }
-
-    private fun setupMapScrollListener() {
-        mapView.addMapListener(object : MapListener {
-            override fun onScroll(event: ScrollEvent?): Boolean {
-                if (!isMapMoving) {
-                    isMapMoving = true
-                    loadPortsJob?.cancel()
-                    loadPortsJob = viewModel.viewModelScope.launch {
-                        delay(500)
-                        loadVisiblePorts()
-                        isMapMoving = false
-                    }
-                }
-                return true
-            }
-
-            override fun onZoom(event: ZoomEvent?): Boolean {
-                loadPortsJob?.cancel()
-                loadPortsJob = viewModel.viewModelScope.launch {
-                    delay(500)
-                    loadVisiblePorts()
-                }
-                return true
-            }
-        })
-    }
-
-    private fun loadVisiblePorts() {
-        val boundingBox = mapView.boundingBox
-        val minLat = boundingBox.latSouth
-        val maxLat = boundingBox.latNorth
-        val minLon = boundingBox.lonWest
-        val maxLon = boundingBox.lonEast
-
-        Log.d(TAG, "Loading ports in bounds: lat[$minLat, $maxLat], lon[$minLon, $maxLon]")
-
-        // Increase padding to 50% to catch more ports
-        val latPadding = (maxLat - minLat) * 0.5
-        val lonPadding = (maxLon - minLon) * 0.5
-
-        viewModel.loadPortsInBounds(
-            minLat = minLat - latPadding,
-            maxLat = maxLat + latPadding,
-            minLon = minLon - lonPadding,
-            maxLon = maxLon + lonPadding
-        )
     }
 
     private fun setupViewModelObservers() {
@@ -296,12 +236,16 @@ class LiveMapView : AppCompatActivity() {
             }
         }
 
+        // Single userLocation observer: animate, add marker, and load ports once
         viewModel.userLocation.observe(this) { location ->
             if (location != null) {
                 val geoPoint = GeoPoint(location.latitude, location.longitude)
                 mapView.controller.animateTo(geoPoint)
                 mapView.controller.setZoom(15.0)
                 addUserLocationMarker(geoPoint)
+
+                // Load ports once (only if not already loaded)
+                viewModel.loadPortsNearUserOnce(location.latitude, location.longitude)
             }
         }
 
@@ -564,10 +508,14 @@ class LiveMapView : AppCompatActivity() {
                 viewModel.clearSelectedMarkerDetail()
             }
         }
+
         btnTogglePorts.setOnClickListener {
             portsVisible = !portsVisible
             if (portsVisible) {
-                loadVisiblePorts()
+                // Re‑add the markers from the already loaded ports
+                viewModel.visiblePorts.value?.let { ports ->
+                    updateFirestorePortMarkers(ports)
+                }
                 btnTogglePorts.setImageResource(R.drawable.ic_port_marker)
                 btnTogglePorts.setColorFilter(Color.WHITE)
             } else {
@@ -587,7 +535,13 @@ class LiveMapView : AppCompatActivity() {
             .setItems(arrayOf("Reload Ferries", "Refresh Ports")) { _, which ->
                 when (which) {
                     0 -> viewModel.refreshFerries()
-                    1 -> loadVisiblePorts()
+                    1 -> {
+                        // Force reload ports
+                        viewModel.resetPortsLoaded()
+                        viewModel.userLocation.value?.let { loc ->
+                            viewModel.loadPortsNearUserOnce(loc.latitude, loc.longitude)
+                        }
+                    }
                 }
             }
             .show()
@@ -622,9 +576,7 @@ class LiveMapView : AppCompatActivity() {
         super.onResume()
         mapView.onResume()
         setupBottomSheet()
-        mapView.postDelayed({
-            loadVisiblePorts()
-        }, 1000)
+        // No automatic port loading here – it's handled by location observer
     }
 
     override fun onPause() {
