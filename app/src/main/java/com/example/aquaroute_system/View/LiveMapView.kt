@@ -90,6 +90,10 @@ class LiveMapView : AppCompatActivity() {
     private var loadPortsJob: Job? = null
 
 
+    private var portsVisible = true
+    private lateinit var btnTogglePorts: ImageButton
+
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -144,6 +148,7 @@ class LiveMapView : AppCompatActivity() {
         btnCargoView = findViewById(R.id.btnCargoView)
         btnAlerts = findViewById(R.id.btnAlerts)
         etSearch = findViewById(R.id.etSearch)
+        btnTogglePorts = findViewById(R.id.btnTogglePorts)
     }
 
     private fun initializeViewModel() {
@@ -172,12 +177,17 @@ class LiveMapView : AppCompatActivity() {
             mapView.minZoomLevel = 5.0
             mapView.maxZoomLevel = 19.0
 
+            // Start at a lower zoom to see more ports
             val phCenter = GeoPoint(12.8797, 121.7740)
-            mapView.controller.setZoom(7.0)
+            mapView.controller.setZoom(6.0) // Changed from 7.0 to 6.0
             mapView.controller.setCenter(phCenter)
 
             setupMapScrollListener()
-            loadVisiblePorts()
+
+            // Load ports after map is ready
+            mapView.post {
+                loadVisiblePorts()
+            }
         } catch (e: Exception) {
             Toast.makeText(this, "Map setup error: ${e.message}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
@@ -219,8 +229,9 @@ class LiveMapView : AppCompatActivity() {
 
         Log.d(TAG, "Loading ports in bounds: lat[$minLat, $maxLat], lon[$minLon, $maxLon]")
 
-        val latPadding = (maxLat - minLat) * 0.2
-        val lonPadding = (maxLon - minLon) * 0.2
+        // Increase padding to 50% to catch more ports
+        val latPadding = (maxLat - minLat) * 0.5
+        val lonPadding = (maxLon - minLon) * 0.5
 
         viewModel.loadPortsInBounds(
             minLat = minLat - latPadding,
@@ -337,6 +348,8 @@ class LiveMapView : AppCompatActivity() {
     }
 
     private fun updateFirestorePortMarkers(ports: List<FirestorePort>) {
+        Log.d(TAG, "Updating ${ports.size} port markers")
+        Toast.makeText(this, "Loaded ${ports.size} ports", Toast.LENGTH_SHORT).show()
         firestorePortMarkers.values.forEach { mapView.overlays.remove(it) }
         firestorePortMarkers.clear()
 
@@ -551,6 +564,21 @@ class LiveMapView : AppCompatActivity() {
                 viewModel.clearSelectedMarkerDetail()
             }
         }
+        btnTogglePorts.setOnClickListener {
+            portsVisible = !portsVisible
+            if (portsVisible) {
+                loadVisiblePorts()
+                btnTogglePorts.setImageResource(R.drawable.ic_port_marker)
+                btnTogglePorts.setColorFilter(Color.WHITE)
+            } else {
+                firestorePortMarkers.values.forEach { mapView.overlays.remove(it) }
+                firestorePortMarkers.clear()
+                mapView.invalidate()
+                btnTogglePorts.setImageResource(R.drawable.ic_port_marker)
+                btnTogglePorts.setColorFilter(Color.GRAY)
+            }
+            Toast.makeText(this, if (portsVisible) "Ports visible" else "Ports hidden", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showSettingsDialog() {
@@ -594,6 +622,9 @@ class LiveMapView : AppCompatActivity() {
         super.onResume()
         mapView.onResume()
         setupBottomSheet()
+        mapView.postDelayed({
+            loadVisiblePorts()
+        }, 1000)
     }
 
     override fun onPause() {

@@ -93,6 +93,13 @@
         private val _visiblePorts = MutableLiveData<List<FirestorePort>>()
         val visiblePorts: LiveData<List<FirestorePort>> = _visiblePorts
         // Static port data for demo (fallback)
+
+
+        //pagination for ports better performance
+        private var lastLoadedBounds = ""
+        private val LOAD_COOLDOWN = 2000L // 2 seconds
+
+
         private val portData = listOf(
             Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
             Port("Manila Port", 14.594, 120.970, false),
@@ -171,19 +178,23 @@
             }
         }
         fun loadPortsInBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double) {
+            val boundsKey = "$minLat,$maxLat,$minLon,$maxLon"
+            if (boundsKey == lastLoadedBounds) return
+            lastLoadedBounds = boundsKey
+
             viewModelScope.launch {
                 val ports = portRepository.getPortsInBounds(minLat, maxLat, minLon, maxLon)
                 _visiblePorts.postValue(ports)
             }
         }
 
-        fun loadFirestorePorts() {
-//            _firestorePorts.value = Result.Loading
-//            viewModelScope.launch {
-//                val result = portRepository.loadPorts()
-//                _firestorePorts.value = result
-//            }
-        }
+//        fun loadFirestorePorts() {
+////            _firestorePorts.value = Result.Loading
+////            viewModelScope.launch {
+////                val result = portRepository.loadPorts()
+////                _firestorePorts.value = result
+////            }
+//        }
 
         fun getPortWithDynamicStatus(port: FirestorePort): FirestorePort {
             val currentHour = _currentHour.value ?: Calendar.getInstance().get(Calendar.HOUR_OF_DAY)

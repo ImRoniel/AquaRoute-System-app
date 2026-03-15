@@ -58,20 +58,35 @@ class PortRepository {
         minLon: Double, maxLon: Double
     ): List<FirestorePort> {
         return try {
-            val snapshot = firestore.collection("ports")
+            Log.d(TAG, "Querying ports in bounds: lat[$minLat, $maxLat], lon[$minLon, $maxLon]")
+
+            // Firestore can't do multiple range filters without composite index
+            // Let's do two separate queries and combine results
+            val latQuery = firestore.collection("ports")
                 .whereGreaterThanOrEqualTo("lat", minLat)
                 .whereLessThanOrEqualTo("lat", maxLat)
-                .whereGreaterThanOrEqualTo("lng", minLon)
-                .whereLessThanOrEqualTo("lng", maxLon)
                 .get()
                 .await()
-            snapshot.documents.mapNotNull { doc ->
-                doc.toObject(FirestorePort::class.java)?.copy(id = doc.id)
+
+            val ports = latQuery.documents.mapNotNull { doc ->
+                val port = doc.toObject(FirestorePort::class.java)?.copy(id = doc.id)
+                // Filter by lng manually
+                if (port != null && port.lng in minLon..maxLon) {
+                    port
+                } else {
+                    null
+                }
             }
+
+            Log.d(TAG, "Found ${ports.size} ports in bounds after manual filtering")
+            ports
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting ports in bounds", e)
             emptyList()
         }
     }
+
+
 
     /**
      * Parse a Firestore document snapshot into a FirestorePort object

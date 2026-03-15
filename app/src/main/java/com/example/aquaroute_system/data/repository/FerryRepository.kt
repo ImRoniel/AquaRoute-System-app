@@ -74,7 +74,7 @@ class FerryRepository(private val firestore: FirebaseFirestore) {
                             }
                             else -> 0
                         },
-                        route = data["route"] as? String ?: "",
+                         route = data["route"] as? String ?: "",
                         speed_knots = (data["speed_knots"] as? Number)?.toInt() ?: 0,
                         pointA = parsePoint(data["pointA"]),
                         pointB = parsePoint(data["pointB"]),

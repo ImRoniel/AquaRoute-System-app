@@ -1,7 +1,10 @@
 package com.example.aquaroute_system.util
 
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.core.content.ContextCompat
+import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.Ferry
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.Port
@@ -27,22 +30,24 @@ object MapHelper {
         return Marker(mapView).apply {
             position = GeoPoint(ferry.lat, ferry.lon)
 
-            // Use ship emoji
-            setTextIcon("⛴")
+            // Use emoji for ferry (most reliable across devices)
+            setTextIcon("⛴️")
+            setTextLabelFontSize(18)
 
             // Color based on status
-            val color = when (ferry.status) {
+            val color = when (ferry.status.lowercase()) {
                 "on_time" -> Color.parseColor("#4CAF50") // Green
                 "delayed" -> Color.parseColor("#FF9800") // Orange
+                "cancelled" -> Color.parseColor("#F44336") // Red
                 else -> Color.parseColor("#666666") // Gray
             }
 
             setTextLabelForegroundColor(color)
             setTextLabelBackgroundColor(Color.TRANSPARENT)
-            setTextLabelFontSize(14)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
 
             title = ferry.name
+            subDescription = "${ferry.route} • ${ferry.speed_knots} knots"
 
             setOnMarkerClickListener { _, _ ->
                 onMarkerClick(ferry)
@@ -62,19 +67,22 @@ object MapHelper {
         return Marker(mapView).apply {
             position = GeoPoint(port.lat, port.lon)
 
-            setTextIcon("P")
+            // Use P for port
+            setTextIcon("⚓")
+            setTextLabelFontSize(18)
 
-            if (port.isPrimary) {
-                setTextLabelForegroundColor(Color.parseColor("#F44336")) // Red
+            val color = if (port.isPrimary) {
+                Color.parseColor("#F44336") // Red for primary ports
             } else {
-                setTextLabelForegroundColor(Color.parseColor("#666666")) // Gray
+                Color.parseColor("#666666") // Gray for others
             }
 
+            setTextLabelForegroundColor(color)
             setTextLabelBackgroundColor(Color.TRANSPARENT)
-            setTextLabelFontSize(16)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
 
             title = port.name
+            subDescription = if (port.isPrimary) "Main Terminal" else "Port"
 
             setOnMarkerClickListener { _, _ ->
                 onMarkerClick(port)
@@ -89,60 +97,55 @@ object MapHelper {
     fun createFirestorePortMarker(
         mapView: MapView,
         port: FirestorePort,
-        currentHour: Int,  // NEW: Pass current hour
+        currentHour: Int,
         onMarkerClick: (FirestorePort) -> Unit
     ): Marker {
-        // Calculate dynamic status based on time
         val dynamicStatus = port.getCurrentStatus(currentHour)
-
-        // Create a copy of port with dynamic status for display
         val displayPort = port.copy(status = dynamicStatus)
 
         return Marker(mapView).apply {
             position = GeoPoint(port.lat, port.lng)
-            title = port.name  // Keep original name
+            title = port.name
 
-            // Icon based on port type (unchanged)
-            val iconText = when (port.type) {
-                "ferry_terminal" -> "⛴"  // Ferry emoji
-                "pier" -> "⚓"            // Anchor emoji
-                else -> "📍"              // Default location pin
+            // Use emoji based on port type (most reliable)
+            val iconText = when {
+                port.type.contains("ferry", ignoreCase = true) -> "⛴️"
+                port.type.contains("pier", ignoreCase = true) -> "⚓"
+                else -> "📍"
             }
             setTextIcon(iconText)
+            setTextLabelFontSize(18)
 
-            // Color based on port type (unchanged)
-            val color = when (port.type) {
-                "ferry_terminal" -> Color.parseColor("#2196F3") // Blue
-                "pier" -> Color.parseColor("#4CAF50")          // Green
-                else -> Color.parseColor("#FF9800")            // Orange
+            // Color based on status
+            val color = when {
+                dynamicStatus.contains("open", ignoreCase = true) -> Color.parseColor("#4CAF50") // Green
+                dynamicStatus.contains("close", ignoreCase = true) -> Color.parseColor("#F44336") // Red
+                dynamicStatus.contains("soon", ignoreCase = true) -> Color.parseColor("#FF9800") // Orange
+                else -> Color.parseColor("#2196F3") // Blue
             }
             setTextLabelForegroundColor(color)
 
-            // MODIFIED: Background based on DYNAMIC status
-            when (dynamicStatus.lowercase()) {
-                "open" -> setTextLabelBackgroundColor(Color.parseColor("#E8F5E8")) // Light green
-                "closed" -> setTextLabelBackgroundColor(Color.parseColor("#FFEBEE")) // Light red
-                "closing soon" -> setTextLabelBackgroundColor(Color.parseColor("#FFF3E0")) // Light orange
-                else -> setTextLabelBackgroundColor(Color.TRANSPARENT)
+            // Background based on type
+            val bgColor = when {
+                port.type.contains("ferry", ignoreCase = true) -> Color.parseColor("#80E3F2FD") // Light blue
+                port.type.contains("pier", ignoreCase = true) -> Color.parseColor("#80E8F5E9") // Light green
+                else -> Color.TRANSPARENT
             }
+            setTextLabelBackgroundColor(bgColor)
 
-            setTextLabelFontSize(14)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
 
-            // MODIFIED: Show dynamic status in description
+            // Build detailed description
             subDescription = buildString {
-                append("Type: ${port.type.uppercase()}")
-                append(" | Status: $dynamicStatus")
-
-                // Show hours if available
+                append("Type: ${port.type.replaceFirstChar { it.uppercase() }}")
+                append(" • Status: $dynamicStatus")
                 if (port.openHour != null && port.closeHour != null) {
-                    append(" | ${port.openHour}:00-${port.closeHour}:00")
+                    append(" • ${port.openHour}:00-${port.closeHour}:00")
                 }
             }
 
-            // IMPORTANT: Pass the displayPort (with dynamic status) to click handler
             setOnMarkerClickListener { _, _ ->
-                onMarkerClick(displayPort)  // Pass port with current status
+                onMarkerClick(displayPort)
                 true
             }
         }

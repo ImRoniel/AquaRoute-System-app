@@ -142,6 +142,17 @@
                     android:scaleType="center"
                     android:layout_marginTop="4dp"
                     android:contentDescription="Zoom Out" />
+
+                <ImageButton
+                    android:id="@+id/btnTogglePorts"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_port_marker"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    app:tint="@color/white"
+                    android:scaleType="center"
+                    android:layout_marginTop="4dp"
+                    android:contentDescription="Toggle Ports" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

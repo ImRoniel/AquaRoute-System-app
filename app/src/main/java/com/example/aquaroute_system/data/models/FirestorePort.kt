@@ -4,17 +4,16 @@ import com.google.firebase.Timestamp
 import java.util.*
 
 data class FirestorePort(
-    val id: String,
-    val name: String,
-    val lat: Double,
-    val lng: Double,
-    val type: String,
-    val status: String,        // Original from Firebase
-    val source: String,
-    val createdAt: Timestamp,
-    // NEW: Operating hours (we'll generate these)
-    val openHour: Int? = null,     // 0-23 (6 = 6 AM)
-    val closeHour: Int? = null,    // 0-23 (19 = 7 PM)
+    val id: String = "",
+    val name: String = "",
+    val lat: Double = 0.0,
+    val lng: Double = 0.0,
+    val type: String = "",
+    val status: String = "",
+    val source: String = "",
+    val createdAt: Timestamp = Timestamp.now(),  // default will be overridden by actual data
+    val openHour: Int? = null,
+    val closeHour: Int? = null,
     val timezone: String = "Asia/Manila"
 ) {
     // NEW: Get dynamic status based on current time
