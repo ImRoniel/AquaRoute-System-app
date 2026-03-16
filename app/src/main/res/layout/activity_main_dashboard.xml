@@ -161,11 +161,13 @@
                             android:layout_weight="1"
                             android:background="@drawable/button_outline"
                             android:backgroundTint="@color/openMap_button"
-                            android:text="📍"
-                            android:textColor="@color/white"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
+                            android:drawableLeft="@drawable/ic_live_map"
+                            android:drawablePadding="4dp"
                             android:gravity="center"
+                            android:padding="26dp"
+                            android:textColor="@color/white"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
                             android:layout_marginEnd="4dp" />
 
                         <TextView
@@ -174,11 +176,13 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_outline"
-                            android:text="📦"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
+                            android:drawableLeft="@drawable/ic_my_cargo"
+                            android:drawablePadding="4dp"
                             android:gravity="center"
+                            android:padding="26dp"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
                             android:layout_marginHorizontal="4dp" />
 
                         <TextView
@@ -187,11 +191,13 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_outline"
-                            android:text="🚢 "
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
+                            android:drawableLeft="@drawable/ic_ferries"
+                            android:drawablePadding="4dp"
                             android:gravity="center"
+                            android:padding="26dp"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
                             android:layout_marginHorizontal="4dp" />
 
                         <TextView
@@ -200,11 +206,13 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_outline"
-                            android:text="⚓ "
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
+                            android:drawableLeft="@drawable/ic_ports"
+                            android:drawablePadding="4dp"
                             android:gravity="center"
+                            android:padding="26dp"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
 
@@ -234,24 +242,24 @@
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="🗺️ LIVE MAP PREVIEW"
+                                    android:text="LIVE MAP PREVIEW"
                                     android:textColor="@color/deep_ocean_blue"
                                     android:textSize="16sp"
                                     android:textStyle="bold" />
 
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/btnOpenMap"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="48dp"
-                                    android:text="Open Map"
-                                    android:textAllCaps="false"
-                                    android:textColor="@color/white"
-                                    android:textSize="14sp"
-                                    android:paddingStart="16dp"
-                                    android:paddingEnd="16dp"
-                                    android:backgroundTint="@color/openMap_button"
-                                    app:rippleColor="@color/teal_200"
-                                    app:cornerRadius="12dp" />
+<!--                                <com.google.android.material.button.MaterialButton-->
+<!--                                    android:id="@+id/btnOpenMap"-->
+<!--                                    android:layout_width="wrap_content"-->
+<!--                                    android:layout_height="48dp"-->
+<!--                                    android:text="Open Map"-->
+<!--                                    android:textAllCaps="false"-->
+<!--                                    android:textColor="@color/white"-->
+<!--                                    android:textSize="14sp"-->
+<!--                                    android:paddingStart="16dp"-->
+<!--                                    android:paddingEnd="16dp"-->
+<!--                                    android:backgroundTint="@color/openMap_button"-->
+<!--                                    app:rippleColor="@color/teal_200"-->
+<!--                                    app:cornerRadius="12dp" />-->
                             </LinearLayout>
 
                             <FrameLayout
@@ -291,7 +299,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="⛈️ WEATHER &amp; SEA CONDITIONS"
+                                android:text="WEATHER &amp; SEA CONDITIONS"
                                 android:textColor="@color/deep_ocean_blue"
                                 android:textSize="16sp"
                                 android:textStyle="bold"
@@ -459,7 +467,10 @@
                     android:id="@+id/drawerDashboard"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="🗺️  DASHBOARD"
+                    android:drawableLeft="@drawable/ic_dashboard"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/deep_ocean_blue"
+                    android:text="DASHBOARD"
                     android:textColor="@color/deep_ocean_blue"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -470,7 +481,10 @@
                     android:id="@+id/drawerLiveMap"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="🚢  LIVE MAP"
+                    android:drawableLeft="@drawable/ic_live_map"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="LIVE MAP"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -481,7 +495,10 @@
                     android:id="@+id/drawerMyCargo"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="📦  MY CARGO"
+                    android:drawableLeft="@drawable/ic_my_cargo"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="MY CARGO"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -525,7 +542,10 @@
                     android:id="@+id/drawerWeather"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="⛈️  WEATHER ADVISORIES"
+                    android:drawableLeft="@drawable/ic_weather"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="WEATHER ADVISORIES"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -536,7 +556,10 @@
                     android:id="@+id/drawerSupport"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="📞  SUPPORT &amp; HELP"
+                    android:drawableLeft="@drawable/ic_support"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="SUPPORT &amp; HELP"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -547,7 +570,10 @@
                     android:id="@+id/drawerSettings"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="⚙️  SETTINGS"
+                    android:drawableLeft="@drawable/ic_settings"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="SETTINGS"
                     android:textColor="@color/medium_text"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
@@ -602,11 +628,15 @@
                 android:id="@+id/drawerLogout"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="🚪 LOGOUT"
+                android:drawableLeft="@drawable/ic_logout"
+                android:drawablePadding="16dp"
+                android:drawableTint="@color/error_red"
+                android:paddingStart="16dp"
+                android:text="LOGOUT"
                 android:textColor="@color/error_red"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:gravity="center"
+                android:gravity="center_vertical"
                 android:background="?attr/selectableItemBackground" />
         </androidx.cardview.widget.CardView>
     </LinearLayout>

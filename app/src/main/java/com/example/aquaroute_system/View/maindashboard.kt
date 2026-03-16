@@ -8,6 +8,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
@@ -53,6 +54,7 @@ class MainDashboard : AppCompatActivity() {
         setupMapPreview()
         setupUserInfo()
         setupClickListeners()
+        setupAnimations()
     }
 
 
@@ -446,6 +448,42 @@ class MainDashboard : AppCompatActivity() {
 
         swipeRefreshLayout.setOnRefreshListener {
             viewModel.refreshData()
+        }
+    }
+
+    private fun setupAnimations() {
+        val interactiveViews = listOf(
+            binding.btnMenu,
+            binding.btnLiveMap,
+            binding.btnMyCargo,
+            binding.btnFerries,
+            binding.btnPorts,
+            binding.btnOpenMap,
+            binding.drawerDashboard,
+            binding.drawerLiveMap,
+            binding.drawerMyCargo,
+            binding.drawerWeather,
+            binding.drawerSupport,
+            binding.drawerSettings,
+            binding.drawerLogout
+        )
+
+        interactiveViews.forEach { setScaleAnimation(it) }
+    }
+
+    private fun setScaleAnimation(view: View) {
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).start()
+                    false
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start()
+                    false
+                }
+                else -> false
+            }
         }
     }
 

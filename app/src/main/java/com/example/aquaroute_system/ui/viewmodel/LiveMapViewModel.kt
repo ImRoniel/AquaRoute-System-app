@@ -109,8 +109,7 @@ class LiveMapViewModel(
     private val portData = listOf(
         Port("Dagupan Ferry Terminal", 16.0431, 120.3339, true),
         Port("Manila Port", 14.594, 120.970, false),
-        Port("Cavite Port", 14.475, 120.915, false),
-        Port("dagupan Terminal", 16.0431, 120.3339, true)
+        Port("Cavite Port", 14.475, 120.915, false)
     )
 
     init {
