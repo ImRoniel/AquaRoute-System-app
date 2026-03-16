@@ -389,9 +389,13 @@ class MainDashboard : AppCompatActivity() {
             startActivity(Intent(this, CargoTrackerActivity::class.java))
         }
 
-        binding.btnOpenMap.setOnClickListener {
-            startActivity(Intent(this, LiveMapView::class.java))
+        binding.btnFerries.setOnClickListener {
+            startActivity(Intent(this, FerriesActivity::class.java))
         }
+
+//        binding.btnOpenMap.setOnClickListener {
+//            startActivity(Intent(this, LiveMapView::class.java))
+//        }
 
 //        binding.btnViewAllCargo.setOnClickListener {
 //            startActivity(Intent(this, CargoTrackerActivity::class.java))
@@ -458,7 +462,7 @@ class MainDashboard : AppCompatActivity() {
             binding.btnMyCargo,
             binding.btnFerries,
             binding.btnPorts,
-            binding.btnOpenMap,
+//            binding.btnOpenMap,
             binding.drawerDashboard,
             binding.drawerLiveMap,
             binding.drawerMyCargo,
