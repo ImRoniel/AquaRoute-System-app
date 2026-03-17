@@ -84,5 +84,10 @@
             android:exported="false"
             android:theme="@style/Theme.Dashboard" />
 
+        <activity
+            android:name=".View.WeatherAdvisoriesActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Dashboard" />
+
     </application>
 </manifest>

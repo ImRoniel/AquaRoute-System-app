@@ -75,10 +75,6 @@
     <color name="text_hint">#B0BEC5</color>
     <color name="text_primary">#FFF4B5</color>
 
-"
-
-
-
     <!-- Gradients for Header -->
     <color name="gradient_start">#87A2FF</color>
     <color name="gradient_end">#87A2FF</color>

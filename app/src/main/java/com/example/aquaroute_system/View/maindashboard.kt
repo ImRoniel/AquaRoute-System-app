@@ -446,6 +446,11 @@ class MainDashboard : AppCompatActivity() {
 //            startActivity(Intent(this, VoyageHistoryActivity::class.java))
 //        }
 
+        binding.drawerWeather.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            startActivity(Intent(this, WeatherAdvisoriesActivity::class.java))
+        }
+
         binding.drawerLogout.setOnClickListener {
             logout()
         }

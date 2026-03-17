@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
+import com.google.firebase.firestore.Query
+
 class WeatherRepository(private val firestore: FirebaseFirestore) {
 
     companion object {
@@ -24,6 +26,8 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
             emit(Result.Loading)
 
             val snapshot = firestore.collection(WEATHER_COLLECTION)
+                .orderBy("updatedAt", Query.Direction.DESCENDING)
+                .limit(50)
                 .get()
                 .await()
 
@@ -46,6 +50,8 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
             trySend(Result.Loading)
 
             listener = firestore.collection(WEATHER_COLLECTION)
+                .orderBy("updatedAt", Query.Direction.DESCENDING)
+                .limit(50)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         Log.e(TAG, "Error observing weather", error)
