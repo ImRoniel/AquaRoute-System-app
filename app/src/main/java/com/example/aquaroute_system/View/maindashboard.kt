@@ -393,6 +393,10 @@ class MainDashboard : AppCompatActivity() {
             startActivity(Intent(this, FerriesActivity::class.java))
         }
 
+        binding.btnWeather.setOnClickListener {
+            startActivity(Intent(this, WeatherAdvisoriesActivity::class.java))
+        }
+
 //        binding.btnOpenMap.setOnClickListener {
 //            startActivity(Intent(this, LiveMapView::class.java))
 //        }
@@ -467,7 +471,7 @@ class MainDashboard : AppCompatActivity() {
             binding.btnMyCargo,
             binding.btnFerries,
             binding.btnPorts,
-//            binding.btnOpenMap,
+            binding.btnWeather,
             binding.drawerDashboard,
             binding.drawerLiveMap,
             binding.drawerMyCargo,

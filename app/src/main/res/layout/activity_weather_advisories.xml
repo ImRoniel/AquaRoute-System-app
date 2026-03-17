@@ -38,6 +38,42 @@
                 android:alpha="0.9"
                 android:layout_marginBottom="16dp" />
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvRadiusSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#CCFFFFFF"
+                android:layout_marginBottom="16dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/deep_ocean_blue">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Search Radius:"
+                        android:textColor="@color/deep_ocean_blue"
+                        android:textStyle="bold"
+                        android:textSize="14sp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerRadius"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="120dp"
+                        android:spinnerMode="dropdown" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
