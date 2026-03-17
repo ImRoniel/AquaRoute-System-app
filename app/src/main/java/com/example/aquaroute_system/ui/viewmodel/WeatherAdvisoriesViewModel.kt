@@ -27,6 +27,10 @@ class WeatherAdvisoriesViewModel(
     private val _selectedRadius = MutableLiveData<Int>(50) // Default 50km
     val selectedRadius: LiveData<Int> = _selectedRadius
 
+    private var currentRadiusKm: Double = 50.0
+    private var displayRadius: Double = 50.0
+    private var currentUnit: String = "km"
+
     private var allPorts: List<FirestorePort> = emptyList()
 
     fun setUserLocation(location: Location) {
@@ -34,12 +38,25 @@ class WeatherAdvisoriesViewModel(
         refreshData()
     }
 
-    fun setSelectedRadius(radius: Int) {
-        if (_selectedRadius.value != radius) {
-            _selectedRadius.value = radius
-            // Re-trigger observation or just re-filter if we have cached results.
-            // Since observeWeather is collectLatest, it might be better to just re-emit or re-fetch.
-            refreshData()
+    fun applyFilter(radiusValue: Double, unit: String) {
+        currentUnit = unit
+        displayRadius = radiusValue
+        currentRadiusKm = if (unit.equals("mi", ignoreCase = true)) {
+            radiusValue * 1.60934
+        } else {
+            radiusValue
+        }
+        // Use the Integer LiveData just to trigger UI updates if necessary, 
+        // but we'll use the precise double for internal logic
+        _selectedRadius.value = currentRadiusKm.toInt()
+        refreshData()
+    }
+
+    fun getDisplayRadiusInfo(): String {
+        return if (displayRadius % 1.0 == 0.0) {
+            "${displayRadius.toInt()} $currentUnit"
+        } else {
+            "%.1f $currentUnit".format(displayRadius)
         }
     }
 
@@ -62,14 +79,19 @@ class WeatherAdvisoriesViewModel(
 
     fun observeWeather() {
         viewModelScope.launch {
+            // Ensure we are in a loading state while waiting for data and location
+            _weatherState.value = Result.Loading
+            
             weatherRepository.observeAllWeatherConditions()
                 .collectLatest { result ->
                     if (result is Result.Success) {
                         val location = _userLocation.value
-                        val radius = _selectedRadius.value ?: 50
+                        val radius = currentRadiusKm
                         
                         if (location == null) {
-                            _weatherState.value = Result.Success(emptyList())
+                            // Instead of showing empty results immediately, we wait for location.
+                            // The activity should handle the "Location Needed" UI if it stays null too long.
+                            _weatherState.value = Result.Loading
                         } else {
                             val filteredList = filterWeatherByDistance(result.data, location, radius)
                             _weatherState.value = Result.Success(filteredList)
@@ -84,12 +106,10 @@ class WeatherAdvisoriesViewModel(
     private fun filterWeatherByDistance(
         weatherList: List<WeatherCondition>,
         userLoc: Location,
-        radius: Int
+        radius: Double
     ): List<WeatherCondition> {
-        // If radius is very large (e.g. All), don't filter
-        if (radius >= 5000) return weatherList
-
-        return weatherList.filter { weather ->
+        // If radius is very large (e.g. All), don't filter but still enrich with port types
+        val sourceList = if (radius >= 5000) weatherList else weatherList.filter { weather ->
             val port = allPorts.find { it.name.trim().equals(weather.location.trim(), ignoreCase = true) }
             if (port != null) {
                 val portLoc = Location("").apply {
@@ -97,10 +117,16 @@ class WeatherAdvisoriesViewModel(
                     longitude = port.lng
                 }
                 val distanceInMeters = userLoc.distanceTo(portLoc)
-                distanceInMeters <= (radius * 1000) // Convert km to meters
+                distanceInMeters <= (radius * 1000)
             } else {
                 false
             }
+        }
+
+        // Enrich with port types
+        return sourceList.map { weather ->
+            val port = allPorts.find { it.name.trim().equals(weather.location.trim(), ignoreCase = true) }
+            weather.copy(portType = port?.type)
         }
     }
 

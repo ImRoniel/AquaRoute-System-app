@@ -34,8 +34,7 @@ class WeatherAdvisoriesActivity : AppCompatActivity() {
     private lateinit var adapter: WeatherAdvisoryAdapter
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    private val radiusOptions = listOf("10 km", "25 km", "50 km", "100 km", "All")
-    private val radiusValues = listOf(10, 25, 50, 100, 5000)
+    private val unitOptions = listOf("km", "mi")
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -44,8 +43,7 @@ class WeatherAdvisoriesActivity : AppCompatActivity() {
             checkLocationThenObserve()
         } else {
             showEmptyState("Enable location to see nearby weather conditions.")
-            binding.cvRadiusSelector.alpha = 0.5f
-            binding.spinnerRadius.isEnabled = false
+            disableRadiusInput()
         }
     }
 
@@ -67,20 +65,30 @@ class WeatherAdvisoriesActivity : AppCompatActivity() {
     }
 
     private fun setupRadiusSelector() {
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, radiusOptions)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerRadius.adapter = adapter
+        // Units Spinner
+        val unitAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, unitOptions)
+        unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerUnits.adapter = unitAdapter
+        binding.spinnerUnits.setSelection(0) // Default "km"
 
-        // Set default selection to 50 km (index 2)
-        binding.spinnerRadius.setSelection(2)
+        // Default value
+        binding.etRadius.setText("50")
 
-        binding.spinnerRadius.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val radius = radiusValues[position]
-                viewModel.setSelectedRadius(radius)
+        binding.btnReloadFilter.setOnClickListener {
+            val radiusStr = binding.etRadius.text.toString()
+            if (radiusStr.isBlank()) {
+                Toast.makeText(this, "Please enter a radius value", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            val radiusValue = radiusStr.toDoubleOrNull()
+            if (radiusValue == null || radiusValue <= 0) {
+                Toast.makeText(this, "Please enter a valid positive number", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val unit = binding.spinnerUnits.selectedItem.toString()
+            viewModel.applyFilter(radiusValue, unit)
         }
     }
 
@@ -123,23 +131,38 @@ class WeatherAdvisoriesActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun checkLocationThenObserve() {
         binding.progressBar.visibility = android.view.View.VISIBLE
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+        binding.llEmptyError.visibility = android.view.View.GONE
+        
+        // Use high accuracy for better reliability as requested
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
                     viewModel.setUserLocation(location)
-                    binding.cvRadiusSelector.alpha = 1.0f
-                    binding.spinnerRadius.isEnabled = true
+                    enableRadiusInput()
                 } else {
                     binding.progressBar.visibility = android.view.View.GONE
                     showEmptyState("Could not determine your location. Please ensure GPS is enabled and try again.")
-                    binding.cvRadiusSelector.alpha = 0.5f
-                    binding.spinnerRadius.isEnabled = false
+                    disableRadiusInput()
                 }
             }
             .addOnFailureListener {
                 binding.progressBar.visibility = android.view.View.GONE
                 showErrorState("Error getting location: ${it.message}")
             }
+    }
+
+    private fun enableRadiusInput() {
+        binding.cvRadiusSelector.alpha = 1.0f
+        binding.etRadius.isEnabled = true
+        binding.spinnerUnits.isEnabled = true
+        binding.btnReloadFilter.isEnabled = true
+    }
+
+    private fun disableRadiusInput() {
+        binding.cvRadiusSelector.alpha = 0.5f
+        binding.etRadius.isEnabled = false
+        binding.spinnerUnits.isEnabled = false
+        binding.btnReloadFilter.isEnabled = false
     }
 
     private fun observeViewModel() {
@@ -156,13 +179,12 @@ class WeatherAdvisoriesActivity : AppCompatActivity() {
                     binding.swipeRefreshLayout.isRefreshing = false
                     
                     if (result.data.isEmpty()) {
-                        val radiusVal = viewModel.selectedRadius.value ?: 50
-                        val radiusText = if (radiusVal >= 5000) "any distance" else "within $radiusVal km"
+                        val radiusInfo = viewModel.getDisplayRadiusInfo()
                         
                         if (viewModel.userLocation.value == null) {
                             showEmptyState("Location needed to filter nearby weather.")
                         } else {
-                            showEmptyState("No weather advisories found $radiusText of your location.")
+                            showEmptyState("No weather advisories found within $radiusInfo of your location.")
                         }
                     } else {
                         binding.llEmptyError.visibility = android.view.View.GONE

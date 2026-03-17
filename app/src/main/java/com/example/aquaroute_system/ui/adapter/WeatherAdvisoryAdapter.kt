@@ -25,6 +25,17 @@ class WeatherAdvisoryAdapter : ListAdapter<WeatherCondition, WeatherAdvisoryAdap
         fun bind(weather: WeatherCondition) {
             binding.apply {
                 tvLocation.text = weather.location.uppercase()
+                
+                // Port Type Indicator logic
+                val type = weather.portType?.lowercase() ?: "port"
+                val (typeLabel, typeIcon) = when {
+                    type.contains("terminal") -> "TERMINAL" to "🏭"
+                    type.contains("pier") -> "PIER" to "🛥️"
+                    type.contains("boatyard") -> "BOATYARD" to "⚓"
+                    else -> "PORT" to "📍"
+                }
+                tvPortType.text = "$typeIcon $typeLabel"
+
                 tvIconCondition.text = "${weather.icon} ${weather.condition.uppercase()}"
                 tvTemp.text = "🌡️ Temp: ${weather.temperature}°C"
                 tvWind.text = "💨 Wind: ${weather.windSpeed} ${weather.windDirection}"

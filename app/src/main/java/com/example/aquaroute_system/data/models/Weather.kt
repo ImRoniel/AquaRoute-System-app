@@ -19,7 +19,8 @@ data class WeatherCondition(
     val pressure: String = "1013 hPa",
     val hasAdvisory: Boolean = false,
     val advisoryMessage: String? = null,
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val portType: String? = null
 ) : Parcelable {
 
     val displayText: String

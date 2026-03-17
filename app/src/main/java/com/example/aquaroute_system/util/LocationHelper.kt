@@ -43,7 +43,12 @@ object LocationHelper {
             LocationServices.getFusedLocationProviderClient(context)
 
         return suspendCancellableCoroutine { continuation ->
-            val task: Task<Location> = fusedLocationClient.lastLocation
+            // Use getCurrentLocation instead of lastLocation for better reliability
+            // Priority.PRIORITY_HIGH_ACCURACY is used to get the best possible location
+            val task: Task<Location> = fusedLocationClient.getCurrentLocation(
+                com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            )
 
             task.addOnSuccessListener { location ->
                 if (continuation.isActive) {
