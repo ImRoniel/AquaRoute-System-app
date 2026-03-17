@@ -12,6 +12,7 @@ import com.example.aquaroute_system.util.LocationHelper
 import com.example.aquaroute_system.util.SessionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -73,9 +74,13 @@ class UserDashboardViewModel(
     //live data for refreshing state
     private val _isRefreshingWeather = MutableLiveData(false)
     val isRefreshingWeather: LiveData<Boolean> = _isRefreshingWeather
+    // List to store all ferries from real-time listener
+    private var _cachedAllFerries = listOf<Ferry>()
+
     init {
         loadCurrentUser()
         startRealTimeUpdates()
+        startUiTicker()
     }
 
     private fun loadCurrentUser() {
@@ -85,8 +90,30 @@ class UserDashboardViewModel(
     private fun startRealTimeUpdates() {
         val userId = sessionManager.getUserId() ?: return
 
+        // Observe Ferries in real-time
+        viewModelScope.launch {
+            ferryRepository.observeAllFerries()
+                .catch { e ->
+                    Log.e(TAG, "Error observing ferries", e)
+                    _errorMessage.value = "Failed to load ferries: ${e.message}"
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            _cachedAllFerries = result.data
+                            updateNearbyFerries()
+                        }
+                        is Result.Error -> {
+                            _errorMessage.value = "Ferry error: ${result.exception.message}"
+                        }
+                        else -> {}
+                    }
+                }
+        }
+
         viewModelScope.launch {
             dashboardRepository.observeUserStats(userId)
+// ... (rest of the stats/port/weather observation logic remains similar)
                 .catch { e ->
                     Log.e(TAG, "Error observing stats", e)
                     _errorMessage.value = "Failed to load stats: ${e.message}"
@@ -163,40 +190,53 @@ class UserDashboardViewModel(
                 }
         }
 
-        // Load nearby ferries periodically
-        loadNearbyFerries()
+        // Load nearby ferries periodically (Managed by startUiTicker)
     }
 
-    fun loadNearbyFerries() {
+    private fun startUiTicker() {
         viewModelScope.launch {
-            val allFerries = ferryRepository.getAllFerries()
-            val userLoc = _userLocation.value
-            if (userLoc != null) {
-                // Compute distance for every ferry and sort
-                val ferriesWithDistance = allFerries.map { ferry ->
-                    ferry to calculateDistance(
-                        userLoc.latitude, userLoc.longitude,
-                        ferry.lat, ferry.lon
-                    )
-                }.sortedBy { it.second }
-
-                // Filter those within 100km
-                val nearby = ferriesWithDistance.filter { it.second <= 100 }.map { it.first }
-                _nearbyFerries.value = if (nearby.isNotEmpty()) {
-                    nearby
-                } else {
-                    ferriesWithDistance.take(2).map { it.first }
-                }
-            } else {
-                // No location: fallback to first few ferries
-                _nearbyFerries.value = allFerries.take(3)
+            while (true) {
+                delay(30_000) // 30 seconds
+                updateNearbyFerries()
             }
+        }
+    }
+
+    private fun updateNearbyFerries() {
+        val allFerries = _cachedAllFerries
+        if (allFerries.isEmpty()) return
+
+        val userLoc = _userLocation.value
+        if (userLoc != null) {
+            // Compute distance for every ferry and sort
+            val ferriesWithDistance = allFerries.map { ferry ->
+                ferry to calculateDistance(
+                    userLoc.latitude, userLoc.longitude,
+                    ferry.lat, ferry.lon
+                )
+            }.sortedBy { it.second }
+
+            // Filter those within 100km
+            val nearby = ferriesWithDistance.filter { it.second <= 100 }.map { it.first }
+            
+            // Re-emit either nearby or first few fallback
+            val newList = if (nearby.isNotEmpty()) {
+                nearby
+            } else {
+                ferriesWithDistance.take(2).map { it.first }
+            }
+            
+            // Re-emit even if the list is same to trigger Adapter local re-calculation
+            _nearbyFerries.value = newList
+        } else {
+            // No location: fallback to first few ferries
+            _nearbyFerries.value = allFerries.take(3)
         }
     }
 
     fun setUserLocation(location: Location) {
         _userLocation.value = location
-        loadNearbyFerries()
+        updateNearbyFerries()
         checkNearbyWeather(location)
     }
 
@@ -225,7 +265,7 @@ class UserDashboardViewModel(
     fun refreshData() {
         _isLoading.value = true
         loadCurrentUser()
-        loadNearbyFerries()
+        updateNearbyFerries()
         _isLoading.value = false
     }
     // New function to check nearby weather

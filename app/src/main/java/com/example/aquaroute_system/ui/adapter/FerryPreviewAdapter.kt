@@ -11,6 +11,9 @@ class FerryPreviewAdapter : RecyclerView.Adapter<FerryPreviewAdapter.FerryViewHo
     private var ferries: List<Ferry> = emptyList()
 
     fun submitList(list: List<Ferry>) {
+        // We use notifyDataSetChanged here because we only have a few items (max 3-5)
+        // and we WANT to force a re-bind every 30 seconds to refresh the progress bar
+        // calculation even if the Firestore data hasn't changed.
         ferries = list
         notifyDataSetChanged()
     }
@@ -33,11 +36,11 @@ class FerryPreviewAdapter : RecyclerView.Adapter<FerryPreviewAdapter.FerryViewHo
 
         fun bind(ferry: Ferry) {
             binding.apply {
-                tvFerryName.text = "🚢 ${ferry.name}"
-                tvDestination.text = "🏢 ${ferry.getDestination()}"
+                tvFerryName.text = "🚢 ${ferry.name.uppercase()}"
+                tvDestination.text = "🏢 ${ferry.getDestination().uppercase()}"
                 tvEta.text = "${ferry.eta} mins"
 
-                // Calculate progress percentage
+                // Calculate progress percentage locally (includes time-based estimation)
                 val progress = calculateProgress(ferry)
                 progressBar.progress = progress
                 tvProgressPercent.text = "$progress%"
@@ -45,8 +48,18 @@ class FerryPreviewAdapter : RecyclerView.Adapter<FerryPreviewAdapter.FerryViewHo
         }
 
         private fun calculateProgress(ferry: Ferry): Int {
-            // If we have pointA and pointB, compute based on distance traveled
-            return if (ferry.pointA != null && ferry.pointB != null && ferry.pointA.size == 2 && ferry.pointB.size == 2) {
+            // Priority 1: Use startTime and endTime if available (most accurate)
+            if (ferry.startTime != null && ferry.endTime != null && ferry.endTime > ferry.startTime) {
+                val currentTime = System.currentTimeMillis()
+                val totalDuration = ferry.endTime - ferry.startTime
+                val elapsed = currentTime - ferry.startTime
+                if (totalDuration > 0) {
+                    return ((elapsed.toFloat() / totalDuration) * 100).toInt().coerceIn(0, 100)
+                }
+            }
+
+            // Priority 2: Use GPS coordinates if available
+            if (ferry.pointA != null && ferry.pointB != null && ferry.pointA.size == 2 && ferry.pointB.size == 2) {
                 val totalDistance = calculateDistance(
                     ferry.pointA[0], ferry.pointA[1],
                     ferry.pointB[0], ferry.pointB[1]
@@ -55,17 +68,24 @@ class FerryPreviewAdapter : RecyclerView.Adapter<FerryPreviewAdapter.FerryViewHo
                     ferry.pointA[0], ferry.pointA[1],
                     ferry.lat, ferry.lon
                 )
-                if (totalDistance > 0) {
-                    ((traveledDistance / totalDistance) * 100).toInt().coerceIn(0, 100)
-                } else 0
+                if (totalDistance > 0.1) { // At least 100m
+                    return ((traveledDistance / totalDistance) * 100).toInt().coerceIn(0, 100)
+                }
+            }
+
+            // Priority 3: Fallback to status
+            if (ferry.status.lowercase() == "arrived" || ferry.status.lowercase() == "docked") {
+                return 100
+            }
+
+            // Priority 4: Fallback to ETA estimation
+            // If ETA is very large (e.g. 800), it's probably just started or far away
+            val maxEta = 120 // Assume 2 hours max journey for default progress scaling
+            return if (ferry.eta > 0) {
+                if (ferry.eta >= maxEta) 5 // If far away, show at least 5% progress if active
+                else ((1 - ferry.eta.toFloat() / maxEta) * 100).toInt().coerceIn(0, 100)
             } else {
-                // Fallback: estimate from ETA – assume max ETA of 120 minutes for demo
-                // You can adjust this logic based on your actual data
-                val maxEta = 120
-                val progress = if (ferry.eta > 0) {
-                    ((1 - ferry.eta.toFloat() / maxEta) * 100).toInt().coerceIn(0, 100)
-                } else 0
-                progress
+                0
             }
         }
 
@@ -80,4 +100,4 @@ class FerryPreviewAdapter : RecyclerView.Adapter<FerryPreviewAdapter.FerryViewHo
             return R * c
         }
     }
-}
+}
