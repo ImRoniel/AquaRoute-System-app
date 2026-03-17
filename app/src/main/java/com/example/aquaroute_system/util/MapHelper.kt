@@ -23,6 +23,7 @@ object MapHelper {
      * Create a marker for a ferry
      */
     fun createFerryMarker(
+        context: android.content.Context,
         mapView: MapView,
         ferry: Ferry,
         onMarkerClick: (Ferry) -> Unit
@@ -30,21 +31,17 @@ object MapHelper {
         return Marker(mapView).apply {
             position = GeoPoint(ferry.lat, ferry.lon)
 
-            // Use emoji for ferry (most reliable across devices)
-            setTextIcon("⛴️")
-            setTextLabelFontSize(18)
+            // Use ferry drawable
+            icon = ContextCompat.getDrawable(context, R.drawable.ic_ferry_marker)
 
-            // Color based on status
+            // Color tint based on status
             val color = when (ferry.status.lowercase()) {
                 "on_time" -> Color.parseColor("#4CAF50") // Green
                 "delayed" -> Color.parseColor("#FF9800") // Orange
                 "cancelled" -> Color.parseColor("#F44336") // Red
                 else -> Color.parseColor("#666666") // Gray
             }
-
-            setTextLabelForegroundColor(color)
-            setTextLabelBackgroundColor(Color.TRANSPARENT)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
             title = ferry.name
             subDescription = "${ferry.route} • ${ferry.speed_knots} knots"
@@ -60,6 +57,7 @@ object MapHelper {
      * Create a marker for a local port
      */
     fun createPortMarker(
+        context: android.content.Context,
         mapView: MapView,
         port: Port,
         onMarkerClick: (Port) -> Unit
@@ -67,19 +65,11 @@ object MapHelper {
         return Marker(mapView).apply {
             position = GeoPoint(port.lat, port.lon)
 
-            // Use P for port
-            setTextIcon("⚓")
-            setTextLabelFontSize(18)
+            // Use terminal icon for primary, pier for others
+            val drawableRes = if (port.isPrimary) R.drawable.ic_port_terminal else R.drawable.ic_port_pier
+            icon = ContextCompat.getDrawable(context, drawableRes)
 
-            val color = if (port.isPrimary) {
-                Color.parseColor("#F44336") // Red for primary ports
-            } else {
-                Color.parseColor("#666666") // Gray for others
-            }
-
-            setTextLabelForegroundColor(color)
-            setTextLabelBackgroundColor(Color.TRANSPARENT)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
             title = port.name
             subDescription = if (port.isPrimary) "Main Terminal" else "Port"
@@ -95,6 +85,7 @@ object MapHelper {
      * Create a marker for a Firestore port
      */
     fun createFirestorePortMarker(
+        context: android.content.Context,
         mapView: MapView,
         port: FirestorePort,
         currentHour: Int,
@@ -107,33 +98,16 @@ object MapHelper {
             position = GeoPoint(port.lat, port.lng)
             title = port.name
 
-            // Use emoji based on port type (most reliable)
-            val iconText = when {
-                port.type.contains("ferry", ignoreCase = true) -> "⛴️"
-                port.type.contains("pier", ignoreCase = true) -> "⚓"
-                else -> "📍"
+            // Select icon based on port type
+            val drawableRes = when {
+                port.type.contains("terminal", ignoreCase = true) -> R.drawable.ic_port_terminal
+                port.type.contains("pier", ignoreCase = true) -> R.drawable.ic_port_pier
+                port.type.contains("boatyard", ignoreCase = true) -> R.drawable.ic_port_boatyard
+                else -> R.drawable.ic_port_marker
             }
-            setTextIcon(iconText)
-            setTextLabelFontSize(18)
+            icon = ContextCompat.getDrawable(context, drawableRes)
 
-            // Color based on status
-            val color = when {
-                dynamicStatus.contains("open", ignoreCase = true) -> Color.parseColor("#4CAF50") // Green
-                dynamicStatus.contains("close", ignoreCase = true) -> Color.parseColor("#F44336") // Red
-                dynamicStatus.contains("soon", ignoreCase = true) -> Color.parseColor("#FF9800") // Orange
-                else -> Color.parseColor("#2196F3") // Blue
-            }
-            setTextLabelForegroundColor(color)
-
-            // Background based on type
-            val bgColor = when {
-                port.type.contains("ferry", ignoreCase = true) -> Color.parseColor("#80E3F2FD") // Light blue
-                port.type.contains("pier", ignoreCase = true) -> Color.parseColor("#80E8F5E9") // Light green
-                else -> Color.TRANSPARENT
-            }
-            setTextLabelBackgroundColor(bgColor)
-
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
             // Build detailed description
             subDescription = buildString {

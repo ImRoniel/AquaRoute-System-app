@@ -268,7 +268,7 @@ class LiveMapView : AppCompatActivity() {
         ferryMarkers.clear()
 
         ferries.forEach { ferry ->
-            val marker = MapHelper.createFerryMarker(mapView, ferry) { selectedFerry ->
+            val marker = MapHelper.createFerryMarker(this, mapView, ferry) { selectedFerry ->
                 viewModel.onFerryMarkerClick(selectedFerry)
             }
             mapView.overlays.add(marker)
@@ -282,7 +282,7 @@ class LiveMapView : AppCompatActivity() {
         portMarkers.clear()
 
         ports.forEach { port ->
-            val marker = MapHelper.createPortMarker(mapView, port) { selectedPort ->
+            val marker = MapHelper.createPortMarker(this, mapView, port) { selectedPort ->
                 viewModel.onPortMarkerClick(selectedPort)
             }
             mapView.overlays.add(marker)
@@ -302,6 +302,7 @@ class LiveMapView : AppCompatActivity() {
         ports.forEach { port ->
             val portWithStatus = viewModel.getPortWithDynamicStatus(port)
             val marker = MapHelper.createFirestorePortMarker(
+                context = this,
                 mapView = mapView,
                 port = portWithStatus,
                 currentHour = currentHour,
@@ -442,10 +443,7 @@ class LiveMapView : AppCompatActivity() {
         val marker = Marker(mapView).apply {
             position = geoPoint
             title = "You are here"
-            setTextIcon("📍")
-            setTextLabelForegroundColor(Color.parseColor("#2196F3"))
-            setTextLabelBackgroundColor(Color.parseColor("#E3F2FD"))
-            setTextLabelFontSize(14)
+            icon = ContextCompat.getDrawable(this@LiveMapView, R.drawable.ic_my_location)
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
         }
         mapView.overlays.add(marker)
