@@ -40,8 +40,8 @@ class PortsViewModel(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    // Adjustable radius (default 50km)
-    private val _radiusKm = MutableLiveData(50.0)
+    // Adjustable radius (default 10km)
+    private val _radiusKm = MutableLiveData(10.0)
     val radiusKm: LiveData<Double> = _radiusKm
 
     // Real-time hour for dynamic port status
