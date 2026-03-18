@@ -8,155 +8,612 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:padding="16dp">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <!-- Welcome Card -->
+            <!-- ============================================================ -->
+            <!-- CARD 1: PERSONALIZED HERO HEADER                             -->
+            <!-- ============================================================ -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:background="@drawable/bg_hero_gradient"
+                    android:padding="20dp">
 
+                    <!-- Wave icon + greeting -->
                     <TextView
                         android:id="@+id/tvWelcome"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif-black"
-                        android:text="Loading..."
-                        android:textColor="@color/deep_ocean_blue"
+                        android:text="GOOD MORNING, CAPTAIN!"
+                        android:textColor="#FFFFFF"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-black"
+                        android:letterSpacing="0.02" />
 
+                    <!-- Personalized subtitle -->
                     <TextView
-                        android:id="@+id/tvMemberSince"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvCargoSummary"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:text="Loading your shipments..."
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="14sp"
                         android:layout_marginTop="4dp"
-                        android:text=""
-                        android:textColor="@color/medium_text"
-                        android:textSize="14sp" />
+                        android:layout_marginBottom="16dp" />
 
-                    <TextView
-                        android:id="@+id/tvLastLogin"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:textColor="@color/medium_text"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvLastUpdate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text=""
-                        android:textColor="@color/medium_text"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Live Map Preview Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/white">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
+                    <!-- 2x2 Stat Chip Grid -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="LIVE MAP PREVIEW"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="horizontal"
+                        android:weightSum="2">
 
-                    <FrameLayout
-                        android:id="@+id/mapPreviewContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        android:background="@drawable/card_background"
-                        android:padding="8dp">
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvFerryPreview"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-                    </FrameLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Weather Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/white">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="WEATHER &amp; SEA CONDITIONS"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvWeather"
-                            android:layout_width="match_parent"
+                        <!-- IN TRANSIT chip -->
+                        <LinearLayout
+                            android:id="@+id/chipInTransit"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:nestedScrollingEnabled="false"
-                            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_stat_chip"
+                            android:padding="12dp"
+                            android:layout_marginEnd="6dp">
+
+                            <TextView
+                                android:id="@+id/tvInTransitCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🚢 IN TRANSIT"
+                                android:textColor="#DDFFFFFF"
+                                android:textSize="10sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.08"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <!-- PROCESSING chip -->
+                        <LinearLayout
+                            android:id="@+id/chipProcessing"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_stat_chip"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp">
+
+                            <TextView
+                                android:id="@+id/tvProcessingCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🟡 PROCESSING"
+                                android:textColor="#DDFFFFFF"
+                                android:textSize="10sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.08"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2"
+                        android:layout_marginTop="8dp">
+
+                        <!-- DELIVERED chip -->
+                        <LinearLayout
+                            android:id="@+id/chipDelivered"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_stat_chip"
+                            android:padding="12dp"
+                            android:layout_marginEnd="6dp">
+
+                            <TextView
+                                android:id="@+id/tvDeliveredCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="✅ DELIVERED"
+                                android:textColor="#DDFFFFFF"
+                                android:textSize="10sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.08"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <!-- DELAYED chip -->
+                        <LinearLayout
+                            android:id="@+id/chipDelayed"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_stat_chip"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp">
+
+                            <TextView
+                                android:id="@+id/tvDelayedCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFD54F"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🔴 DELAYED"
+                                android:textColor="#DDFFFFFF"
+                                android:textSize="10sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.08"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ============================================================ -->
+            <!-- CARD 2: FLEET STATUS PULSE                                   -->
+            <!-- ============================================================ -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header row: FLEET STATUS + active count badge -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
 
                         <TextView
-                            android:id="@+id/tvWeatherEmpty"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🚢  FLEET STATUS"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <!-- Active Vessel count badge -->
+                        <TextView
+                            android:id="@+id/tvActiveFerryCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="— ACTIVE"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/button_primary_small"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp" />
+                    </LinearLayout>
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/light_gray"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Nearest ferry spotlight — visible when ferry data available -->
+                    <LinearLayout
+                        android:id="@+id/layoutNearestFerry"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <!-- Ferry name + status -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="No weather data available"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvNearestFerryName"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="OceanJet 5"
+                                android:textColor="@color/dark_text"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:maxLines="1"
+                                android:ellipsize="end" />
+
+                            <TextView
+                                android:id="@+id/tvNearestFerryStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="EN ROUTE"
+                                android:textColor="@color/white"
+                                android:textSize="10sp"
+                                android:background="@drawable/bg_status_pill_open"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="3dp" />
+                        </LinearLayout>
+
+                        <!-- Route -->
+                        <TextView
+                            android:id="@+id/tvNearestFerryRoute"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Manila → Cebu"
                             android:textColor="@color/medium_text"
-                            android:textSize="14sp"
-                            android:gravity="center"
-                            android:padding="16dp"
-                            android:visibility="gone" />
-                    </FrameLayout>
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginBottom="10dp" />
+
+                        <!-- ETA + Progress bar row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvNearestFerryEta"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-- min"
+                                android:textColor="@color/medium_text"
+                                android:textSize="12sp" />
+
+                            <ProgressBar
+                                android:id="@+id/pbNearestFerry"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:layout_marginHorizontal="10dp"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressTint="@color/sky_cyan"
+                                android:progressBackgroundTint="@color/light_gray" />
+
+                            <TextView
+                                android:id="@+id/tvNearestFerryProgress"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textColor="@color/sky_cyan"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Empty / loading state for fleet -->
+                    <TextView
+                        android:id="@+id/tvFleetEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Loading fleet data..."
+                        android:textColor="@color/medium_text"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:visibility="visible" />
+
+                    <!-- View All Map button -->
+                    <TextView
+                        android:id="@+id/btnViewAllOnMap"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center"
+                        android:text="VIEW ALL ON LIVE MAP →"
+                        android:textColor="@color/sky_cyan"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        android:background="?attr/selectableItemBackground"
+                        android:layout_marginTop="8dp" />
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- ============================================================ -->
+            <!-- CARD 3: MY CARGO SNAPSHOT                                    -->
+            <!-- ============================================================ -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="📦  MY CARGO"
+                        android:textColor="@color/deep_ocean_blue"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/light_gray"
+                        android:layout_marginBottom="4dp" />
+
+                    <!-- Dynamic cargo rows will be added here programmatically -->
+                    <LinearLayout
+                        android:id="@+id/llCargoRows"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <!-- Empty state (no cargo) -->
+                    <LinearLayout
+                        android:id="@+id/layoutCargoEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📭"
+                            android:textSize="36sp"
+                            android:layout_marginBottom="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No active shipments"
+                            android:textColor="@color/medium_text"
+                            android:textSize="14sp"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Your cargo will appear here once registered"
+                            android:textColor="@color/light_text"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <!-- Track All Cargo button -->
+                    <TextView
+                        android:id="@+id/btnTrackAllCargo"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center"
+                        android:text="TRACK ALL CARGO →"
+                        android:textColor="@color/primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        android:background="?attr/selectableItemBackground"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ============================================================ -->
+            <!-- CARD 4: PORT & WEATHER ADVISORY TICKER                       -->
+            <!-- ============================================================ -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="⚓  PORTS &amp; ADVISORIES"
+                        android:textColor="@color/deep_ocean_blue"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/light_gray"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Port status summary row (dot counts) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/tvPortsOpen"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="🟢\n0 Open"
+                            android:textColor="@color/safety_green"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="36dp"
+                            android:background="@color/light_gray" />
+
+                        <TextView
+                            android:id="@+id/tvPortsLimited"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🟡\n0 Limited"
+                            android:textColor="@color/warning_amber"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:gravity="center" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="36dp"
+                            android:background="@color/light_gray" />
+
+                        <TextView
+                            android:id="@+id/tvPortsClosed"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🔴\n0 Closed"
+                            android:textColor="@color/error_red"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <!-- Advisory banner (visible only when hasAdvisory == true) -->
+                    <LinearLayout
+                        android:id="@+id/layoutAdvisoryBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/bg_advisory_banner"
+                        android:padding="10dp"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚠️"
+                            android:textSize="18sp"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/tvAdvisoryText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="No advisories"
+                            android:textColor="#E65100"
+                            android:textSize="13sp"
+                            android:maxLines="3"
+                            android:ellipsize="end" />
+                    </LinearLayout>
+
+                    <!-- No ports/weather empty state -->
+                    <TextView
+                        android:id="@+id/tvPortsEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Loading port data..."
+                        android:textColor="@color/medium_text"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:visibility="gone" />
+
+                    <!-- View Weather button -->
+                    <TextView
+                        android:id="@+id/btnViewWeather"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center"
+                        android:text="VIEW WEATHER ADVISORIES →"
+                        android:textColor="@color/weather_teal"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        android:background="?attr/selectableItemBackground"
+                        android:layout_marginTop="8dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
         </LinearLayout>
     </ScrollView>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

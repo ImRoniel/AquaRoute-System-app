@@ -56,6 +56,23 @@ class UserDashboardViewModel(
     private val _nearbyFerries = MutableLiveData<List<Ferry>>()
     val nearbyFerries: LiveData<List<Ferry>> = _nearbyFerries
 
+    // Single nearest ferry for dashboard spotlight
+    private val _nearestFerry = MutableLiveData<Ferry?>()
+    val nearestFerry: LiveData<Ferry?> = _nearestFerry
+
+    // Per-status cargo counts for hero header chips
+    private val _inTransitCount = MutableLiveData(0)
+    val inTransitCount: LiveData<Int> = _inTransitCount
+
+    private val _processingCount = MutableLiveData(0)
+    val processingCount: LiveData<Int> = _processingCount
+
+    private val _deliveredCount = MutableLiveData(0)
+    val deliveredCount: LiveData<Int> = _deliveredCount
+
+    private val _delayedCount = MutableLiveData(0)
+    val delayedCount: LiveData<Int> = _delayedCount
+
     // User location
     private val _userLocation = MutableLiveData<Location?>()
     val userLocation: LiveData<Location?> = _userLocation
@@ -218,19 +235,23 @@ class UserDashboardViewModel(
 
             // Filter those within 100km
             val nearby = ferriesWithDistance.filter { it.second <= 100 }.map { it.first }
-            
+
             // Re-emit either nearby or first few fallback
             val newList = if (nearby.isNotEmpty()) {
                 nearby
             } else {
                 ferriesWithDistance.take(2).map { it.first }
             }
-            
+
             // Re-emit even if the list is same to trigger Adapter local re-calculation
             _nearbyFerries.value = newList
+            // Post the nearest ferry for the dashboard spotlight
+            _nearestFerry.value = newList.firstOrNull()
         } else {
             // No location: fallback to first few ferries
-            _nearbyFerries.value = allFerries.take(3)
+            val fallback = allFerries.take(3)
+            _nearbyFerries.value = fallback
+            _nearestFerry.value = fallback.firstOrNull()
         }
     }
 
@@ -252,14 +273,25 @@ class UserDashboardViewModel(
     }
 
     private fun updateStatsFromCargo(cargoList: List<Cargo>) {
+        val inTransit  = cargoList.count { it.status == "in_transit" }
+        val delivered  = cargoList.count { it.status == "delivered" }
+        val delayed    = cargoList.count { it.status == "delayed" }
+        val processing = cargoList.count { it.status == "processing" || it.status == "pending" }
+
         val currentStats = _dashboardStats.value ?: DashboardStats()
         val updatedStats = currentStats.copy(
             totalShipments = cargoList.size,
-            inTransit = cargoList.count { it.status == "in_transit" },
-            delivered = cargoList.count { it.status == "delivered" },
-            delayed = cargoList.count { it.status == "delayed" }
+            inTransit  = inTransit,
+            delivered  = delivered,
+            delayed    = delayed
         )
-        _dashboardStats.value = updatedStats
+        _dashboardStats.value  = updatedStats
+
+        // Post individual count LiveData for dashboard chips
+        _inTransitCount.value  = inTransit
+        _deliveredCount.value  = delivered
+        _delayedCount.value    = delayed
+        _processingCount.value = processing
     }
 
     fun refreshData() {

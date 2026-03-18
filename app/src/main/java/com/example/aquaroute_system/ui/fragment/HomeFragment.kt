@@ -6,94 +6,290 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import com.example.aquaroute_system.R
+import com.example.aquaroute_system.data.models.Cargo
+import com.example.aquaroute_system.data.models.Ferry
+import com.example.aquaroute_system.data.models.PortStatus
+import com.example.aquaroute_system.data.models.User
+import com.example.aquaroute_system.data.models.WeatherCondition
 import com.example.aquaroute_system.databinding.FragmentHomeBinding
-import com.example.aquaroute_system.ui.adapter.FerryPreviewAdapter
-import com.example.aquaroute_system.ui.adapter.WeatherAdapter
+import com.example.aquaroute_system.databinding.ItemCargoSnapshotRowBinding
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
 
 class HomeFragment : Fragment() {
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: UserDashboardViewModel by activityViewModels()
-    private lateinit var ferryAdapter: FerryPreviewAdapter
-    private lateinit var weatherAdapter: WeatherAdapter
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        setupRecyclerViews()
         setupObservers()
+        setupClickListeners()
         setupSwipeRefresh()
     }
 
-    private fun setupRecyclerViews() {
-        ferryAdapter = FerryPreviewAdapter()
-        binding.rvFerryPreview.adapter = ferryAdapter
-
-        weatherAdapter = WeatherAdapter()
-        binding.rvWeather.adapter = weatherAdapter
-    }
+    // -------------------------------------------------------------------------
+    // Observers
+    // -------------------------------------------------------------------------
 
     private fun setupObservers() {
+
+        // Hero Header — user greeting
         viewModel.currentUser.observe(viewLifecycleOwner) { user ->
-            user?.let { updateUserInfo(it) }
+            user?.let { updateGreeting(it) }
         }
 
+        // Hero Header — cargo stat chips (individual counts)
+        viewModel.inTransitCount.observe(viewLifecycleOwner) { count ->
+            binding.tvInTransitCount.text = count.toString()
+            updateCargoSummarySubtitle()
+        }
+        viewModel.processingCount.observe(viewLifecycleOwner) { count ->
+            binding.tvProcessingCount.text = count.toString()
+        }
+        viewModel.deliveredCount.observe(viewLifecycleOwner) { count ->
+            binding.tvDeliveredCount.text = count.toString()
+        }
+        viewModel.delayedCount.observe(viewLifecycleOwner) { count ->
+            binding.tvDelayedCount.text = count.toString()
+        }
+
+        // Fleet Status Pulse — full list for count + nearest ferry spotlight
         viewModel.nearbyFerries.observe(viewLifecycleOwner) { ferries ->
-            ferryAdapter.submitList(ferries)
+            updateFleetCount(ferries)
+        }
+        viewModel.nearestFerry.observe(viewLifecycleOwner) { ferry ->
+            updateNearestFerrySpotlight(ferry)
         }
 
+        // My Cargo Snapshot — up to 3 active cargo rows
+        viewModel.activeCargo.observe(viewLifecycleOwner) { cargoList ->
+            updateCargoSnapshot(cargoList)
+        }
+
+        // Port & Weather Ticker
+        viewModel.portStatuses.observe(viewLifecycleOwner) { ports ->
+            updatePortStatus(ports)
+        }
         viewModel.weatherConditions.observe(viewLifecycleOwner) { weatherList ->
-            if (weatherList.isEmpty()) {
-                binding.tvWeatherEmpty.visibility = View.VISIBLE
-                binding.rvWeather.visibility = View.GONE
-            } else {
-                binding.tvWeatherEmpty.visibility = View.GONE
-                binding.rvWeather.visibility = View.VISIBLE
-                weatherAdapter.submitList(weatherList)
-            }
+            updateAdvisoryBanner(weatherList)
         }
 
+        // Swipe-refresh loading indicator
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.swipeRefreshLayout.isRefreshing = isLoading
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Card 1: Personalized Hero Header
+    // -------------------------------------------------------------------------
+
+    private fun updateGreeting(user: User) {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val greeting = when (hour) {
+            in 0..11  -> "GOOD MORNING"
+            in 12..16 -> "GOOD AFTERNOON"
+            else      -> "GOOD EVENING"
+        }
+        val name = (user.displayName ?: "CAPTAIN").uppercase()
+        binding.tvWelcome.text = "🌊 $greeting, $name!"
+    }
+
+    private fun updateCargoSummarySubtitle() {
+        val inTransit = viewModel.inTransitCount.value ?: 0
+        binding.tvCargoSummary.text = when {
+            inTransit > 0 -> "You have $inTransit shipment${if (inTransit > 1) "s" else ""} currently in transit."
+            else          -> "No active shipments right now. Stay on course!"
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Card 2: Fleet Status Pulse
+    // -------------------------------------------------------------------------
+
+    private fun updateFleetCount(ferries: List<Ferry>) {
+        val count = ferries.size
+        binding.tvActiveFerryCount.text = "$count ACTIVE"
+    }
+
+    private fun updateNearestFerrySpotlight(ferry: Ferry?) {
+        if (ferry == null) {
+            binding.layoutNearestFerry.visibility = View.GONE
+            binding.tvFleetEmpty.visibility = View.VISIBLE
+            binding.tvFleetEmpty.text = "No ferry data available"
+        } else {
+            binding.tvFleetEmpty.visibility = View.GONE
+            binding.layoutNearestFerry.visibility = View.VISIBLE
+
+            binding.tvNearestFerryName.text = ferry.name
+            binding.tvNearestFerryRoute.text = "${ferry.getOrigin()} → ${ferry.getDestination()}"
+
+            val etaText = if (ferry.eta > 0) "${ferry.eta} min" else "— min"
+            binding.tvNearestFerryEta.text = etaText
+
+            val statusText = when (ferry.status.lowercase()) {
+                "en_route", "active", "sailing" -> "EN ROUTE"
+                "arrived", "docked"             -> "DOCKED"
+                else                            -> ferry.status.uppercase()
+            }
+            binding.tvNearestFerryStatus.text = statusText
+
+            val progress = calculateFerryProgress(ferry)
+            binding.pbNearestFerry.progress = progress
+            binding.tvNearestFerryProgress.text = "$progress%"
+        }
+    }
+
+    private fun calculateFerryProgress(ferry: Ferry): Int {
+        // Time-based (most accurate)
+        if (ferry.startTime != null && ferry.endTime != null && ferry.endTime > ferry.startTime) {
+            val now = System.currentTimeMillis()
+            val total = ferry.endTime - ferry.startTime
+            val elapsed = now - ferry.startTime
+            if (total > 0) return ((elapsed.toFloat() / total) * 100).toInt().coerceIn(0, 100)
+        }
+        // GPS-coordinate based
+        if (ferry.pointA != null && ferry.pointB != null &&
+            ferry.pointA.size == 2 && ferry.pointB.size == 2) {
+            val totalDist = haversine(ferry.pointA[0], ferry.pointA[1], ferry.pointB[0], ferry.pointB[1])
+            val travelledDist = haversine(ferry.pointA[0], ferry.pointA[1], ferry.lat, ferry.lon)
+            if (totalDist > 0.1) return ((travelledDist / totalDist) * 100).toInt().coerceIn(0, 100)
+        }
+        // Status fallback
+        if (ferry.status.lowercase() in listOf("arrived", "docked")) return 100
+        // ETA fallback
+        val maxEta = 120
+        return if (ferry.eta > 0) {
+            if (ferry.eta >= maxEta) 5
+            else ((1 - ferry.eta.toFloat() / maxEta) * 100).toInt().coerceIn(0, 100)
+        } else 0
+    }
+
+    private fun haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val R = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    }
+
+    // -------------------------------------------------------------------------
+    // Card 3: My Cargo Snapshot
+    // -------------------------------------------------------------------------
+
+    private fun updateCargoSnapshot(cargoList: List<Cargo>) {
+        val container = binding.llCargoRows
+        container.removeAllViews()
+
+        val activeCargo = cargoList.take(3) // Show at most 3 rows
+
+        if (activeCargo.isEmpty()) {
+            binding.layoutCargoEmpty.visibility = View.VISIBLE
+        } else {
+            binding.layoutCargoEmpty.visibility = View.GONE
+
+            activeCargo.forEach { cargo ->
+                val rowBinding = ItemCargoSnapshotRowBinding.inflate(
+                    layoutInflater, container, false
+                )
+
+                val (dot, labelColor) = when (cargo.status.lowercase()) {
+                    "in_transit"             -> "🟢" to R.color.safety_green
+                    "delivered"              -> "✅" to R.color.sky_cyan
+                    "delayed"                -> "🔴" to R.color.error_red
+                    "processing", "pending"  -> "🟡" to R.color.warning_amber
+                    else                     -> "⚪" to R.color.medium_text
+                }
+
+                rowBinding.tvCargoStatusDot.text   = dot
+                rowBinding.tvCargoReference.text   = cargo.getDisplayReference().ifEmpty { cargo.id.take(8) }
+                rowBinding.tvCargoRoute.text        = "${cargo.origin} → ${cargo.destination}"
+                rowBinding.tvCargoStatusLabel.text  = cargo.getStatusDisplay()
+                rowBinding.tvCargoStatusLabel.setTextColor(
+                    requireContext().getColor(labelColor)
+                )
+
+                container.addView(rowBinding.root)
+
+                // Divider between rows (not after last)
+                if (cargo != activeCargo.last()) {
+                    val divider = View(requireContext())
+                    val params = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1)
+                    divider.layoutParams = params
+                    divider.setBackgroundColor(requireContext().getColor(R.color.light_gray))
+                    container.addView(divider)
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Card 4: Port & Weather Advisory Ticker
+    // -------------------------------------------------------------------------
+
+    private fun updatePortStatus(ports: List<PortStatus>) {
+        val open    = ports.count { it.status.lowercase() == "open" }
+        val limited = ports.count { it.status.lowercase() == "limited" }
+        val closed  = ports.count { it.status.lowercase() == "closed" }
+
+        binding.tvPortsOpen.text    = "🟢\n$open Open"
+        binding.tvPortsLimited.text = "🟡\n$limited Limited"
+        binding.tvPortsClosed.text  = "🔴\n$closed Closed"
+
+        binding.tvPortsEmpty.visibility = if (ports.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun updateAdvisoryBanner(weatherList: List<WeatherCondition>) {
+        val advisories = weatherList.filter { it.hasAdvisory && !it.advisoryMessage.isNullOrBlank() }
+        if (advisories.isEmpty()) {
+            binding.layoutAdvisoryBanner.visibility = View.GONE
+        } else {
+            binding.layoutAdvisoryBanner.visibility = View.VISIBLE
+            val text = advisories.joinToString(" • ") { "${it.location}: ${it.advisoryMessage}" }
+            binding.tvAdvisoryText.text = text
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Click Listeners
+    // -------------------------------------------------------------------------
+
+    private fun setupClickListeners() {
+        binding.btnViewAllOnMap.setOnClickListener {
+            findNavController().navigate(R.id.nav_map)
+        }
+        binding.btnTrackAllCargo.setOnClickListener {
+            findNavController().navigate(R.id.nav_cargo)
+        }
+        binding.btnViewWeather.setOnClickListener {
+            findNavController().navigate(R.id.nav_weather)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Swipe Refresh
+    // -------------------------------------------------------------------------
+
     private fun setupSwipeRefresh() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             viewModel.refreshData()
         }
-    }
-
-    private fun updateUserInfo(user: com.example.aquaroute_system.data.models.User) {
-        val currentTime = Calendar.getInstance()
-        val hour = currentTime.get(Calendar.HOUR_OF_DAY)
-
-        val greeting = when (hour) {
-            in 0..11 -> "GOOD MORNING"
-            in 12..16 -> "GOOD AFTERNOON"
-            else -> "GOOD EVENING"
-        }
-
-        val displayName = user.displayName ?: "Captain"
-        binding.tvWelcome.text = "$greeting, ${displayName.uppercase()}!"
-
-        val dateFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-        val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-
-        val memberSince = if (user.createdAt > 0) Date(user.createdAt) else Date()
-        binding.tvMemberSince.text = "Member since: ${dateFormat.format(memberSince)}"
-
-        val lastLogin = Date(user.lastLoginAt)
-        binding.tvLastLogin.text = "Last login: Today ${timeFormat.format(lastLogin)}"
     }
 
     override fun onDestroyView() {
