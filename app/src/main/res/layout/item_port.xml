@@ -5,97 +5,110 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
-    app:cardCornerRadius="16dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/white"
     app:strokeWidth="0dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
 
-        <!-- Port Icon/Avatar -->
-        <View
-            android:id="@+id/iconBackground"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_circle_primary_light"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!-- Left: Port Icon -->
+        <FrameLayout
+            android:layout_width="40dp"
+            android:layout_height="40dp">
 
-        <ImageView
-            android:id="@+id/ivPortType"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_port_marker"
-            app:layout_constraintBottom_toBottomOf="@id/iconBackground"
-            app:layout_constraintEnd_toEndOf="@id/iconBackground"
-            app:layout_constraintStart_toStartOf="@id/iconBackground"
-            app:layout_constraintTop_toTopOf="@id/iconBackground"
-            app:tint="@color/deep_ocean_blue" />
+            <View
+                android:id="@+id/iconBackground"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_circle_primary_light" />
 
-        <!-- Port Info -->
-        <TextView
-            android:id="@+id/tvPortName"
+            <ImageView
+                android:id="@+id/ivPortType"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_port_marker"
+                app:tint="@color/deep_ocean_blue" />
+        </FrameLayout>
+
+        <!-- Center: Name + Status + Distance -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="8dp"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:text="Batangas Terminal"
-            android:textColor="@color/text_dark"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@id/statusChip"
-            app:layout_constraintStart_toEndOf="@id/iconBackground"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp">
 
-        <TextView
-            android:id="@+id/tvDistance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="sans-serif"
-            android:text="2.5 km away"
-            android:textColor="@color/text_medium"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@id/tvPortName"
-            app:layout_constraintTop_toBottomOf="@id/tvPortName" />
+            <TextView
+                android:id="@+id/tvPortName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="Batangas Terminal"
+                android:textColor="@color/text_dark"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-        <!-- Status & Activity Info -->
-        <TextView
-            android:id="@+id/statusChip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_status_pill_open"
-            android:textStyle="bold"
-            android:fontFamily="sans-serif-medium"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp"
-            android:text="OPEN"
-            android:textColor="@color/success_green"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:id="@+id/statusChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_status_pill_open"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:text="OPEN"
+                    android:textAllCaps="true"
+                    android:textColor="@color/success_green"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:id="@+id/tvDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="sans-serif"
+                    android:text="Terminal"
+                    android:textColor="@color/text_medium"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Right: Vessel Count Badge -->
         <LinearLayout
             android:id="@+id/vesselActivityLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:background="@drawable/bg_pill_gray"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/statusChip">
+            android:paddingVertical="4dp">
 
             <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
                 android:src="@drawable/ic_ferry_marker"
                 app:tint="@color/text_medium" />
 
@@ -105,10 +118,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:fontFamily="sans-serif-medium"
-                android:text="3 Active"
+                android:text="0"
                 android:textColor="@color/text_medium"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
