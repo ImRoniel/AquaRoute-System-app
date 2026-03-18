@@ -14,7 +14,8 @@ data class FirestorePort(
     val createdAt: Timestamp = Timestamp.now(),  // default will be overridden by actual data
     val openHour: Int? = null,
     val closeHour: Int? = null,
-    val timezone: String = "Asia/Manila"
+    val timezone: String = "Asia/Manila",
+    val geohash: String = "" // NEW: Field for optimized geospatial queries
 ) {
     // NEW: Get dynamic status based on current time
     fun getCurrentStatus(currentHour: Int): String {

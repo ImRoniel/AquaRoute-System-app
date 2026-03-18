@@ -66,28 +66,5 @@
             android:exported="false"
             android:theme="@style/Theme.Dashboard" />
 
-        <!-- LIVE MAP VIEW (Screen 7) -->
-        <activity
-            android:name=".View.LiveMapView"
-            android:exported="false"
-            android:theme="@style/Theme.Dashboard" />
-
-        <!-- CARGO TRACKER (Screen 8) -->
-        <activity
-            android:name=".View.CargoTrackerActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Dashboard" />
-
-        <!-- FERRIES LIST -->
-        <activity
-            android:name=".View.FerriesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Dashboard" />
-
-        <activity
-            android:name=".View.WeatherAdvisoriesActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Dashboard" />
-
     </application>
 </manifest>

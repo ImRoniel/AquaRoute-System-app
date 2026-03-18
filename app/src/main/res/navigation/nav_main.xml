@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.aquaroute_system.ui.fragment.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/nav_map"
+        android:name="com.example.aquaroute_system.ui.fragment.LiveMapFragment"
+        android:label="Map"
+        tools:layout="@layout/activity_livemap" />
+    <fragment
+        android:id="@+id/nav_cargo"
+        android:name="com.example.aquaroute_system.ui.fragment.CargoFragment"
+        android:label="Package"
+        tools:layout="@layout/activity_cargo_tracker" />
+    <fragment
+        android:id="@+id/nav_ports"
+        android:name="com.example.aquaroute_system.ui.fragment.PortsFragment"
+        android:label="Port" />
+    <fragment
+        android:id="@+id/nav_weather"
+        android:name="com.example.aquaroute_system.ui.fragment.WeatherFragment"
+        android:label="Weather"
+        tools:layout="@layout/activity_weather_advisories" />
+</navigation>

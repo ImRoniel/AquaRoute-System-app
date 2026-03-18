@@ -6,6 +6,8 @@ import com.example.aquaroute_system.data.models.Result
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.lang.Math.toRadians
 import kotlin.math.cos
@@ -139,7 +141,8 @@ class PortRepository {
                 source = source,
                 createdAt = createdAt,
                 openHour = openHour,
-                closeHour = closeHour
+                closeHour = closeHour,
+                geohash = data["geohash"] as? String ?: ""
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing document ${document.id}: ${e.message}")
@@ -197,4 +200,53 @@ class PortRepository {
             emptyList()
         }
     }
-}
+
+    /**
+     * Observe ports within a specific radius using lat/lon bounding-box + real-time listener.
+     * Uses the same proven approach as getPortsNearLocation but with a snapshot listener
+     * for real-time updates instead of a one-shot query.
+     */
+    fun observePortsNearLocation(lat: Double, lon: Double, radiusKm: Double): kotlinx.coroutines.flow.Flow<Result<List<FirestorePort>>> = callbackFlow {
+        val latDelta = radiusKm / 111.0
+        val lonDelta = radiusKm / (111.0 * cos(toRadians(lat)))
+
+        val minLat = lat - latDelta
+        val maxLat = lat + latDelta
+        val minLon = lon - lonDelta
+        val maxLon = lon + lonDelta
+
+        Log.d(TAG, "Observing ports in bounds: lat[$minLat, $maxLat], lon[$minLon, $maxLon] for radius $radiusKm km")
+
+        val listener = firestore.collection(PORTS_COLLECTION)
+            .whereGreaterThanOrEqualTo("lat", minLat)
+            .whereLessThanOrEqualTo("lat", maxLat)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Snapshot listener error", error)
+                    trySend(Result.Error(error))
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val ports = snapshot.documents.mapNotNull { doc ->
+                        parseFirestorePort(doc)
+                    }.filter { port ->
+                        // Filter by longitude (Firestore can only range-query one field)
+                        port.lng in minLon..maxLon
+                    }.filter { port ->
+                        // Final exact Haversine filtering for precise radius
+                        com.example.aquaroute_system.util.GeoHashUtils.calculateDistance(lat, lon, port.lat, port.lng) <= radiusKm
+                    }.sortedBy { port ->
+                        com.example.aquaroute_system.util.GeoHashUtils.calculateDistance(lat, lon, port.lat, port.lng)
+                    }
+                    Log.d(TAG, "Fetched ${ports.size} ports within $radiusKm km radius (bounding-box + Haversine)")
+                    trySend(Result.Success(ports))
+                }
+            }
+
+        awaitClose {
+            Log.d(TAG, "Closing port snapshot listener")
+            listener.remove()
+        }
+    }
+}

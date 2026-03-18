@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+    <item
+        android:id="@+id/nav_map"
+        android:icon="@drawable/ic_live_map"
+        android:title="Map" />
+    <item
+        android:id="@+id/nav_cargo"
+        android:icon="@drawable/ic_my_cargo"
+        android:title="Package" />
+    <item
+        android:id="@+id/nav_ports"
+        android:icon="@drawable/ic_ports"
+        android:title="Port" />
+    <item
+        android:id="@+id/nav_weather"
+        android:icon="@drawable/ic_weather"
+        android:title="Weather" />
+</menu>
