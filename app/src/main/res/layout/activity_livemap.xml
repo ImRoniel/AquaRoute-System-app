@@ -16,9 +16,9 @@
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/deep_ocean_blue"
+        android:background="@android:color/transparent"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:elevation="4dp">
+        android:elevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -36,15 +36,10 @@
                 android:padding="12dp"
                 android:contentDescription="Back" />
 
-            <TextView
+            <View
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="🗺️ LIVE MAP"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:gravity="center" />
+                android:layout_weight="1" />
 
             <ImageButton
                 android:id="@+id/btnSettings"

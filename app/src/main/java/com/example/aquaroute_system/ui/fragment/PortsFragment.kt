@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.TranslateAnimation
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
@@ -13,9 +14,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.aquaroute_system.R
+import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
 import com.example.aquaroute_system.databinding.FragmentPortsBinding
@@ -23,8 +24,12 @@ import com.example.aquaroute_system.ui.adapter.PortAdapter
 import com.example.aquaroute_system.ui.viewmodel.PortsViewModel
 import com.example.aquaroute_system.ui.viewmodel.PortsViewModelFactory
 import com.example.aquaroute_system.ui.viewmodel.UserDashboardViewModel
+import com.example.aquaroute_system.util.GeoHashUtils
 import com.example.aquaroute_system.util.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Marker
 
 class PortsFragment : Fragment() {
 
@@ -36,6 +41,8 @@ class PortsFragment : Fragment() {
     private lateinit var adapter: PortAdapter
 
     private val unitOptions = listOf("km", "mi")
+    private var selectedPortId: String? = null
+    private var mapInitialized = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentPortsBinding.inflate(inflater, container, false)
@@ -55,6 +62,20 @@ class PortsFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         checkLocationPermission()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mapInitialized) {
+            binding.miniMapView.onResume()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (mapInitialized) {
+            binding.miniMapView.onPause()
+        }
     }
 
     private fun checkLocationPermission() {
@@ -97,14 +118,98 @@ class PortsFragment : Fragment() {
             currentHour = viewModel.currentHour,
             vesselCounts = { viewModel.vesselCounts.value ?: emptyMap() },
             onPortClick = { port ->
-                Toast.makeText(context, "Locating ${port.name} on map...", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.nav_map)
+                onPortTapped(port)
             }
         )
 
         binding.rvPorts.layoutManager = LinearLayoutManager(context)
         binding.rvPorts.adapter = adapter
     }
+
+    // ─── Map Preview ───────────────────────────────────────────────
+
+    private fun onPortTapped(port: FirestorePort) {
+        if (selectedPortId == port.id) {
+            // Same port tapped again → collapse
+            hidePortPreview()
+        } else {
+            showPortPreview(port)
+        }
+    }
+
+    private fun showPortPreview(port: FirestorePort) {
+        selectedPortId = port.id
+
+        // Initialize map if first time
+        if (!mapInitialized) {
+            val mapView = binding.miniMapView
+            mapView.setTileSource(TileSourceFactory.MAPNIK)
+            mapView.setMultiTouchControls(true)
+            mapView.controller.setZoom(15.0)
+            mapInitialized = true
+            mapView.onResume()
+        }
+
+        val mapView = binding.miniMapView
+        val point = GeoPoint(port.lat, port.lng)
+        mapView.controller.animateTo(point)
+        mapView.controller.setZoom(15.0)
+
+        // Clear old overlays and add port marker
+        mapView.overlays.clear()
+        val portMarker = Marker(mapView).apply {
+            position = point
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            title = port.name
+            try {
+                val iconRes = when (port.type.lowercase()) {
+                    "terminal" -> R.drawable.ic_port_terminal
+                    "pier" -> R.drawable.ic_port_pier
+                    "boatyard" -> R.drawable.ic_port_boatyard
+                    else -> R.drawable.ic_port_marker
+                }
+                icon = ContextCompat.getDrawable(requireContext(), iconRes)
+            } catch (_: Exception) {
+                icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_port_marker)
+            }
+        }
+        mapView.overlays.add(portMarker)
+        mapView.invalidate()
+
+        // Update header
+        binding.tvPreviewPortName.text = port.name
+
+        // Show panel with slide-up animation
+        val panel = binding.mapPreviewPanel
+        if (panel.visibility != View.VISIBLE) {
+            panel.visibility = View.VISIBLE
+            panel.post {
+                val anim = TranslateAnimation(0f, 0f, panel.height.toFloat(), 0f)
+                anim.duration = 250
+                panel.startAnimation(anim)
+            }
+        }
+    }
+
+    private fun hidePortPreview() {
+        selectedPortId = null
+        val panel = binding.mapPreviewPanel
+        if (panel.visibility == View.VISIBLE) {
+            val anim = TranslateAnimation(0f, 0f, 0f, panel.height.toFloat())
+            anim.duration = 200
+            anim.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(a: android.view.animation.Animation?) {}
+                override fun onAnimationRepeat(a: android.view.animation.Animation?) {}
+                override fun onAnimationEnd(a: android.view.animation.Animation?) {
+                    panel.visibility = View.GONE
+                    binding.miniMapView.overlays.clear()
+                }
+            })
+            panel.startAnimation(anim)
+        }
+    }
+
+    // ─── Radius ────────────────────────────────────────────────────
 
     private fun setupRadiusSelector() {
         val unitAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, unitOptions)
@@ -136,6 +241,8 @@ class PortsFragment : Fragment() {
         viewModel.setRadius(radiusKm)
     }
 
+    // ─── Listeners & Observers ─────────────────────────────────────
+
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.refreshPortsNearUser()
@@ -143,6 +250,10 @@ class PortsFragment : Fragment() {
 
         binding.btnEnableLocation.setOnClickListener {
             checkLocationPermission()
+        }
+
+        binding.btnClosePreview.setOnClickListener {
+            hidePortPreview()
         }
 
         binding.searchPorts.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -172,7 +283,6 @@ class PortsFragment : Fragment() {
             adapter.notifyDataSetChanged()
         }
 
-        // Real-time hour updates -> refresh status chips
         viewModel.currentHourLive.observe(viewLifecycleOwner) { hour ->
             adapter.updateCurrentHour(hour)
         }
@@ -194,6 +304,8 @@ class PortsFragment : Fragment() {
         }
     }
 
+    // ─── Empty States ──────────────────────────────────────────────
+
     private fun updateEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
             if (viewModel.locationPermissionGranted.value == false) {
@@ -214,7 +326,7 @@ class PortsFragment : Fragment() {
     }
 
     private fun showNoPortsState() {
-        val radius = viewModel.radiusKm.value?.toInt() ?: 50
+        val radius = viewModel.radiusKm.value?.toInt() ?: 10
         binding.emptyState.visibility = View.VISIBLE
         binding.tvEmptyTitle.text = "No Ports Found"
         binding.tvEmptyMessage.text = "No terminals or piers found within $radius km of your location."
@@ -236,6 +348,9 @@ class PortsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        if (mapInitialized) {
+            binding.miniMapView.onDetach()
+        }
         _binding = null
     }
 }
