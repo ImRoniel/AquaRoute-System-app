@@ -22,6 +22,7 @@ import com.example.aquaroute_system.ui.viewmodel.CargoTrackerViewModelFactory
 import com.example.aquaroute_system.util.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
@@ -205,31 +206,75 @@ class CargoFragment : Fragment() {
         }
 
         val mapView = binding.cargoMiniMapView
+        mapView.overlays.clear()
         
-        // Determine coordinates: prefer ferry, fallback to cargo
-        val point = when {
+        val pointsToZoom = mutableListOf<GeoPoint>()
+
+        // 1. Determine Ferry/Cargo Current Location
+        val currentPoint = when {
             ferry != null && ferry.lat != 0.0 -> GeoPoint(ferry.lat, ferry.lon)
             cargo?.current_lat != null && cargo.current_lng != null -> GeoPoint(cargo.current_lat, cargo.current_lng)
             cargo?.currentLocation != null -> GeoPoint(cargo.currentLocation.latitude, cargo.currentLocation.longitude)
             else -> null
         }
 
-        if (point == null) return
-
-        mapView.controller.animateTo(point)
-        mapView.controller.setZoom(15.0)
-        mapView.overlays.clear()
-
-        // Draw Marker (Replacement for ic_ferry.png with smaller ic_ferry_marker.xml)
-        val marker = Marker(mapView).apply {
-            position = point
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-            title = ferry?.name ?: "Cargo Location"
-            icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_ferry_marker)
+        currentPoint?.let {
+            pointsToZoom.add(it)
+            val marker = Marker(mapView).apply {
+                position = it
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                title = ferry?.name ?: "Current Location"
+                icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_ferry_marker)
+            }
+            mapView.overlays.add(marker)
         }
-        mapView.overlays.add(marker)
-        mapView.invalidate()
 
+        // 2. Add Port Markers (Origin/Destination)
+        if (ferry != null) {
+            val pointA = ferry.pointA?.toGeoPoint()
+            val pointB = ferry.pointB?.toGeoPoint()
+
+            pointA?.let {
+                pointsToZoom.add(it)
+                val marker = Marker(mapView).apply {
+                    position = it
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "Origin: ${ferry.getOrigin()}"
+                    icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_port_marker)
+                }
+                mapView.overlays.add(marker)
+            }
+
+            pointB?.let {
+                pointsToZoom.add(it)
+                val marker = Marker(mapView).apply {
+                    position = it
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "Destination: ${ferry.getDestination()}"
+                    icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_port_marker)
+                }
+                mapView.overlays.add(marker)
+            }
+        }
+
+        // 4. Auto-Zoom / Centering
+        if (pointsToZoom.isNotEmpty()) {
+            if (pointsToZoom.size == 1) {
+                mapView.controller.animateTo(pointsToZoom[0])
+                mapView.controller.setZoom(15.0)
+            } else {
+                mapView.post {
+                    try {
+                        val boundingBox = BoundingBox.fromGeoPoints(pointsToZoom)
+                        mapView.zoomToBoundingBox(boundingBox.increaseByScale(1.3f), true)
+                    } catch (e: Exception) {
+                        mapView.controller.animateTo(pointsToZoom[0])
+                    }
+                }
+            }
+        }
+
+        mapView.invalidate()
         binding.tvPreviewFerryName.text = ferry?.name ?: "Cargo Tracking"
 
         val panel = binding.cargoMapPreviewPanel
@@ -241,6 +286,10 @@ class CargoFragment : Fragment() {
                 panel.startAnimation(anim)
             }
         }
+    }
+
+    private fun List<Double>?.toGeoPoint(): GeoPoint? {
+        return if (this != null && size >= 2) GeoPoint(this[0], this[1]) else null
     }
 
     private fun updateViewMapButtonState(cargo: Cargo?, ferry: Ferry?) {
