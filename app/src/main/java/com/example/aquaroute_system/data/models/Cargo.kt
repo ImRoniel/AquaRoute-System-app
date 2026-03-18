@@ -37,6 +37,8 @@ data class Cargo(
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val currentLocation: Location? = null,
+    val current_lat: Double? = null,  // Match Firestore top-level fields
+    val current_lng: Double? = null,
     val progress: Int = 0,
     val recipientName: String = "",
     val recipientPhone: String = "",

@@ -46,7 +46,7 @@ class CargoTrackerActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModel() {
-        val factory = CargoTrackerViewModelFactory(cargoRepository, sessionManager)
+        val factory = CargoTrackerViewModelFactory(cargoRepository, com.example.aquaroute_system.data.repository.FerryRepository(com.google.firebase.firestore.FirebaseFirestore.getInstance()), sessionManager)
         viewModel = ViewModelProvider(this, factory)[CargoTrackerViewModel::class.java]
     }
 
@@ -132,13 +132,7 @@ class CargoTrackerActivity : AppCompatActivity() {
             }
         }
 
-        binding.btnFullDetails.setOnClickListener {
-            viewModel.searchResult.value?.let { cargo ->
-                val intent = Intent(this, CargoDetailsActivity::class.java)
-                intent.putExtra("CARGO_ID", cargo.id)
-                startActivity(intent)
-            }
-        }
+        // Removed btnFullDetails reference since it's deleted from layout
 
         binding.btnNewSearch.setOnClickListener {
             // Clear search and show search box

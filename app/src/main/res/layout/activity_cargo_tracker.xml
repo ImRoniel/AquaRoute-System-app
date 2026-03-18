@@ -22,7 +22,8 @@
     <!-- Main Content -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:padding="16dp"
         android:fillViewport="true">
 
@@ -66,9 +67,11 @@
                             android:layout_width="0dp"
                             android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:hint="e.g., CRG-56215413-6451"
+                            android:hint="e.g., CRG-56215...-...."
                             android:background="@drawable/edittext_background"
                             android:paddingHorizontal="12dp"
+                            android:drawableStart="@drawable/ic_search"
+                            android:drawablePadding="8dp"
                             android:imeOptions="actionSearch"
                             android:inputType="text"
                             android:maxLines="1"
@@ -84,12 +87,13 @@
                             android:visibility="gone"
                             android:layout_marginHorizontal="4dp" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnTrack"
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
                             android:text="TRACK"
-                            android:background="@drawable/button_primary"
+                            app:backgroundTint="@color/openMap_button"
+                            app:cornerRadius="8dp"
                             android:textColor="@color/white"
                             android:textSize="14sp"
                             android:textStyle="bold"
@@ -517,7 +521,7 @@
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_outline"
-                            android:text="🗺️ VIEW ON MAP"
+                            android:text="VIEW"
                             android:textColor="@color/deep_ocean_blue"
                             android:textSize="12sp"
                             android:textStyle="bold"
@@ -525,25 +529,12 @@
                             android:layout_marginEnd="4dp" />
 
                         <TextView
-                            android:id="@+id/btnFullDetails"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_outline"
-                            android:text="📋 FULL DETAILS"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginHorizontal="4dp" />
-
-                        <TextView
                             android:id="@+id/btnNewSearch"
                             android:layout_width="0dp"
                             android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_primary"
-                            android:text="🔄 NEW SEARCH"
+                            android:text="NEW SEARCH"
                             android:textColor="@color/white"
                             android:textSize="12sp"
                             android:textStyle="bold"
@@ -554,4 +545,69 @@
             </androidx.cardview.widget.CardView>
         </LinearLayout>
     </ScrollView>
+
+    <!-- Map Preview Panel (slides up from bottom) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cargoMapPreviewPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/white"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginBottom="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:background="@color/deep_ocean_blue">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_ferry"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvPreviewFerryName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Ferry Name"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <ImageButton
+                    android:id="@+id/btnCloseCargoMap"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_close"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="@color/white"
+                    android:contentDescription="Close map preview" />
+            </LinearLayout>
+
+            <!-- Map -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/cargoMiniMapView"
+                android:layout_width="match_parent"
+                android:layout_height="200dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 </LinearLayout>
