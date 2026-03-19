@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
             else      -> "GOOD EVENING"
         }
         val name = (user.displayName ?: "CAPTAIN").uppercase()
-        binding.tvWelcome.text = "🌊 $greeting, $name!"
+        binding.tvWelcome.text = "$greeting, $name!"
     }
 
     private fun updateCargoSummarySubtitle() {
@@ -221,15 +221,15 @@ class HomeFragment : Fragment() {
                     layoutInflater, container, false
                 )
 
-                val (dot, labelColor) = when (cargo.status.lowercase()) {
-                    "in_transit"             -> "🟢" to R.color.safety_green
-                    "delivered"              -> "✅" to R.color.sky_cyan
-                    "delayed"                -> "🔴" to R.color.error_red
-                    "processing", "pending"  -> "🟡" to R.color.warning_amber
-                    else                     -> "⚪" to R.color.medium_text
+                val (dotRes, labelColor) = when (cargo.status.lowercase()) {
+                    "in_transit"             -> R.drawable.ic_status_dot_green to R.color.safety_green
+                    "delivered"              -> R.drawable.ic_status_dot_blue to R.color.sky_cyan
+                    "delayed"                -> R.drawable.ic_status_dot_red to R.color.error_red
+                    "processing", "pending"  -> R.drawable.ic_status_dot_amber to R.color.warning_amber
+                    else                     -> R.drawable.ic_status_dot_amber to R.color.medium_text
                 }
 
-                rowBinding.tvCargoStatusDot.text = dot
+                rowBinding.ivCargoStatusDot.setImageResource(dotRes)
                 rowBinding.tvCargoReference.text = cargo.getDisplayReference().ifEmpty { cargo.id.take(8) }
 
                 // Enrich route with ferry name when available
@@ -272,9 +272,9 @@ class HomeFragment : Fragment() {
         val limited = ports.count { it.status.lowercase() == "limited" }
         val closed  = ports.count { it.status.lowercase() == "closed" }
 
-        binding.tvPortsOpen.text    = "🟢\n$open Open"
-        binding.tvPortsLimited.text = "🟡\n$limited Limited"
-        binding.tvPortsClosed.text  = "🔴\n$closed Closed"
+        binding.tvPortsOpen.text    = "$open Open"
+        binding.tvPortsLimited.text = "$limited Limited"
+        binding.tvPortsClosed.text  = "$closed Closed"
 
         binding.tvPortsEmpty.visibility = if (ports.isEmpty()) View.VISIBLE else View.GONE
     }

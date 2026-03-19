@@ -69,30 +69,43 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
                             android:background="@drawable/bg_stat_chip"
                             android:padding="12dp"
                             android:layout_marginEnd="6dp">
 
-                            <TextView
-                                android:id="@+id/tvInTransitCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#FFFFFF"
-                                android:textSize="28sp"
-                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_transit"
+                                app:tint="@color/white"
+                                android:alpha="0.9" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="🚢 IN TRANSIT"
-                                android:textColor="#DDFFFFFF"
-                                android:textSize="10sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.08"
-                                android:layout_marginTop="2dp" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:id="@+id/tvInTransitCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="IN TRANSIT"
+                                    android:textColor="#DDFFFFFF"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <!-- PROCESSING chip -->
@@ -101,30 +114,43 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
                             android:background="@drawable/bg_stat_chip"
                             android:padding="12dp"
                             android:layout_marginStart="6dp">
 
-                            <TextView
-                                android:id="@+id/tvProcessingCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#FFFFFF"
-                                android:textSize="28sp"
-                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_processing"
+                                app:tint="@color/white"
+                                android:alpha="0.9" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="🟡 PROCESSING"
-                                android:textColor="#DDFFFFFF"
-                                android:textSize="10sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.08"
-                                android:layout_marginTop="2dp" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:id="@+id/tvProcessingCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="PROCESSING"
+                                    android:textColor="#DDFFFFFF"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
 
@@ -133,7 +159,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:weightSum="2"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="12dp">
 
                         <!-- DELIVERED chip -->
                         <LinearLayout
@@ -141,30 +167,43 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
                             android:background="@drawable/bg_stat_chip"
                             android:padding="12dp"
                             android:layout_marginEnd="6dp">
 
-                            <TextView
-                                android:id="@+id/tvDeliveredCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#FFFFFF"
-                                android:textSize="28sp"
-                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_delivered"
+                                app:tint="@color/white"
+                                android:alpha="0.9" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="✅ DELIVERED"
-                                android:textColor="#DDFFFFFF"
-                                android:textSize="10sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.08"
-                                android:layout_marginTop="2dp" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:id="@+id/tvDeliveredCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="DELIVERED"
+                                    android:textColor="#DDFFFFFF"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <!-- DELAYED chip -->
@@ -173,35 +212,47 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
                             android:background="@drawable/bg_stat_chip"
                             android:padding="12dp"
                             android:layout_marginStart="6dp">
 
-                            <TextView
-                                android:id="@+id/tvDelayedCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#FFD54F"
-                                android:textSize="28sp"
-                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_delayed"
+                                app:tint="@color/white"
+                                android:alpha="0.9" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="🔴 DELAYED"
-                                android:textColor="#DDFFFFFF"
-                                android:textSize="10sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.08"
-                                android:layout_marginTop="2dp" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:id="@+id/tvDelayedCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="DELAYED"
+                                    android:textColor="#DDFFFFFF"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
-
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
             <!-- ============================================================ -->
             <!-- CARD 2: FLEET STATUS PULSE                                   -->
@@ -228,14 +279,22 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_ferry_marker"
+                            app:tint="@color/deep_ocean_blue"
+                            android:layout_marginEnd="10dp" />
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🚢  FLEET STATUS"
+                            android:text="FLEET STATUS"
                             android:textColor="@color/deep_ocean_blue"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.02" />
 
                         <!-- Active Vessel count badge -->
                         <TextView
@@ -362,15 +421,16 @@
                     <TextView
                         android:id="@+id/btnViewAllOnMap"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="VIEW ALL ON LIVE MAP →"
                         android:textColor="@color/sky_cyan"
-                        android:textSize="13sp"
+                        android:textSize="12sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
-                        android:background="?attr/selectableItemBackground"
-                        android:layout_marginTop="8dp" />
+                        android:background="@drawable/button_outline_small"
+                        android:paddingVertical="10dp"
+                        android:layout_marginTop="16dp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -400,14 +460,22 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_my_cargo"
+                            app:tint="@color/primary"
+                            android:layout_marginEnd="10dp" />
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🚢  FLEET CARGO PULSE"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="FLEET CARGO PULSE"
+                            android:textColor="@color/primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.02" />
 
                         <!-- Active count badge -->
                         <TextView
@@ -447,12 +515,12 @@
                         android:padding="16dp"
                         android:visibility="gone">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⚓"
-                            android:textSize="36sp"
-                            android:layout_marginBottom="8dp" />
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_my_cargo"
+                            app:tint="@color/light_gray"
+                            android:layout_marginBottom="12dp" />
 
                         <TextView
                             android:id="@+id/tvCargoEmptyTitle"
@@ -489,15 +557,16 @@
                     <TextView
                         android:id="@+id/btnTrackAllCargo"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="EXPLORE ALL SHIPMENTS →"
                         android:textColor="@color/primary"
-                        android:textSize="13sp"
+                        android:textSize="12sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
-                        android:background="?attr/selectableItemBackground"
-                        android:layout_marginTop="4dp" />
+                        android:background="@drawable/button_outline_small"
+                        android:paddingVertical="10dp"
+                        android:layout_marginTop="12dp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -520,14 +589,29 @@
                     android:padding="16dp">
 
                     <!-- Header -->
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="⚓  PORTS &amp; ADVISORIES"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_ports"
+                            app:tint="@color/deep_ocean_blue"
+                            android:layout_marginEnd="10dp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="PORTS &amp; ADVISORIES"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.02" />
+                    </LinearLayout>
 
                     <!-- Divider -->
                     <View
@@ -536,56 +620,98 @@
                         android:background="@color/light_gray"
                         android:layout_marginBottom="10dp" />
 
-                    <!-- Port status summary row (dot counts) -->
+                    <!-- Port status summary row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="8dp"
+                        android:weightSum="3">
 
-                        <TextView
-                            android:id="@+id/tvPortsOpen"
+                        <!-- Open Status -->
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:gravity="center"
-                            android:text="🟢\n0 Open"
-                            android:textColor="@color/safety_green"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:src="@drawable/ic_status_dot_green"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:id="@+id/tvPortsOpen"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 Open"
+                                android:textColor="@color/safety_green"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <View
                             android:layout_width="1dp"
-                            android:layout_height="36dp"
-                            android:background="@color/light_gray" />
+                            android:layout_height="30dp"
+                            android:background="@color/divider"
+                            android:alpha="0.5" />
 
-                        <TextView
-                            android:id="@+id/tvPortsLimited"
+                        <!-- Limited Status -->
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🟡\n0 Limited"
-                            android:textColor="@color/warning_amber"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:gravity="center" />
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:src="@drawable/ic_status_dot_amber"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:id="@+id/tvPortsLimited"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 Limited"
+                                android:textColor="@color/warning_amber"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <View
                             android:layout_width="1dp"
-                            android:layout_height="36dp"
-                            android:background="@color/light_gray" />
+                            android:layout_height="30dp"
+                            android:background="@color/divider"
+                            android:alpha="0.5" />
 
-                        <TextView
-                            android:id="@+id/tvPortsClosed"
+                        <!-- Closed Status -->
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="🔴\n0 Closed"
-                            android:textColor="@color/error_red"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:gravity="center" />
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:src="@drawable/ic_status_dot_red"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:id="@+id/tvPortsClosed"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 Closed"
+                                android:textColor="@color/error_red"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- Advisory banner (visible only when hasAdvisory == true) -->
