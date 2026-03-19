@@ -103,8 +103,10 @@ class MainDashboard : AppCompatActivity() {
 
     private fun requestUserLocation() {
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.setLocationPermissionGranted(true)
             getLastKnownLocation()
         } else {
+            viewModel.setLocationPermissionGranted(false)
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
         }
     }
@@ -132,9 +134,15 @@ class MainDashboard : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                getLastKnownLocation()
+        if (requestCode == 100 && grantResults.isNotEmpty()) {
+            val granted = grantResults[0] == PackageManager.PERMISSION_GRANTED
+            viewModel.setLocationPermissionGranted(granted)
+            if (granted) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    getLastKnownLocation()
+                }
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
     }

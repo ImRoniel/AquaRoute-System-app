@@ -74,6 +74,9 @@ class HomeFragment : Fragment() {
         viewModel.nearestFerry.observe(viewLifecycleOwner) { ferry ->
             updateNearestFerrySpotlight(ferry)
         }
+        viewModel.nearestFerryMessage.observe(viewLifecycleOwner) { message ->
+            binding.tvFleetEmpty.text = message
+        }
 
         // Fleet Cargo Pulse — fleet-wide active cargo rows + count badge
         viewModel.fleetActiveCargo.observe(viewLifecycleOwner) { cargoList ->
@@ -137,7 +140,6 @@ class HomeFragment : Fragment() {
         if (ferry == null) {
             binding.layoutNearestFerry.visibility = View.GONE
             binding.tvFleetEmpty.visibility = View.VISIBLE
-            binding.tvFleetEmpty.text = "No ferry data available"
         } else {
             binding.tvFleetEmpty.visibility = View.GONE
             binding.layoutNearestFerry.visibility = View.VISIBLE
@@ -148,12 +150,16 @@ class HomeFragment : Fragment() {
             val etaText = if (ferry.eta > 0) "${ferry.eta} min" else "— min"
             binding.tvNearestFerryEta.text = etaText
 
-            val statusText = when (ferry.status.lowercase()) {
-                "en_route", "active", "sailing" -> "EN ROUTE"
-                "arrived", "docked"             -> "DOCKED"
-                else                            -> ferry.status.uppercase()
+            val (statusText, statusColor) = when (ferry.status.lowercase()) {
+                "en_route", "active", "sailing" -> "ON TIME" to R.color.safety_green
+                "arrived", "docked"             -> "DOCKED" to R.color.sky_cyan
+                "delayed"                       -> "DELAYED" to R.color.error_red
+                else                            -> ferry.status.uppercase() to R.color.warning_amber
             }
             binding.tvNearestFerryStatus.text = statusText
+            binding.tvNearestFerryStatus.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                requireContext().getColor(statusColor)
+            )
 
             val progress = calculateFerryProgress(ferry)
             binding.pbNearestFerry.progress = progress

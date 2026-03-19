@@ -12,10 +12,13 @@ import com.example.aquaroute_system.util.LocationHelper
 import com.example.aquaroute_system.util.SessionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.aquaroute_system.util.SpatialIndex
 
 class UserDashboardViewModel(
     private val sessionManager: SessionManager,
@@ -71,9 +74,12 @@ class UserDashboardViewModel(
     private val _totalActiveFerryCount = MutableLiveData(0)
     val totalActiveFerryCount: LiveData<Int> = _totalActiveFerryCount
 
-    // Single nearest ferry for dashboard spotlight
     private val _nearestFerry = MutableLiveData<Ferry?>()
     val nearestFerry: LiveData<Ferry?> = _nearestFerry
+
+    // Message for empty or loading states on the Nearest Ferry card
+    private val _nearestFerryMessage = MutableLiveData<String>()
+    val nearestFerryMessage: LiveData<String> = _nearestFerryMessage
 
     // Per-status cargo counts for hero header chips
     private val _inTransitCount = MutableLiveData(0)
@@ -87,6 +93,10 @@ class UserDashboardViewModel(
 
     private val _delayedCount = MutableLiveData(0)
     val delayedCount: LiveData<Int> = _delayedCount
+
+    // Location Permission Status
+    private val _locationPermissionGranted = MutableLiveData<Boolean>(true)
+    val locationPermissionGranted: LiveData<Boolean> = _locationPermissionGranted
 
     // User location
     private val _userLocation = MutableLiveData<Location?>()
@@ -106,8 +116,14 @@ class UserDashboardViewModel(
     //live data for refreshing state
     private val _isRefreshingWeather = MutableLiveData(false)
     val isRefreshingWeather: LiveData<Boolean> = _isRefreshingWeather
-    // List to store all ferries from real-time listener
     private var _cachedAllFerries = listOf<Ferry>()
+    private val spatialIndex = SpatialIndex()
+
+    // Location debounce states
+    private var lastSearchLocation: Location? = null
+    private var lastSearchTime: Long = 0L
+    private val MIN_DISTANCE_M = 100f
+    private val MIN_TIME_MS = 500L
 
     init {
         loadCurrentUser()
@@ -133,6 +149,7 @@ class UserDashboardViewModel(
                     when (result) {
                         is Result.Success -> {
                             _cachedAllFerries = result.data
+                            spatialIndex.build(result.data)
                             _totalActiveFerryCount.value = result.data.size
                             updateNearbyFerries()
                             // Build ferryId → ferryName map for cargo row enrichment
@@ -248,11 +265,18 @@ class UserDashboardViewModel(
 
     private fun updateNearbyFerries() {
         val allFerries = _cachedAllFerries
-        if (allFerries.isEmpty()) return
+        if (allFerries.isEmpty()) {
+            _nearestFerryMessage.value = "All ferries are docked"
+            _nearestFerry.value = null
+            return
+        }
 
         val userLoc = _userLocation.value
         if (userLoc != null) {
-            // Compute distance for every ferry and sort
+            // Trigger radius search for Nearest Ferry spotlight
+            updateNearestFerryWithRadiusSearch(userLoc)
+
+            // Legacy simple 100km filter for nearbyFerries LiveData
             val ferriesWithDistance = allFerries.map { ferry ->
                 ferry to calculateDistance(
                     userLoc.latitude, userLoc.longitude,
@@ -260,32 +284,80 @@ class UserDashboardViewModel(
                 )
             }.sortedBy { it.second }
 
-            // Filter those within 100km
             val nearby = ferriesWithDistance.filter { it.second <= 100 }.map { it.first }
 
-            // Re-emit either nearby or first few fallback
             val newList = if (nearby.isNotEmpty()) {
                 nearby
             } else {
                 ferriesWithDistance.take(2).map { it.first }
             }
-
-            // Re-emit even if the list is same to trigger Adapter local re-calculation
             _nearbyFerries.value = newList
-            // Post the nearest ferry for the dashboard spotlight
-            _nearestFerry.value = newList.firstOrNull()
         } else {
             // No location: fallback to first few ferries
             val fallback = allFerries.take(3)
             _nearbyFerries.value = fallback
-            _nearestFerry.value = fallback.firstOrNull()
+            _nearestFerryMessage.value = if (_locationPermissionGranted.value == false) {
+                "Location permission denied"
+            } else {
+                "Waiting for location..."
+            }
+            _nearestFerry.value = null
+        }
+    }
+
+    fun setLocationPermissionGranted(granted: Boolean) {
+        _locationPermissionGranted.value = granted
+        if (!granted) {
+            _nearestFerryMessage.value = "Location permission denied"
+            _nearestFerry.value = null
+        } else {
+            // If just granted, we might still be waiting for the first location fix
+            if (_userLocation.value == null) {
+                _nearestFerryMessage.value = "Waiting for location..."
+            }
+        }
+    }
+
+    private fun updateNearestFerryWithRadiusSearch(location: Location) {
+        if (_cachedAllFerries.isEmpty()) {
+            _nearestFerryMessage.postValue("All ferries are docked")
+            _nearestFerry.postValue(null)
+            return
+        }
+
+        _nearestFerryMessage.postValue("Finding nearest ferry...")
+
+        viewModelScope.launch(Dispatchers.Default) {
+            val (nearest, _) = spatialIndex.findNearestFerryExpandingRadius(
+                location.latitude, location.longitude
+            )
+
+            withContext(Dispatchers.Main) {
+                if (nearest != null) {
+                    _nearestFerry.value = nearest
+                } else {
+                    _nearestFerry.value = null
+                    _nearestFerryMessage.value = "No ferries within 200 km"
+                }
+            }
         }
     }
 
     fun setUserLocation(location: Location) {
         _userLocation.value = location
-        updateNearbyFerries()
         checkNearbyWeather(location)
+
+        val timeSinceLast = System.currentTimeMillis() - lastSearchTime
+        val distChange = lastSearchLocation?.distanceTo(location) ?: Float.MAX_VALUE
+
+        if (timeSinceLast > MIN_TIME_MS && distChange > MIN_DISTANCE_M) {
+            lastSearchTime = System.currentTimeMillis()
+            lastSearchLocation = location
+            updateNearestFerryWithRadiusSearch(location)
+            
+            // Also update legacy nearby list
+            updateNearbyFerries()
+        }
     }
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
