@@ -120,6 +120,11 @@ class CargoFragment : Fragment() {
             updateViewMapButtonState(viewModel.searchResult.value, ferry)
             if (ferry != null) {
                 binding.tvFerryNameValue.text = ferry.name
+                
+                // Add ETA mapping
+                if (ferry.eta > 0) {
+                    binding.tvEtaValue.text = "${ferry.eta} min${if (ferry.eta != 1) "s" else ""}"
+                }
             } else {
                 val rawId = viewModel.searchResult.value?.ferryId
                 binding.tvFerryNameValue.text = if (rawId.isNullOrEmpty()) "Not assigned" else "Unknown Ferry"
