@@ -44,6 +44,7 @@ class MainDashboard : AppCompatActivity() {
 
         initializeDependencies()
         checkUserSession()
+        setupDrawerHeader()
         setupNavigation()
         requestUserLocation()
         setupClickListeners()
@@ -84,21 +85,45 @@ class MainDashboard : AppCompatActivity() {
         }
     }
 
+    private fun setupDrawerHeader() {
+        val userName = sessionManager.getUserName() ?: "Guest"
+        val userEmail = sessionManager.getUserEmail() ?: ""
+        
+        binding.drawerUserName.text = userName
+        binding.drawerUserEmail.text = userEmail
+    }
+
     private fun setupNavigation() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-        
+
+        // Wire up the BottomNavigationView with NavController
         binding.bottomNav.setupWithNavController(navController)
-        
-        // Add scale animation to bottom navigation items
+
+        // Override the item-selected listener to add a scale animation
+        // while still delegating navigation to NavigationUI
         binding.bottomNav.setOnItemSelectedListener { item ->
             val view = binding.bottomNav.findViewById<View>(item.itemId)
             view?.animate()?.scaleX(0.9f)?.scaleY(0.9f)?.setDuration(100)?.withEndAction {
                 view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start()
             }?.start()
-            
+
             NavigationUI.onNavDestinationSelected(item, navController)
         }
+
+        // When the user taps the already-selected tab, pop back to its root
+        binding.bottomNav.setOnItemReselectedListener { item ->
+            navController.popBackStack(item.itemId, inclusive = false)
+        }
+    }
+
+    /**
+     * Public helper for fragments to switch tabs programmatically.
+     * Sets selectedItemId on the BottomNav, which triggers the
+     * onItemSelectedListener and keeps everything in sync.
+     */
+    fun navigateToTab(itemId: Int) {
+        binding.bottomNav.selectedItemId = itemId
     }
 
     private fun requestUserLocation() {
@@ -155,22 +180,22 @@ class MainDashboard : AppCompatActivity() {
 
         binding.drawerDashboard.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navController.navigate(R.id.nav_home)
+            navigateToTab(R.id.nav_home)
         }
 
         binding.drawerLiveMap.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navController.navigate(R.id.nav_map)
+            navigateToTab(R.id.nav_map)
         }
 
         binding.drawerMyCargo.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navController.navigate(R.id.nav_cargo)
+            navigateToTab(R.id.nav_cargo)
         }
 
         binding.drawerWeather.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navController.navigate(R.id.nav_weather)
+            navigateToTab(R.id.nav_weather)
         }
 
         binding.drawerLogout.setOnClickListener {

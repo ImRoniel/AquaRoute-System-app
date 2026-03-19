@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
 import com.example.aquaroute_system.R
+import com.example.aquaroute_system.View.MainDashboard
 import com.example.aquaroute_system.data.models.Cargo
 import com.example.aquaroute_system.data.models.Ferry
 import com.example.aquaroute_system.data.models.PortStatus
@@ -302,13 +302,13 @@ class HomeFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnViewAllOnMap.setOnClickListener {
-            findNavController().navigate(R.id.nav_map)
+            (activity as? MainDashboard)?.navigateToTab(R.id.nav_map)
         }
         binding.btnTrackAllCargo.setOnClickListener {
-            findNavController().navigate(R.id.nav_cargo)
+            (activity as? MainDashboard)?.navigateToTab(R.id.nav_cargo)
         }
         binding.btnViewWeather.setOnClickListener {
-            findNavController().navigate(R.id.nav_weather)
+            (activity as? MainDashboard)?.navigateToTab(R.id.nav_weather)
         }
     }
 
