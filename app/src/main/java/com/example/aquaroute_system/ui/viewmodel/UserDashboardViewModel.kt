@@ -63,9 +63,13 @@ class UserDashboardViewModel(
     private val _ferryNameMap = MutableLiveData<Map<String, String>>(emptyMap())
     val ferryNameMap: LiveData<Map<String, String>> = _ferryNameMap
 
-    // NEARBY FERRIES for live map preview
+    // Nearby ferries list for dynamic cards & Live Map preview
     private val _nearbyFerries = MutableLiveData<List<Ferry>>()
     val nearbyFerries: LiveData<List<Ferry>> = _nearbyFerries
+
+    // Total fleet size for accurate FLEET STATUS badge
+    private val _totalActiveFerryCount = MutableLiveData(0)
+    val totalActiveFerryCount: LiveData<Int> = _totalActiveFerryCount
 
     // Single nearest ferry for dashboard spotlight
     private val _nearestFerry = MutableLiveData<Ferry?>()
@@ -129,6 +133,7 @@ class UserDashboardViewModel(
                     when (result) {
                         is Result.Success -> {
                             _cachedAllFerries = result.data
+                            _totalActiveFerryCount.value = result.data.size
                             updateNearbyFerries()
                             // Build ferryId → ferryName map for cargo row enrichment
                             _ferryNameMap.value = result.data.associate { it.id to it.name }

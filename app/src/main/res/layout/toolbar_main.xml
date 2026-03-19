@@ -32,32 +32,5 @@
             android:textStyle="bold"
             android:fontFamily="sans-serif-black"
             android:paddingStart="8dp" />
-
-        <LinearLayout
-            android:id="@+id/statusBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/status_background"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            android:visibility="visible">
-
-            <View
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/custom_background"
-                android:backgroundTint="@color/success_green" />
-
-            <TextView
-                android:id="@+id/tvActiveVessels"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0 vessels active"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:layout_marginStart="6dp" />
-        </LinearLayout>
     </LinearLayout>
 </androidx.appcompat.widget.Toolbar>

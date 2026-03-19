@@ -67,9 +67,9 @@ class HomeFragment : Fragment() {
             binding.tvDelayedCount.text = count.toString()
         }
 
-        // Fleet Status Pulse — full list for count + nearest ferry spotlight
-        viewModel.nearbyFerries.observe(viewLifecycleOwner) { ferries ->
-            updateFleetCount(ferries)
+        // Fleet Status Pulse
+        viewModel.totalActiveFerryCount.observe(viewLifecycleOwner) { count ->
+            updateFleetCount(count)
         }
         viewModel.nearestFerry.observe(viewLifecycleOwner) { ferry ->
             updateNearestFerrySpotlight(ferry)
@@ -129,8 +129,7 @@ class HomeFragment : Fragment() {
     // Card 2: Fleet Status Pulse
     // -------------------------------------------------------------------------
 
-    private fun updateFleetCount(ferries: List<Ferry>) {
-        val count = ferries.size
+    private fun updateFleetCount(count: Int) {
         binding.tvActiveFerryCount.text = "$count ACTIVE"
     }
 
