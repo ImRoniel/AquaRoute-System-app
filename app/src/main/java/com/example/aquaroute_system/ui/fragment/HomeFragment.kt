@@ -75,9 +75,17 @@ class HomeFragment : Fragment() {
             updateNearestFerrySpotlight(ferry)
         }
 
-        // My Cargo Snapshot — up to 3 active cargo rows
-        viewModel.activeCargo.observe(viewLifecycleOwner) { cargoList ->
+        // Fleet Cargo Pulse — fleet-wide active cargo rows + count badge
+        viewModel.fleetActiveCargo.observe(viewLifecycleOwner) { cargoList ->
             updateCargoSnapshot(cargoList)
+        }
+        viewModel.fleetActiveCargoCount.observe(viewLifecycleOwner) { count ->
+            binding.tvFleetCargoCount.text = "$count ACTIVE"
+        }
+        // Ferry name map for enriching cargo rows with ferry names
+        viewModel.ferryNameMap.observe(viewLifecycleOwner) { _ ->
+            // Re-render rows when ferry names arrive/update
+            viewModel.fleetActiveCargo.value?.let { updateCargoSnapshot(it) }
         }
 
         // Port & Weather Ticker
@@ -112,8 +120,8 @@ class HomeFragment : Fragment() {
     private fun updateCargoSummarySubtitle() {
         val inTransit = viewModel.inTransitCount.value ?: 0
         binding.tvCargoSummary.text = when {
-            inTransit > 0 -> "You have $inTransit shipment${if (inTransit > 1) "s" else ""} currently in transit."
-            else          -> "No active shipments right now. Stay on course!"
+            inTransit > 0 -> "The fleet currently has $inTransit shipment${if (inTransit > 1) "s" else ""} in transit."
+            else          -> "No active fleet shipments right now. Stay on course!"
         }
     }
 
@@ -190,12 +198,15 @@ class HomeFragment : Fragment() {
     }
 
     // -------------------------------------------------------------------------
-    // Card 3: My Cargo Snapshot
+    // Card 3: Fleet Cargo Pulse
     // -------------------------------------------------------------------------
 
     private fun updateCargoSnapshot(cargoList: List<Cargo>) {
         val container = binding.llCargoRows
         container.removeAllViews()
+
+        // Hide loading text once data arrives
+        binding.tvCargoLoading.visibility = View.GONE
 
         val activeCargo = cargoList.take(3) // Show at most 3 rows
 
@@ -203,6 +214,8 @@ class HomeFragment : Fragment() {
             binding.layoutCargoEmpty.visibility = View.VISIBLE
         } else {
             binding.layoutCargoEmpty.visibility = View.GONE
+
+            val ferryMap = viewModel.ferryNameMap.value ?: emptyMap()
 
             activeCargo.forEach { cargo ->
                 val rowBinding = ItemCargoSnapshotRowBinding.inflate(
@@ -217,10 +230,22 @@ class HomeFragment : Fragment() {
                     else                     -> "⚪" to R.color.medium_text
                 }
 
-                rowBinding.tvCargoStatusDot.text   = dot
-                rowBinding.tvCargoReference.text   = cargo.getDisplayReference().ifEmpty { cargo.id.take(8) }
-                rowBinding.tvCargoRoute.text        = "${cargo.origin} → ${cargo.destination}"
-                rowBinding.tvCargoStatusLabel.text  = cargo.getStatusDisplay()
+                rowBinding.tvCargoStatusDot.text = dot
+                rowBinding.tvCargoReference.text = cargo.getDisplayReference().ifEmpty { cargo.id.take(8) }
+
+                // Enrich route with ferry name when available
+                val ferryId = cargo.assignedFerryId ?: cargo.ferryId
+                val ferryName = ferryId?.let { ferryMap[it] }
+                val routeText = when {
+                    !cargo.origin.isNullOrBlank() && !cargo.destination.isNullOrBlank() ->
+                        "${cargo.origin} → ${cargo.destination}"
+                    ferryName != null -> "Ferry: $ferryName"
+                    !cargo.description.isNullOrBlank() -> cargo.description
+                    else -> "Shipment ${cargo.id.take(6)}"
+                }
+                rowBinding.tvCargoRoute.text = routeText
+
+                rowBinding.tvCargoStatusLabel.text = cargo.getStatusDisplay()
                 rowBinding.tvCargoStatusLabel.setTextColor(
                     requireContext().getColor(labelColor)
                 )

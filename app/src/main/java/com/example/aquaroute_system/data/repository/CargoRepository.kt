@@ -137,6 +137,51 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
+    // Observe FLEET-WIDE active cargo (no userId filter) — for dashboard Cargo Pulse
+    // NOTE: Firestore may require a composite index for this query.
+    //       Follow the URL in the logcat error to create it.
+    fun observeFleetActiveCargo(limit: Int = 5): Flow<Result<List<Cargo>>> = callbackFlow {
+        var listener: ListenerRegistration? = null
+
+        try {
+            trySend(Result.Loading)
+
+            listener = firestore.collection(CARGO_COLLECTION)
+                .whereIn("status", listOf(
+                    "in_transit", "processing", "pending",
+                    "In Transit", "Processing", "Pending"
+                ))
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e(TAG, "Error observing fleet cargo", error)
+                        trySend(Result.Error(error))
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        val cargoList = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing fleet cargo: ${e.message}")
+                                null
+                            }
+                        }
+                        trySend(Result.Success(cargoList))
+                        Log.d(TAG, "Fleet cargo pulse: ${cargoList.size} active items")
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up fleet cargo listener", e)
+            trySend(Result.Error(e))
+        }
+
+        awaitClose {
+            listener?.remove()
+        }
+    }
+
     // Track cargo by reference number - PUBLIC ACCESS (no userId needed)
     suspend fun getCargoByReference(referenceNumber: String): Result<Cargo> {
         return try {

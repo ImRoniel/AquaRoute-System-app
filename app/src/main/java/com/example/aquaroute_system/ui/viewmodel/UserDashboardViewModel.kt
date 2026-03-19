@@ -48,9 +48,20 @@ class UserDashboardViewModel(
     private val _weatherConditions = MutableLiveData<List<WeatherCondition>>()
     val weatherConditions: LiveData<List<WeatherCondition>> = _weatherConditions
 
-    // Active cargo
+    // Active cargo (user-specific — kept for Cargo screen)
     private val _activeCargo = MutableLiveData<List<Cargo>>()
     val activeCargo: LiveData<List<Cargo>> = _activeCargo
+
+    // Fleet-wide active cargo for dashboard Cargo Pulse card
+    private val _fleetActiveCargo = MutableLiveData<List<Cargo>>()
+    val fleetActiveCargo: LiveData<List<Cargo>> = _fleetActiveCargo
+
+    private val _fleetActiveCargoCount = MutableLiveData(0)
+    val fleetActiveCargoCount: LiveData<Int> = _fleetActiveCargoCount
+
+    // Ferry name map (ferryId → ferry name) for enriching cargo rows
+    private val _ferryNameMap = MutableLiveData<Map<String, String>>(emptyMap())
+    val ferryNameMap: LiveData<Map<String, String>> = _ferryNameMap
 
     // NEARBY FERRIES for live map preview
     private val _nearbyFerries = MutableLiveData<List<Ferry>>()
@@ -119,6 +130,8 @@ class UserDashboardViewModel(
                         is Result.Success -> {
                             _cachedAllFerries = result.data
                             updateNearbyFerries()
+                            // Build ferryId → ferryName map for cargo row enrichment
+                            _ferryNameMap.value = result.data.associate { it.id to it.name }
                         }
                         is Result.Error -> {
                             _errorMessage.value = "Ferry error: ${result.exception.message}"
@@ -187,20 +200,29 @@ class UserDashboardViewModel(
                 }
         }
 
+        // Removed old observeUserActiveCargo tracker since UI is entirely fleet-oriented now
+
+        // Fleet-wide cargo observation (no userId filter) for Cargo Pulse card + Hero Header stats
         viewModelScope.launch {
-            cargoRepository.observeUserActiveCargo(userId)
+            cargoRepository.observeFleetActiveCargo() // Removed limit: fetch all active for accurate fleet stats
                 .catch { e ->
-                    Log.e(TAG, "Error observing cargo", e)
-                    _errorMessage.value = "Failed to load cargo: ${e.message}"
+                    Log.e(TAG, "Error observing fleet cargo", e)
+                    _fleetActiveCargo.value = emptyList() // Fallback to hide loading state
+                    _fleetActiveCargoCount.value = 0
+                    updateStatsFromCargo(emptyList())     // Zero hero stats on error
                 }
                 .collectLatest { result ->
                     when (result) {
                         is Result.Success -> {
-                            _activeCargo.value = result.data
-                            updateStatsFromCargo(result.data)
+                            _fleetActiveCargo.value = result.data
+                            _fleetActiveCargoCount.value = result.data.size
+                            updateStatsFromCargo(result.data) // Power the Hero Header with fleet stats!
                         }
                         is Result.Error -> {
-                            _errorMessage.value = "Cargo error: ${result.exception.message}"
+                            Log.e(TAG, "Fleet cargo error: ${result.exception.message}")
+                            _fleetActiveCargo.value = emptyList() // Fallback to hide loading state
+                            _fleetActiveCargoCount.value = 0
+                            updateStatsFromCargo(emptyList())     // Zero hero stats on error
                         }
                         else -> {}
                     }

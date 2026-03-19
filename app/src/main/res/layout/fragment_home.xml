@@ -392,15 +392,36 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Header -->
-                    <TextView
+                    <!-- Header row: title + count badge -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📦  MY CARGO"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🚢  FLEET CARGO PULSE"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <!-- Active count badge -->
+                        <TextView
+                            android:id="@+id/tvFleetCargoCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="— ACTIVE"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:background="@drawable/button_primary_small"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp" />
+                    </LinearLayout>
 
                     <!-- Divider -->
                     <View
@@ -416,7 +437,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical" />
 
-                    <!-- Empty state (no cargo) -->
+                    <!-- Empty state (no fleet cargo after load) -->
                     <LinearLayout
                         android:id="@+id/layoutCargoEmpty"
                         android:layout_width="match_parent"
@@ -429,14 +450,15 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="📭"
+                            android:text="⚓"
                             android:textSize="36sp"
                             android:layout_marginBottom="8dp" />
 
                         <TextView
+                            android:id="@+id/tvCargoEmptyTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="No active shipments"
+                            android:text="No active shipments fleet-wide"
                             android:textColor="@color/medium_text"
                             android:textSize="14sp"
                             android:gravity="center" />
@@ -444,20 +466,32 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Your cargo will appear here once registered"
+                            android:text="Active shipments will appear here in real-time"
                             android:textColor="@color/light_text"
                             android:textSize="12sp"
                             android:gravity="center"
                             android:layout_marginTop="4dp" />
                     </LinearLayout>
 
-                    <!-- Track All Cargo button -->
+                    <!-- Loading state -->
+                    <TextView
+                        android:id="@+id/tvCargoLoading"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Searching for fleet activity..."
+                        android:textColor="@color/medium_text"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:visibility="visible" />
+
+                    <!-- Explore All Shipments button -->
                     <TextView
                         android:id="@+id/btnTrackAllCargo"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:gravity="center"
-                        android:text="TRACK ALL CARGO →"
+                        android:text="EXPLORE ALL SHIPMENTS →"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold"
