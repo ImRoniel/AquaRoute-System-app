@@ -146,65 +146,44 @@ class CargoTrackerActivity : AppCompatActivity() {
     private fun showCargoDetails(cargo: Cargo) {
         // Display the reference number
         binding.tvTrackingNumberValue.text = cargo.reference
-
-        // Description
-        binding.tvDescriptionValue.text = cargo.description.ifEmpty { "No description provided" }
-
-        // Weight
+        binding.tvCargoTypeValue.text = cargo.cargoType.ifEmpty { "General Cargo" }
         binding.tvWeightValue.text = String.format(Locale.US, "%.1f kg", cargo.weight)
 
-        // Status
-        binding.tvFerryStatusValue.text = cargo.getStatusDisplay()
-
-        // Set status color
-        val statusColor = when (cargo.status.lowercase()) {
-            "in_transit" -> getColor(R.color.success_green)
-            "delivered" -> getColor(R.color.deep_ocean_blue)
-            "delayed" -> getColor(R.color.error_red)
-            "processing", "pending" -> getColor(R.color.warning_orange)
-            else -> getColor(R.color.medium_text)
+        // Status Display & Vectorized Dot Mapping
+        val statusText = cargo.getStatusDisplay()
+        binding.tvFerryStatusValue.text = statusText
+        
+        val (dotRes, colorRes) = when (cargo.status.lowercase()) {
+            "in_transit" -> Pair(R.drawable.ic_status_dot_green, R.color.success_green)
+            "delivered" -> Pair(R.drawable.ic_status_dot_blue, R.color.deep_ocean_blue)
+            "delayed" -> Pair(R.drawable.ic_status_dot_red, R.color.error_red)
+            "processing", "pending" -> Pair(R.drawable.ic_status_dot_amber, R.color.warning_amber)
+            else -> Pair(R.drawable.ic_status_dot_gray, R.color.medium_text)
         }
-        binding.tvFerryStatusValue.setTextColor(statusColor)
+        
+        binding.ivCargoStatusDot.setImageResource(dotRes)
+        binding.tvFerryStatusValue.setTextColor(getColor(colorRes))
 
-        // Ferry information
-        binding.tvFerryNameValue.text = cargo.ferryId?.let {
-            "Ferry ID: $it"
-        } ?: "Not assigned"
+        // Route Information
+        binding.tvOriginValue.text = cargo.origin.ifEmpty { "Manila" }
+        binding.tvDestinationValue.text = cargo.destination.ifEmpty { "Cebu" }
 
-        // Origin & Destination (if available)
-        binding.tvOriginValue.text = cargo.origin.ifEmpty {
-            when (cargo.ferryId) {
-                "D893D5IGv3JW1m8ilZer" -> "Manila"
-                else -> "Unknown"
-            }
-        }
+        // Vessel Info
+        binding.tvFerryNameValue.text = cargo.ferryId ?: "Not assigned"
 
-        binding.tvDestinationValue.text = cargo.destination.ifEmpty {
-            when (cargo.ferryId) {
-                "D893D5IGv3JW1m8ilZer" -> "Cebu"
-                else -> "Unknown"
-            }
-        }
-
-        // Cargo Type (use description as fallback)
-        binding.tvCargoTypeValue.text = cargo.cargoType.ifEmpty {
-            cargo.description.take(20) + if (cargo.description.length > 20) "..." else ""
-        }
-
-        // ETA (if available)
+        // ETA Formatting
         binding.tvEtaValue.text = cargo.eta?.let {
-            val etaDate = Date(it)
             val dateFormat = SimpleDateFormat("MMM dd, yyyy · hh:mm a", Locale.US)
-            dateFormat.format(etaDate)
+            dateFormat.format(Date(it))
         } ?: "TBD"
 
-        // Progress (hide by default)
-        binding.progressLayout.visibility = View.GONE
-
-        // Delay reason (hide by default)
-        binding.delayReasonLayout.visibility = View.GONE
-
-        // Recipient (hide by default)
-        binding.recipientLayout.visibility = View.GONE
+        // Dynamic Progress Visibility
+        if (cargo.status.lowercase() == "in_transit" && cargo.progress in 1..99) {
+            binding.progressLayout.visibility = View.VISIBLE
+            binding.progressBar.progress = cargo.progress
+            binding.tvProgressValue.text = "${cargo.progress}%"
+        } else {
+            binding.progressLayout.visibility = View.GONE
+        }
     }
 }

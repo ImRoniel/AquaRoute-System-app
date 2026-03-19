@@ -4,40 +4,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/splashscreen"
+    android:background="@color/background"
     android:orientation="vertical"
     tools:context=".View.CargoTrackerActivity">
 
-    <!-- Repositioned Back Button (Minimal) -->
-    <ImageButton
-        android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
+    <!-- Header / Back Navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_close"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        app:tint="@color/deep_ocean_blue"
-        android:padding="16dp"
-        android:contentDescription="Back" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/deep_ocean_blue"
+            android:padding="8dp"
+            android:contentDescription="Back"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CARGO TRACKER"
+            android:textColor="@color/deep_ocean_blue"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
 
     <!-- Main Content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="16dp"
+        android:paddingHorizontal="16dp"
         android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
 
             <!-- Search Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="@color/white">
 
@@ -45,16 +66,31 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔍 ENTER REFERENCE NUMBER"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_search"
+                            app:tint="@color/deep_ocean_blue" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TRACK SHIPMENT"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.02"
+                            android:layout_marginStart="10dp" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -65,50 +101,55 @@
                         <EditText
                             android:id="@+id/etSearch"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="52dp"
                             android:layout_weight="1"
-                            android:hint="e.g., CRG-56215...-...."
+                            android:hint="Enter Reference Number"
+                            android:textColorHint="@color/text_hint"
+                            android:textColor="@color/deep_ocean_blue"
                             android:background="@drawable/edittext_background"
-                            android:paddingHorizontal="12dp"
-                            android:drawableStart="@drawable/ic_search"
-                            android:drawablePadding="8dp"
+                            android:paddingHorizontal="16dp"
                             android:imeOptions="actionSearch"
-                            android:inputType="text"
+                            android:inputType="textCapCharacters"
                             android:maxLines="1"
-                            android:textSize="14sp" />
+                            android:textSize="15sp"
+                            android:fontFamily="sans-serif-medium" />
 
                         <ImageButton
                             android:id="@+id/btnClearSearch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@drawable/ic_close"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            app:tint="@color/medium_text"
+                            app:tint="@color/text_medium"
                             android:visibility="gone"
-                            android:layout_marginHorizontal="4dp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTrack"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:text="TRACK"
-                            app:backgroundTint="@color/openMap_button"
-                            app:cornerRadius="8dp"
-                            android:textColor="@color/white"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:paddingHorizontal="16dp" />
+                            android:layout_marginStart="4dp"
+                            android:contentDescription="Clear search" />
                     </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTrack"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="LOCATE SHIPMENT"
+                        app:backgroundTint="@color/primary"
+                        app:cornerRadius="12dp"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05"
+                        app:elevation="2dp" />
 
                     <TextView
                         android:id="@+id/searchInstruction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Enter the reference number provided by the shipping company"
-                        android:textColor="@color/medium_text"
+                        android:text="Verify your tracking ID via your receipt"
+                        android:textColor="@color/text_medium"
                         android:textSize="12sp"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone" />
+                        android:layout_marginTop="12dp"
+                        android:layout_gravity="center_horizontal"
+                        android:alpha="0.8" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -121,47 +162,13 @@
                 android:visibility="gone"
                 android:layout_marginVertical="20dp" />
 
-            <!-- Empty State (Not Found) -->
-            <LinearLayout
-                android:id="@+id/emptyState"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="32dp"
-                android:visibility="gone">
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/ic_cargo_placeholder"
-                    android:layout_marginBottom="16dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cargo Not Found"
-                    android:textColor="@color/deep_ocean_blue"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="No cargo found with this reference number"
-                    android:textColor="@color/medium_text"
-                    android:textSize="14sp"
-                    android:gravity="center" />
-            </LinearLayout>
-
             <!-- Result Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/resultCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
                 android:visibility="gone"
                 app:cardBackgroundColor="@color/white">
 
@@ -169,380 +176,397 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📦 CARGO DETAILS"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Tracking Number -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_my_cargo"
+                            app:tint="@color/primary" />
 
                         <TextView
-                            android:layout_width="100dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Reference:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvTrackingNumberValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="CRG-56215413-6451"
+                            android:text="SHIPMENT DETAILS"
                             android:textColor="@color/deep_ocean_blue"
                             android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05"
+                            android:layout_marginStart="10dp" />
                     </LinearLayout>
 
-                    <!-- Cargo Type -->
+                    <!-- Details List -->
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Cargo Type:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCargoTypeValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Electronics"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Description -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Description:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvDescriptionValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Electronics equipment"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Weight -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Weight:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvWeightValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="500 kg"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/light_gray"
-                        android:layout_marginVertical="12dp" />
-
-                    <!-- Route -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🚢 ROUTE INFORMATION"
-                        android:textColor="@color/deep_ocean_blue"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Origin -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Origin:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvOriginValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Manila"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Destination -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Destination:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvDestinationValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Cebu"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Assigned Ferry -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Ferry:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvFerryNameValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="MV OceanJet 8"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Status -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="Status:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvFerryStatusValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="IN TRANSIT"
-                            android:textColor="@color/success_green"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <!-- ETA -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="100dp"
-                            android:layout_height="wrap_content"
-                            android:text="ETA:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvEtaValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Mar 10, 2026 · 2:30 PM"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Progress (for in transit) -->
-                    <LinearLayout
-                        android:id="@+id/progressLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone">
+                        android:layout_marginStart="4dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Progress:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp"
-                            android:layout_marginBottom="4dp" />
-
-                        <ProgressBar
-                            android:id="@+id/progressBar"
-                            style="?android:attr/progressBarStyleHorizontal"
+                        <!-- Tracking Number -->
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="8dp"
-                            android:progress="45"
-                            android:progressTint="@color/deep_ocean_blue"
-                            android:layout_marginBottom="4dp" />
-
-                        <TextView
-                            android:id="@+id/tvProgressValue"
-                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="45%"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="12sp"
-                            android:layout_gravity="end" />
-                    </LinearLayout>
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
 
-                    <!-- Delay Reason -->
-                    <LinearLayout
-                        android:id="@+id/delayReasonLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone">
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="REFERENCE"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
 
-                        <TextView
-                            android:layout_width="100dp"
+                            <TextView
+                                android:id="@+id/tvTrackingNumberValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Status with Dot -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Delay Reason:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:id="@+id/tvDelayReason"
-                            android:layout_width="0dp"
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="STATUS"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+
+                            <ImageView
+                                android:id="@+id/ivCargoStatusDot"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:src="@drawable/ic_status_dot_amber"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:id="@+id/tvFerryStatusValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.02" />
+                        </LinearLayout>
+
+                        <!-- Cargo Type -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Severe weather"
-                            android:textColor="@color/error_red"
-                            android:textSize="14sp" />
-                    </LinearLayout>
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
 
-                    <!-- Recipient -->
-                    <LinearLayout
-                        android:id="@+id/recipientLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone">
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="CATEGORY"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
 
-                        <TextView
-                            android:layout_width="100dp"
+                            <TextView
+                                android:id="@+id/tvCargoTypeValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <!-- Weight -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Recipient:"
-                            android:textColor="@color/medium_text"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:id="@+id/tvRecipientValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Maria Santos"
-                            android:textColor="@color/deep_ocean_blue"
-                            android:textSize="14sp" />
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="WEIGHT"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+
+                            <TextView
+                                android:id="@+id/tvWeightValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="14sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="@color/light_gray"
-                        android:layout_marginVertical="16dp" />
+                        android:background="@color/divider"
+                        android:layout_marginVertical="16dp"
+                        android:alpha="0.4" />
+
+                    <!-- Route Section -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_ferry"
+                            app:tint="@color/primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="LOGISTICS &amp; ROUTE"
+                            android:textColor="@color/deep_ocean_blue"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="4dp">
+
+                        <!-- Origin/Destination -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="ORIGIN"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvOriginValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="DESTINATION"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvDestinationValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <!-- Vessel -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="VESSEL"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvFerryNameValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- ETA -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="10dp">
+
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="EST. ARRIVAL"
+                                android:textColor="@color/text_medium"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvEtaValue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="--"
+                                android:textColor="@color/deep_ocean_blue"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <!-- Progress (conditional) -->
+                        <LinearLayout
+                            android:id="@+id/progressLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="12dp"
+                            android:visibility="gone">
+
+                            <ProgressBar
+                                android:id="@+id/progressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="8dp"
+                                android:progressTint="@color/primary"
+                                android:backgroundTint="@color/light_gray" />
+
+                            <TextView
+                                android:id="@+id/tvProgressValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0%"
+                                android:textColor="@color/primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:layout_gravity="end"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Spacing -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp" />
 
                     <!-- Action Buttons -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center">
+                        android:orientation="horizontal">
 
-                        <TextView
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnViewOnMap"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:background="@drawable/button_outline"
                             android:text="VIEW"
-                            android:textColor="@color/deep_ocean_blue"
+                            android:textColor="@color/primary"
+                            app:strokeColor="@color/primary"
+                            app:cornerRadius="8dp"
+                            android:layout_marginEnd="6dp"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginEnd="4dp" />
+                            android:textStyle="bold" />
 
-                        <TextView
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnNewSearch"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:background="@drawable/button_primary"
-                            android:text="NEW SEARCH"
-                            android:textColor="@color/white"
+                            android:text="NEW"
+                            app:backgroundTint="@color/primary"
+                            app:cornerRadius="8dp"
+                            android:layout_marginStart="6dp"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:layout_marginStart="4dp" />
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- Empty State (Not Found) -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="48dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/ic_cargo_placeholder"
+                    android:layout_marginBottom="24dp"
+                    android:alpha="0.4" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Shipment Not Found"
+                    android:textColor="@color/deep_ocean_blue"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="We couldn't locate any records for this reference number. Please verify and try again."
+                    android:textColor="@color/text_medium"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:alpha="0.8" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
@@ -552,11 +576,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="12dp"
         app:cardBackgroundColor="@color/white"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginBottom="4dp">
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -566,16 +590,15 @@
             <!-- Header -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="56dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
-                android:background="@color/deep_ocean_blue">
+                android:paddingHorizontal="16dp"
+                android:background="@color/primary">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_ferry"
                     app:tint="@color/white" />
 
@@ -584,29 +607,41 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="Ferry Name"
+                    android:layout_marginStart="12dp"
+                    android:text="Vessel Tracking"
                     android:textColor="@color/white"
-                    android:textSize="14sp"
+                    android:textSize="15sp"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
                 <ImageButton
                     android:id="@+id/btnCloseCargoMap"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_close"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     app:tint="@color/white"
                     android:contentDescription="Close map preview" />
             </LinearLayout>
 
-            <!-- Map -->
-            <org.osmdroid.views.MapView
-                android:id="@+id/cargoMiniMapView"
+            <!-- Map Container -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="200dp" />
+                android:layout_height="240dp">
+                
+                <org.osmdroid.views.MapView
+                    android:id="@+id/cargoMiniMapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+                
+                <!-- Overlay shadow for depth -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:background="@drawable/bg_status_pill_open"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

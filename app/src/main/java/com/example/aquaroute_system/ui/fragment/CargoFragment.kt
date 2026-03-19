@@ -324,31 +324,45 @@ class CargoFragment : Fragment() {
 
     private fun showCargoDetails(cargo: Cargo) {
         binding.tvTrackingNumberValue.text = cargo.reference
-        binding.tvDescriptionValue.text = cargo.description.ifEmpty { "No description provided" }
+        binding.tvCargoTypeValue.text = cargo.cargoType.ifEmpty { "General Cargo" }
         binding.tvWeightValue.text = String.format(Locale.US, "%.1f kg", cargo.weight)
-        binding.tvFerryStatusValue.text = cargo.getStatusDisplay()
-
-        val colorRes = when (cargo.status.lowercase()) {
-            "in_transit" -> R.color.success_green
-            "delivered" -> R.color.deep_ocean_blue
-            "delayed" -> R.color.error_red
-            "processing", "pending" -> R.color.warning_orange
-            else -> R.color.medium_text
+        
+        // Status Display & Vectorized Dot Mapping
+        val statusText = cargo.getStatusDisplay()
+        binding.tvFerryStatusValue.text = statusText
+        
+        val (dotRes, colorRes) = when (cargo.status.lowercase()) {
+            "in_transit" -> Pair(R.drawable.ic_status_dot_green, R.color.success_green)
+            "delivered" -> Pair(R.drawable.ic_status_dot_blue, R.color.deep_ocean_blue)
+            "delayed" -> Pair(R.drawable.ic_status_dot_red, R.color.error_red)
+            "processing", "pending" -> Pair(R.drawable.ic_status_dot_amber, R.color.warning_amber)
+            else -> Pair(R.drawable.ic_status_dot_gray, R.color.medium_text)
         }
+        
+        binding.ivCargoStatusDot.setImageResource(dotRes)
         binding.tvFerryStatusValue.setTextColor(ContextCompat.getColor(requireContext(), colorRes))
 
+        // Route Information
         binding.tvOriginValue.text = cargo.origin.ifEmpty { "Manila" }
         binding.tvDestinationValue.text = cargo.destination.ifEmpty { "Cebu" }
-        binding.tvCargoTypeValue.text = cargo.cargoType.ifEmpty { "General Cargo" }
 
+        // ETA Formatting
         binding.tvEtaValue.text = cargo.eta?.let {
             val dateFormat = SimpleDateFormat("MMM dd, yyyy · hh:mm a", Locale.US)
             dateFormat.format(Date(it))
         } ?: "TBD"
 
-        binding.progressLayout.visibility = View.GONE
-        binding.delayReasonLayout.visibility = View.GONE
-        binding.recipientLayout.visibility = View.GONE
+        // Dynamic Progress Visibility
+        if (cargo.status.lowercase() == "in_transit" && cargo.progress in 1..99) {
+            binding.progressLayout.visibility = View.VISIBLE
+            binding.progressBar.progress = cargo.progress
+            binding.tvProgressValue.text = "${cargo.progress}%"
+        } else {
+            binding.progressLayout.visibility = View.GONE
+        }
+        
+        // Hide unused layouts from previous version
+        // (Note: These IDs were removed in the layout refactor, so we don't need to touch them here if they're gone)
     }
 
     override fun onDestroyView() {
