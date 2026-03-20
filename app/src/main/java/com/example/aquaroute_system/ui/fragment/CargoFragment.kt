@@ -14,8 +14,11 @@ import androidx.fragment.app.viewModels
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.Cargo
 import com.example.aquaroute_system.data.models.Ferry
+import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.repository.CargoRepository
 import com.example.aquaroute_system.data.repository.FerryRepository
+import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
+import com.example.aquaroute_system.data.repository.WeatherRepository
 import com.example.aquaroute_system.databinding.ActivityCargoTrackerBinding
 import com.example.aquaroute_system.ui.viewmodel.CargoTrackerViewModel
 import com.example.aquaroute_system.ui.viewmodel.CargoTrackerViewModelFactory
@@ -38,7 +41,9 @@ class CargoFragment : Fragment() {
     private lateinit var sessionManager: SessionManager
     private lateinit var cargoRepository: CargoRepository
     private lateinit var ferryRepository: FerryRepository
-    
+    private lateinit var weatherRepository: WeatherRepository
+    private lateinit var weatherRefreshRepository: WeatherRefreshRepository
+
     private var mapInitialized = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -53,6 +58,8 @@ class CargoFragment : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
         cargoRepository = CargoRepository(firestore)
         ferryRepository = FerryRepository(firestore)
+        weatherRepository = WeatherRepository(firestore)
+        weatherRefreshRepository = WeatherRefreshRepository("https://aquaroute-system-web.onrender.com/")
 
         initializeViewModel()
         setupViews()
@@ -77,7 +84,10 @@ class CargoFragment : Fragment() {
     }
 
     private fun initializeViewModel() {
-        val factory = CargoTrackerViewModelFactory(cargoRepository, ferryRepository, sessionManager)
+        val factory = CargoTrackerViewModelFactory(
+            cargoRepository, ferryRepository, sessionManager,
+            weatherRepository, weatherRefreshRepository
+        )
         val vm: CargoTrackerViewModel by viewModels { factory }
         viewModel = vm
     }
@@ -120,14 +130,22 @@ class CargoFragment : Fragment() {
             updateViewMapButtonState(viewModel.searchResult.value, ferry)
             if (ferry != null) {
                 binding.tvFerryNameValue.text = ferry.name
-                
-                // Add ETA mapping
+
+                // ETA mapping
                 if (ferry.eta > 0) {
                     binding.tvEtaValue.text = "${ferry.eta} min${if (ferry.eta != 1) "s" else ""}"
+                }
+
+                // Trigger weather fetch for this ferry's current location
+                if (ferry.lat != 0.0 || ferry.lon != 0.0) {
+                    viewModel.fetchWeatherForCargoFerry(ferry)
+                } else {
+                    binding.cargoWeatherSection.visibility = View.GONE
                 }
             } else {
                 val rawId = viewModel.searchResult.value?.ferryId
                 binding.tvFerryNameValue.text = if (rawId.isNullOrEmpty()) "Not assigned" else "Unknown Ferry"
+                binding.cargoWeatherSection.visibility = View.GONE
             }
         }
 
@@ -165,6 +183,50 @@ class CargoFragment : Fragment() {
                 showMapPreview(cargo, ferry)
             } else {
                 hideMapPreview()
+            }
+        }
+
+        // ── Weather observer ──────────────────────────────────────────────────────
+        viewModel.cargoFerryWeather.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Result.Loading -> {
+                    binding.cargoWeatherSection.visibility = View.VISIBLE
+                    binding.tvCargoWeatherDesc.text = "Loading..."
+                    binding.tvCargoWeatherTemp.text = "--"
+                    binding.tvCargoWeatherWind.text = "--"
+                    binding.tvCargoWeatherIcon.text = "⏳"
+                }
+                is Result.Success -> {
+                    val w = result.data
+                    binding.cargoWeatherSection.visibility = View.VISIBLE
+                    binding.tvCargoWeatherDesc.text = w.condition.replaceFirstChar { it.uppercase() }
+                    binding.tvCargoWeatherTemp.text = "${w.temperature}°C"
+                    binding.tvCargoWeatherWind.text = w.windSpeed
+                    binding.tvCargoWeatherIcon.text = w.icon.ifBlank {
+                        when {
+                            w.condition.contains("rain", true)  -> "🌧️"
+                            w.condition.contains("storm", true) -> "⛈️"
+                            w.condition.contains("cloud", true) -> "☁️"
+                            w.condition.contains("clear", true) -> "☀️"
+                            w.condition.contains("fog", true) ||
+                            w.condition.contains("mist", true)  -> "🌫️"
+                            else -> "⛅"
+                        }
+                    }
+                }
+                is Result.Error -> {
+                    // Only hide if it's the initial reset sentinel, not a real error during transit
+                    if (result.exception.message == "no_data") {
+                        binding.cargoWeatherSection.visibility = View.GONE
+                    } else {
+                        binding.cargoWeatherSection.visibility = View.VISIBLE
+                        binding.tvCargoWeatherDesc.text = "Weather unavailable"
+                        binding.tvCargoWeatherTemp.text = "N/A"
+                        binding.tvCargoWeatherWind.text = "N/A"
+                        binding.tvCargoWeatherIcon.text = "❓"
+                    }
+                }
+                else -> {}
             }
         }
     }

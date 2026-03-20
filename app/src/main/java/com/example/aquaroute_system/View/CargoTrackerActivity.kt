@@ -12,6 +12,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.Cargo
 import com.example.aquaroute_system.data.repository.CargoRepository
+import com.example.aquaroute_system.data.repository.FerryRepository
+import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
+import com.example.aquaroute_system.data.repository.WeatherRepository
 import com.example.aquaroute_system.databinding.ActivityCargoTrackerBinding
 import com.example.aquaroute_system.ui.viewmodel.CargoTrackerViewModel
 import com.example.aquaroute_system.ui.viewmodel.CargoTrackerViewModelFactory
@@ -46,7 +49,14 @@ class CargoTrackerActivity : AppCompatActivity() {
     }
 
     private fun initializeViewModel() {
-        val factory = CargoTrackerViewModelFactory(cargoRepository, com.example.aquaroute_system.data.repository.FerryRepository(com.google.firebase.firestore.FirebaseFirestore.getInstance()), sessionManager)
+        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val ferryRepository = FerryRepository(firestore)
+        val weatherRepository = WeatherRepository(firestore)
+        val weatherRefreshRepository = WeatherRefreshRepository("https://aquaroute-system-web.onrender.com/")
+        val factory = CargoTrackerViewModelFactory(
+            cargoRepository, ferryRepository, sessionManager,
+            weatherRepository, weatherRefreshRepository
+        )
         viewModel = ViewModelProvider(this, factory)[CargoTrackerViewModel::class.java]
     }
 
