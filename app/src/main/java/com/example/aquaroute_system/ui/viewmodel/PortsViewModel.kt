@@ -1,12 +1,16 @@
 package com.example.aquaroute_system.ui.viewmodel
 
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.aquaroute_system.data.models.Ferry
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.data.models.Result
+import com.example.aquaroute_system.data.models.WeatherCondition
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
+import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
+import com.example.aquaroute_system.data.repository.WeatherRepository
 import com.example.aquaroute_system.util.GeoHashUtils
 import com.example.aquaroute_system.util.SessionManager
 import kotlinx.coroutines.Job
@@ -19,7 +23,9 @@ import java.util.*
 class PortsViewModel(
     private val portRepository: PortRepository,
     private val ferryRepository: FerryRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val weatherRepository: WeatherRepository,
+    private val weatherRefreshRepository: WeatherRefreshRepository
 ) : ViewModel() {
 
     private val _ports = MutableLiveData<List<FirestorePort>>()
@@ -51,6 +57,37 @@ class PortsViewModel(
     private val allFerries = MutableLiveData<List<Ferry>>()
     private var portJob: Job? = null
     private var timeJob: Job? = null
+    private var weatherJob: Job? = null
+
+    // Weather data for the currently selected port
+    private val _portWeather = MutableLiveData<Result<WeatherCondition>>()
+    val portWeather: LiveData<Result<WeatherCondition>> = _portWeather
+
+    fun fetchWeatherForPort(portId: String) {
+        weatherJob?.cancel()
+        weatherJob = viewModelScope.launch {
+            Log.d("WeatherTrace", "[PortsViewModel] fetchWeatherForPort called for portId=$portId")
+
+            // Step 1: Tell the backend to refresh weather from OpenWeather API into Firestore
+            Log.d("WeatherTrace", "[PortsViewModel] Triggering backend weather refresh...")
+            val refreshResult = weatherRefreshRepository.requestRefresh(listOf(portId))
+            when (refreshResult) {
+                is Result.Success -> Log.d("WeatherTrace", "[PortsViewModel] Backend refresh succeeded.")
+                is Result.Error  -> Log.w("WeatherTrace", "[PortsViewModel] Backend refresh failed: ${refreshResult.exception.message}. Proceeding with cached Firestore data.")
+                else -> {}
+            }
+
+            // Step 2: Small delay to allow backend to write to Firestore
+            delay(2000)
+
+            // Step 3: Read the freshly written (or existing) weather doc from Firestore
+            Log.d("WeatherTrace", "[PortsViewModel] Reading weather from Firestore for portId=$portId")
+            weatherRepository.getWeatherForLocation(portId).collect { result ->
+                Log.d("WeatherTrace", "[PortsViewModel] portWeather result: $result")
+                _portWeather.value = result
+            }
+        }
+    }
 
     init {
         observeFerries()
@@ -157,5 +194,6 @@ class PortsViewModel(
         super.onCleared()
         timeJob?.cancel()
         portJob?.cancel()
+        weatherJob?.cancel()
     }
 }

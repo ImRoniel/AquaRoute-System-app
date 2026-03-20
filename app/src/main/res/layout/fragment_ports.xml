@@ -172,6 +172,145 @@
                 android:id="@+id/miniMapView"
                 android:layout_width="match_parent"
                 android:layout_height="200dp" />
+
+            <!-- Weather Conditions Section -->
+            <LinearLayout
+                android:id="@+id/weatherSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="12dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="4dp">
+
+                <!-- Title Row -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Weather Conditions"
+                    android:textColor="#2D2F31"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Main weather row: icon + temp + description -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/tvWeatherIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☀️"
+                        android:textSize="24sp"
+                        android:layout_marginEnd="10dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvWeatherTemp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--°C"
+                            android:textColor="#2D2F31"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvWeatherDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Loading..."
+                            android:textColor="#65676B"
+                            android:textSize="12sp"
+                            android:textAllCaps="true" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Wind & Waves chip row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+
+                    <!-- Wind Speed chip -->
+                    <TextView
+                        android:id="@+id/tvWeatherWind"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💨 -- m/s"
+                        android:textColor="#65676B"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_chip_default"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginEnd="6dp" />
+
+                    <!-- Wave Height chip -->
+                    <TextView
+                        android:id="@+id/tvWeatherWaves"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌊 --"
+                        android:textColor="#65676B"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_chip_default"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="4dp" />
+                </LinearLayout>
+
+                <!-- Advisory Banner (hidden when no advisory) -->
+                <LinearLayout
+                    android:id="@+id/weatherAdvisoryBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_advisory_banner"
+                    android:padding="8dp"
+                    android:layout_marginBottom="6dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚠️"
+                        android:textSize="14sp"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:id="@+id/tvAdvisoryMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Advisory"
+                        android:textColor="#8B0000"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- No data placeholder -->
+                <TextView
+                    android:id="@+id/tvWeatherNoData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Weather data unavailable for this port."
+                    android:textColor="#9E9E9E"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    android:layout_marginBottom="4dp" />
+
+            </LinearLayout>
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

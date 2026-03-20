@@ -18,7 +18,7 @@
         android:icon="@drawable/ic_ports"
         android:title="Port" />
     <item
-        android:id="@+id/nav_weather"
-        android:icon="@drawable/ic_weather"
-        android:title="Weather" />
+        android:id="@+id/nav_ferries"
+        android:icon="@drawable/ic_ferries"
+        android:title="Ferries" />
 </menu>

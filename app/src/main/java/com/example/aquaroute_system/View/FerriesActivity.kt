@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.aquaroute_system.data.repository.FerryRepository
+import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
+import com.example.aquaroute_system.data.repository.WeatherRepository
 import com.example.aquaroute_system.databinding.ActivityFerriesBinding
 import com.example.aquaroute_system.ui.adapter.FerryAdapter
 import com.example.aquaroute_system.ui.viewmodel.FerriesViewModel
@@ -42,8 +44,10 @@ class FerriesActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         val firestore = FirebaseFirestore.getInstance()
-        val repository = FerryRepository(firestore)
-        val factory = FerriesViewModelFactory(repository)
+        val ferryRepository = FerryRepository(firestore)
+        val weatherRepository = WeatherRepository(firestore)
+        val weatherRefreshRepository = WeatherRefreshRepository("https://aquaroute-system-web.onrender.com/")
+        val factory = FerriesViewModelFactory(ferryRepository, weatherRepository, weatherRefreshRepository)
         viewModel = ViewModelProvider(this, factory).get(FerriesViewModel::class.java)
     }
 
@@ -81,11 +85,11 @@ class FerriesActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.loadFerries()
+            viewModel.refresh()
         }
 
         binding.btnRetry.setOnClickListener {
-            viewModel.loadFerries()
+            viewModel.refresh()
         }
 
         // Apply scale animation to retry button

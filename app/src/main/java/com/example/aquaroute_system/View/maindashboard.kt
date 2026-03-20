@@ -195,7 +195,7 @@ class MainDashboard : AppCompatActivity() {
 
         binding.drawerWeather.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_weather)
+            navigateToTab(R.id.nav_ferries)
         }
 
         binding.drawerLogout.setOnClickListener {

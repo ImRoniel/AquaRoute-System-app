@@ -78,17 +78,23 @@ class WeatherRepository(private val firestore: FirebaseFirestore) {
 
     fun getWeatherForLocation(locationId: String): Flow<Result<WeatherCondition>> = flow {
         try {
+            emit(Result.Loading)
+            Log.d(TAG, "Fetching weather for locationId=$locationId")
+
             val doc = firestore.collection(WEATHER_COLLECTION)
                 .document(locationId)
                 .get()
                 .await()
 
-            val weather = doc.toObject(WeatherCondition::class.java)?.copy(locationId = doc.id)
-                ?: throw Exception("Weather data not found")
+            Log.d(TAG, "Doc exists=${doc.exists()} for locationId=$locationId")
 
+            val weather = doc.toObject(WeatherCondition::class.java)?.copy(locationId = doc.id)
+                ?: throw Exception("Weather data not found for port: $locationId")
+
+            Log.d(TAG, "Weather loaded: temp=${weather.temperature}, condition=${weather.condition}")
             emit(Result.Success(weather))
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting weather", e)
+            Log.e(TAG, "Error getting weather for $locationId: ${e.message}", e)
             emit(Result.Error(e))
         }
     }

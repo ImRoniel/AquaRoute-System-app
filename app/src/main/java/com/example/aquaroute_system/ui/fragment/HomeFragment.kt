@@ -308,7 +308,7 @@ class HomeFragment : Fragment() {
             (activity as? MainDashboard)?.navigateToTab(R.id.nav_cargo)
         }
         binding.btnViewWeather.setOnClickListener {
-            (activity as? MainDashboard)?.navigateToTab(R.id.nav_weather)
+            (activity as? MainDashboard)?.navigateToTab(R.id.nav_ferries)
         }
     }
 

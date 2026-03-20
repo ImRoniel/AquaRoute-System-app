@@ -24,11 +24,11 @@ class WeatherAdvisoriesViewModel(
     private val _userLocation = MutableLiveData<Location?>()
     val userLocation: LiveData<Location?> = _userLocation
 
-    private val _selectedRadius = MutableLiveData<Int>(50) // Default 50km
+    private val _selectedRadius = MutableLiveData<Int>(1) // Default 1km
     val selectedRadius: LiveData<Int> = _selectedRadius
 
-    private var currentRadiusKm: Double = 50.0
-    private var displayRadius: Double = 50.0
+    private var currentRadiusKm: Double = 1.0
+    private var displayRadius: Double = 1.0
     private var currentUnit: String = "km"
 
     private var allPorts: List<FirestorePort> = emptyList()

@@ -25,8 +25,9 @@
         android:name="com.example.aquaroute_system.ui.fragment.PortsFragment"
         android:label="Port" />
     <fragment
-        android:id="@+id/nav_weather"
-        android:name="com.example.aquaroute_system.ui.fragment.WeatherFragment"
-        android:label="Weather"
-        tools:layout="@layout/activity_weather_advisories" />
+        android:id="@+id/nav_ferries"
+        android:name="com.example.aquaroute_system.ui.fragment.FerriesFragment"
+        android:label="Ferries"
+        tools:layout="@layout/fragment_ferries" />
+
 </navigation>

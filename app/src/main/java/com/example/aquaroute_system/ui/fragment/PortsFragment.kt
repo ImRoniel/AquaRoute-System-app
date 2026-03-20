@@ -3,6 +3,7 @@ package com.example.aquaroute_system.ui.fragment
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,8 +18,11 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.FirestorePort
+import com.example.aquaroute_system.data.models.Result
 import com.example.aquaroute_system.data.repository.FerryRepository
 import com.example.aquaroute_system.data.repository.PortRepository
+import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
+import com.example.aquaroute_system.data.repository.WeatherRepository
 import com.example.aquaroute_system.databinding.FragmentPortsBinding
 import com.example.aquaroute_system.ui.adapter.PortAdapter
 import com.example.aquaroute_system.ui.viewmodel.PortsViewModel
@@ -106,9 +110,12 @@ class PortsFragment : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
         val portRepository = PortRepository()
         val ferryRepository = FerryRepository(firestore)
+        val weatherRepository = WeatherRepository(firestore)
+        // Production backend — Render deployment
+        val weatherRefreshRepository = WeatherRefreshRepository("https://aquaroute-system-web.onrender.com/")
         val sessionManager = SessionManager(requireContext())
 
-        val factory = PortsViewModelFactory(portRepository, ferryRepository, sessionManager)
+        val factory = PortsViewModelFactory(portRepository, ferryRepository, sessionManager, weatherRepository, weatherRefreshRepository)
         val vm: PortsViewModel by viewModels { factory }
         viewModel = vm
     }
@@ -178,6 +185,16 @@ class PortsFragment : Fragment() {
 
         // Update header
         binding.tvPreviewPortName.text = port.name
+
+        // Fetch weather for this port from Firestore
+        viewModel.fetchWeatherForPort(port.id)
+        // Show loading state in weather section
+        binding.tvWeatherDesc.text = "Loading..."
+        binding.tvWeatherTemp.text = "--°C"
+        binding.tvWeatherWind.text = "💨 -- m/s"
+        binding.tvWeatherWaves.text = "🌊 --"
+        binding.weatherAdvisoryBanner.visibility = View.GONE
+        binding.tvWeatherNoData.visibility = View.GONE
 
         // Show panel with slide-up animation
         val panel = binding.mapPreviewPanel
@@ -269,6 +286,44 @@ class PortsFragment : Fragment() {
         viewModel.ports.observe(viewLifecycleOwner) { ports ->
             adapter.submitList(ports)
             updateEmptyState(ports.isEmpty())
+        }
+
+        viewModel.portWeather.observe(viewLifecycleOwner) { result ->
+            Log.d("WeatherTrace", "[PortsFragment] portWeather observer fired: $result")
+            when (result) {
+                is Result.Loading -> {
+                    Log.d("WeatherTrace", "[PortsFragment] State = LOADING")
+                    binding.tvWeatherDesc.text = "Loading..."
+                    binding.tvWeatherTemp.text = "--°C"
+                    binding.tvWeatherNoData.visibility = View.GONE
+                }
+                is Result.Success -> {
+                    val w = result.data
+                    Log.d("WeatherTrace", "[PortsFragment] State = SUCCESS — temp=${w.temperature}, cond=${w.condition}, wind=${w.windSpeed}")
+                    binding.tvWeatherNoData.visibility = View.GONE
+                    binding.tvWeatherIcon.text = w.icon
+                    binding.tvWeatherTemp.text = "${w.temperature.toInt()}°C"
+                    binding.tvWeatherDesc.text = w.condition.uppercase()
+                    binding.tvWeatherWind.text = "💨 ${w.windSpeed}"
+                    binding.tvWeatherWaves.text = "🌊 ${w.waves}"
+                    if (w.hasAdvisory && w.advisoryMessage != null) {
+                        binding.weatherAdvisoryBanner.visibility = View.VISIBLE
+                        binding.tvAdvisoryMessage.text = w.advisoryMessage
+                    } else {
+                        binding.weatherAdvisoryBanner.visibility = View.GONE
+                    }
+                }
+                is Result.Error -> {
+                    Log.e("WeatherTrace", "[PortsFragment] State = ERROR — ${result.exception.message}")
+                    binding.tvWeatherIcon.text = "❓"
+                    binding.tvWeatherTemp.text = "N/A"
+                    binding.tvWeatherDesc.text = ""
+                    binding.tvWeatherWind.text = ""
+                    binding.tvWeatherWaves.text = ""
+                    binding.weatherAdvisoryBanner.visibility = View.GONE
+                    binding.tvWeatherNoData.visibility = View.VISIBLE
+                }
+            }
         }
 
         viewModel.locationPermissionGranted.observe(viewLifecycleOwner) { granted ->

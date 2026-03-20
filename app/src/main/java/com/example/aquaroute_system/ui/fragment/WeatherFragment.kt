@@ -87,7 +87,7 @@ class WeatherFragment : Fragment() {
         unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerUnits.adapter = unitAdapter
         binding.spinnerUnits.setSelection(0)
-        binding.etRadius.setText("50")
+        binding.etRadius.setText("1")
 
         binding.btnReloadFilter.setOnClickListener {
             val radiusStr = binding.etRadius.text.toString()
