@@ -176,7 +176,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="180dp" />
 
-            <!-- Destination Weather Section -->
+            <!-- Current Weather Section -->
             <LinearLayout
                 android:id="@+id/destinationWeatherSection"
                 android:layout_width="match_parent"
@@ -190,7 +190,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⛅  Destination Weather"
+                    android:text="⛅  Current Weather"
                     android:textColor="#2D2F31"
                     android:textSize="12sp"
                     android:textStyle="bold"

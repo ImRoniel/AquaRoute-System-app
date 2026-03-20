@@ -30,9 +30,9 @@ class FerriesViewModel(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    // Weather for the currently selected ferry's destination port
-    private val _destinationWeather = MutableLiveData<Result<WeatherCondition>>()
-    val destinationWeather: LiveData<Result<WeatherCondition>> = _destinationWeather
+    // Weather for the currently selected ferry's CURRENT LOCATION
+    private val _ferryWeather = MutableLiveData<Result<WeatherCondition>>()
+    val ferryWeather: LiveData<Result<WeatherCondition>> = _ferryWeather
 
     private var ferryListJob: Job? = null
     private var weatherJob: Job? = null
@@ -69,35 +69,58 @@ class FerriesViewModel(
     }
 
     /**
-     * Calls the Render production backend to refresh weather for the destination port,
-     * then reads the updated Firestore weather doc.
-     * @param destinationPortId  Firestore document ID in the `weather` collection (same as the port doc ID)
+     * Fetches current-location weather for the given ferry.
+     *
+     * Cache policy (Firebase quota guard):
+     *   - If a valid weather doc exists in Firestore and is < 15 min old → emit cached data, skip backend.
+     *   - Otherwise → POST /weather/refresh-by-coords with ferry.lat/lon → delay 2 s → re-read Firestore.
      */
-    fun fetchWeatherForDestination(destinationPortId: String) {
-        if (destinationPortId.isBlank()) {
-            _destinationWeather.value = Result.Error(Exception("No destination port ID available"))
-            return
-        }
+    fun fetchWeatherForFerry(ferry: Ferry) {
         weatherJob?.cancel()
         weatherJob = viewModelScope.launch {
-            Log.d("WeatherTrace", "[FerriesVM] fetchWeatherForDestination: $destinationPortId")
-            _destinationWeather.value = Result.Loading
+            val ferryId = ferry.id
+            Log.d("WeatherTrace", "[FerriesVM] fetchWeatherForFerry: $ferryId (${ferry.lat},${ferry.lon})")
 
-            // 1. Trigger backend refresh (production Render URL)
-            val refreshResult = weatherRefreshRepository.requestRefresh(listOf(destinationPortId))
+            _ferryWeather.value = Result.Loading
+
+            // ── Step 1: Check Firestore cache ──────────────────────────────────────
+            var cachedAndFresh = false
+            weatherRepository.getWeatherForLocation(ferryId).collect { result ->
+                if (result is Result.Success) {
+                    val ageMs = System.currentTimeMillis() - result.data.updatedAt
+                    val FIFTEEN_MIN_MS = 15 * 60 * 1000L
+                    if (ageMs < FIFTEEN_MIN_MS) {
+                        Log.d("WeatherTrace", "[FerriesVM] Cache HIT for $ferryId (age=${ageMs/1000}s) — skipping backend")
+                        _ferryWeather.value = result
+                        cachedAndFresh = true
+                    } else {
+                        Log.d("WeatherTrace", "[FerriesVM] Cache STALE for $ferryId (age=${ageMs/1000}s)")
+                    }
+                    return@collect // stop the flow after first emission
+                }
+            }
+            if (cachedAndFresh) return@launch
+
+            // ── Step 2: Refresh from backend using live coordinates ────────────────
+            Log.d("WeatherTrace", "[FerriesVM] Calling backend refresh-by-coords for $ferryId")
+            val refreshResult = weatherRefreshRepository.requestRefreshByCoords(
+                locationId = ferryId,
+                lat = ferry.lat,
+                lon = ferry.lon,
+                name = ferry.name.ifBlank { ferryId }
+            )
             when (refreshResult) {
-                is Result.Success -> Log.d("WeatherTrace", "[FerriesVM] Refresh OK")
-                is Result.Error  -> Log.w("WeatherTrace", "[FerriesVM] Refresh failed: ${refreshResult.exception.message}")
+                is Result.Success -> Log.d("WeatherTrace", "[FerriesVM] Coords refresh OK")
+                is Result.Error  -> Log.w("WeatherTrace", "[FerriesVM] Coords refresh failed: ${refreshResult.exception.message}")
                 else -> {}
             }
 
-            // 2. Brief wait for Firestore write
+            // ── Step 3: Wait for Firestore write propagation, then read ───────────
             delay(2000)
-
-            // 3. Read weather doc from Firestore
-            weatherRepository.getWeatherForLocation(destinationPortId).collect { result ->
-                Log.d("WeatherTrace", "[FerriesVM] destinationWeather: $result")
-                _destinationWeather.value = result
+            weatherRepository.getWeatherForLocation(ferryId).collect { result ->
+                Log.d("WeatherTrace", "[FerriesVM] ferryWeather after refresh: $result")
+                _ferryWeather.value = result
+                return@collect
             }
         }
     }

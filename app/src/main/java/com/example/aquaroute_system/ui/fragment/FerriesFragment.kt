@@ -119,9 +119,7 @@ class FerriesFragment : Fragment() {
 
         // Derive destination port ID: use the last segment of the route as the portId key
         // e.g. route "Bataan - Manila" → destinationPortId used for weather lookup
-        val destinationPortId = ferry.getDestination().trim()
-        Log.d("FerriesFragment", "Ferry tapped: ${ferry.name}, destinationPortId=$destinationPortId")
-        viewModel.fetchWeatherForDestination(destinationPortId)
+        viewModel.fetchWeatherForFerry(ferry)
 
         // Slide up the panel
         val panel = binding.ferryPreviewPanel
@@ -173,8 +171,8 @@ class FerriesFragment : Fragment() {
             binding.emptyState.visibility = if (ferries.isEmpty()) View.VISIBLE else View.GONE
         }
 
-        viewModel.destinationWeather.observe(viewLifecycleOwner) { result ->
-            Log.d("WeatherTrace", "[FerriesFragment] destinationWeather: $result")
+        viewModel.ferryWeather.observe(viewLifecycleOwner) { result ->
+            Log.d("WeatherTrace", "[FerriesFragment] ferryWeather: $result")
             when (result) {
                 is Result.Loading -> {
                     binding.tvDestWeatherDesc.text = "Loading..."
