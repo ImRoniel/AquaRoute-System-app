@@ -149,19 +149,24 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
             listener = firestore.collection(CARGO_COLLECTION)
                 .whereIn("status", listOf(
                     "in_transit", "processing", "pending",
-                    "In Transit", "Processing", "Pending"
+                    "In Transit", "Processing", "Pending",
+                    "PROCESSING", "PENDING"
                 ))
-                .orderBy("createdAt", Query.Direction.DESCENDING)
+                // CRITICAL FIX: Removed .orderBy("createdAt") because mixing whereIn + orderBy requires
+                // a manual Composite Index in Firestore. Without it, the server fetch fails and kills the listener.
                 .limit(20) // QUOTA FIX: was unbounded — every write re-read all cargo docs
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        Log.e(TAG, "Error observing fleet cargo", error)
+                        Log.e("CargoDebug", "Error observing fleet cargo (Index missing?): ${error.message}")
                         trySend(Result.Error(error))
                         return@addSnapshotListener
                     }
 
                     if (snapshot != null) {
-                        val cargoList = snapshot.documents.mapNotNull { doc ->
+                        val isFromCache = snapshot.metadata.isFromCache
+                        Log.d("CargoDebug", "Snapshot received. isFromCache: $isFromCache, docCount: ${snapshot.size()}")
+                        
+                        var cargoList = snapshot.documents.mapNotNull { doc ->
                             try {
                                 doc.toObject(Cargo::class.java)?.copy(id = doc.id)
                             } catch (e: Exception) {
@@ -169,8 +174,12 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
                                 null
                             }
                         }
+                        
+                        // Sort locally to maintain "newest first" without triggering Firestore index errors
+                        cargoList = cargoList.sortedByDescending { it.createdAt }
+                        
                         trySend(Result.Success(cargoList))
-                        Log.d(TAG, "Fleet cargo pulse: ${cargoList.size} active items")
+                        Log.d("CargoDebug", "Emitted Result.Success! List size: ${cargoList.size} (Source: ${if (isFromCache) "CACHE" else "SERVER"})")
                     }
                 }
         } catch (e: Exception) {

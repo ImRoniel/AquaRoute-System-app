@@ -234,9 +234,8 @@ class UserDashboardViewModel(
                         }
                         is Result.Error -> {
                             Log.e(TAG, "Fleet cargo error: ${result.exception.message}")
-                            _fleetActiveCargo.value = emptyList() // Fallback to hide loading state
-                            _fleetActiveCargoCount.value = 0
-                            updateStatsFromCargo(emptyList())     // Zero hero stats on error
+                            // CRITICAL FIX: Do NOT clear existing cached UI state on network/index errors!
+                            // Keep the previous fleetActiveCargo intact so the screen doesn't go blank.
                         }
                         else -> {}
                     }
@@ -365,10 +364,10 @@ class UserDashboardViewModel(
     }
 
     private fun updateStatsFromCargo(cargoList: List<Cargo>) {
-        val inTransit  = cargoList.count { it.status == "in_transit" }
-        val delivered  = cargoList.count { it.status == "delivered" }
-        val delayed    = cargoList.count { it.status == "delayed" }
-        val processing = cargoList.count { it.status == "processing" || it.status == "pending" }
+        val inTransit  = cargoList.count { it.status.lowercase() == "in_transit" || it.status.lowercase() == "in transit" }
+        val delivered  = cargoList.count { it.status.lowercase() == "delivered" }
+        val delayed    = cargoList.count { it.status.lowercase() == "delayed" }
+        val processing = cargoList.count { it.status.lowercase() == "processing" || it.status.lowercase() == "pending" }
 
         val currentStats = _dashboardStats.value ?: DashboardStats()
         val updatedStats = currentStats.copy(
