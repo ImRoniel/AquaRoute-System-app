@@ -81,8 +81,9 @@ class LiveMapFragment : Fragment() {
         setupViewModelObservers()
         checkLocationPermission()
         
-        viewModel.startLiveUpdates()
-        viewModel.refreshFerries()
+        // DO NOT call refreshFerries() here — ferry data flows from Firestore
+        // via observeAllFerries() snapshot listener. The Render backend is
+        // invoked only by the manual "Reload Ferries" option in the settings dialog.
     }
 
     private fun initializeViewModel() {
@@ -429,6 +430,7 @@ class LiveMapFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.mapView.onResume()
+        viewModel.startLiveUpdates()  // Only run the UI tick while fragment is visible
     }
 
     override fun onPause() {

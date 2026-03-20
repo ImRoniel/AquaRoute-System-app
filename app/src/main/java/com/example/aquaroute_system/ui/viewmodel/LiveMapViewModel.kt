@@ -92,6 +92,9 @@ class LiveMapViewModel(
     // Live update job
     private var liveUpdateJob: Job? = null
 
+    // Ferry observation job (replaces one-shot getAllFerries call)
+    private var ferryObserveJob: Job? = null
+
     // Visible ports (combined from ferries and user location)
     private val _visiblePorts = MutableLiveData<List<FirestorePort>>()
     val visiblePorts: LiveData<List<FirestorePort>> = _visiblePorts
@@ -115,13 +118,45 @@ class LiveMapViewModel(
     init {
         initializeMapData()
         startTimeUpdates()
-        loadFerries()
+        startObservingFerries() // ARCH FIX: subscribe to Firestore snapshot, not one-shot fetch
     }
 
     private fun initializeMapData() {
         _ports.value = portData
     }
 
+    /**
+     * Subscribes to the ferries Firestore collection via a persistent SnapshotListener.
+     * Cancels any previous subscription first to avoid duplicate listeners.
+     * The map will reactively update whenever the backend writes new data to Firestore.
+     */
+    private fun startObservingFerries() {
+        ferryObserveJob?.cancel()
+        ferryObserveJob = viewModelScope.launch {
+            ferryRepository.observeAllFerries()
+                .collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val ferries = result.data
+                            _ferries.value = ferries
+                            filterNearbyFerries()
+                            loadPortsFromFerries(ferries)
+                            Log.d(TAG, "Ferries updated from Firestore: ${ferries.size} ferries")
+                        }
+                        is Result.Error -> {
+                            Log.e(TAG, "Error observing ferries", result.exception)
+                            // Don't clear existing ferries on transient errors
+                        }
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    /**
+     * Legacy one-shot ferry fetch. Kept for internal fallback only.
+     * Prefer startObservingFerries() for all reactive use cases.
+     */
     fun loadFerries() {
         viewModelScope.launch {
             val ferries = ferryRepository.getAllFerries()
@@ -166,12 +201,18 @@ class LiveMapViewModel(
         liveUpdateJob = null
     }
 
+    /**
+     * Manually triggers a ferry data refresh from the Render backend (Overpass → Firestore).
+     * The startObservingFerries() snapshot listener will automatically receive the updated
+     * documents when Firestore is written — no explicit loadFerries() call needed.
+     */
     fun refreshFerries() {
         viewModelScope.launch {
             _isLoading.value = true
             when (val result = ferryRefreshRepository.refresh()) {
                 is Result.Success -> {
-                    loadFerries()
+                    Log.d(TAG, "Backend refresh triggered successfully — Firestore listener will auto-update")
+                    // No loadFerries() needed — the snapshot listener handles the update
                 }
                 is Result.Error -> {
                     _errorMessage.value = "Ferry refresh failed: ${result.exception.message}"
@@ -180,6 +221,19 @@ class LiveMapViewModel(
             }
             _isLoading.value = false
         }
+    }
+
+    /**
+     * Computes the remaining ETA in minutes for a ferry from the client side,
+     * using `endTime` stored in the Firestore document.
+     * This avoids needing the backend to continuously update the `eta` field.
+     *
+     * @return remaining minutes (minimum 0), or null if timing data is unavailable.
+     */
+    fun getComputedEtaMinutes(ferry: Ferry): Int? {
+        val endTime = ferry.endTime ?: return null
+        val remainingMs = endTime - System.currentTimeMillis()
+        return if (remainingMs > 0) (remainingMs / 60_000).toInt() else 0
     }
 
     fun loadPortsInBounds(minLat: Double, maxLat: Double, minLon: Double, maxLon: Double) {
