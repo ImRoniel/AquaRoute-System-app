@@ -137,9 +137,8 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
-    // Observe FLEET-WIDE active cargo (no userId filter) — for dashboard Cargo Pulse
-    // NOTE: Firestore may require a composite index for this query.
-    //       Follow the URL in the logcat error to create it.
+    // Get FLEET-WIDE cargo in ALL active statuses (no userId filter) — for Hero Header counts
+    // Includes all status casing variants since Firestore string matching is case-sensitive.
     fun observeFleetActiveCargo(limit: Int = 5): Flow<Result<List<Cargo>>> = callbackFlow {
         var listener: ListenerRegistration? = null
 
@@ -148,38 +147,36 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
 
             listener = firestore.collection(CARGO_COLLECTION)
                 .whereIn("status", listOf(
+                    // lowercase (legacy Android writes)
                     "in_transit", "processing", "pending",
+                    // Title Case (web admin form values)
                     "In Transit", "Processing", "Pending",
-                    "PROCESSING", "PENDING"
+                    // UPPER_SNAKE_CASE (current web admin writes)
+                    "IN_TRANSIT", "PROCESSING", "PENDING"
                 ))
-                // CRITICAL FIX: Removed .orderBy("createdAt") because mixing whereIn + orderBy requires
-                // a manual Composite Index in Firestore. Without it, the server fetch fails and kills the listener.
-                .limit(20) // QUOTA FIX: was unbounded — every write re-read all cargo docs
+                .limit(50) // fetch all active for accurate fleet-wide stats
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        Log.e("CargoDebug", "Error observing fleet cargo (Index missing?): ${error.message}")
+                        Log.e("CargoDebug", "Error observing fleet cargo: ${error.message}")
                         trySend(Result.Error(error))
                         return@addSnapshotListener
                     }
 
                     if (snapshot != null) {
                         val isFromCache = snapshot.metadata.isFromCache
-                        Log.d("CargoDebug", "Snapshot received. isFromCache: $isFromCache, docCount: ${snapshot.size()}")
-                        
-                        var cargoList = snapshot.documents.mapNotNull { doc ->
+                        Log.d("CargoDebug", "Fleet snapshot — isFromCache: $isFromCache, docs: ${snapshot.size()}")
+
+                        val cargoList = snapshot.documents.mapNotNull { doc ->
                             try {
                                 doc.toObject(Cargo::class.java)?.copy(id = doc.id)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error parsing fleet cargo: ${e.message}")
                                 null
                             }
-                        }
-                        
-                        // Sort locally to maintain "newest first" without triggering Firestore index errors
-                        cargoList = cargoList.sortedByDescending { it.createdAt }
-                        
+                        }.sortedByDescending { it.createdAt }
+
                         trySend(Result.Success(cargoList))
-                        Log.d("CargoDebug", "Emitted Result.Success! List size: ${cargoList.size} (Source: ${if (isFromCache) "CACHE" else "SERVER"})")
+                        Log.d("CargoDebug", "Fleet emit: ${cargoList.size} items (${if (isFromCache) "CACHE" else "SERVER"})")
                     }
                 }
         } catch (e: Exception) {
@@ -187,9 +184,50 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
             trySend(Result.Error(e))
         }
 
-        awaitClose {
-            listener?.remove()
+        awaitClose { listener?.remove() }
+    }
+
+    // Observe FLEET-WIDE IN-TRANSIT only cargo — for Cargo Pulse card (only actively moving cargo)
+    fun observeFleetInTransitCargo(): Flow<Result<List<Cargo>>> = callbackFlow {
+        var listener: ListenerRegistration? = null
+
+        try {
+            trySend(Result.Loading)
+
+            listener = firestore.collection(CARGO_COLLECTION)
+                .whereIn("status", listOf(
+                    "in_transit",   // legacy Android lowercase
+                    "In Transit",   // web admin Title Case
+                    "IN_TRANSIT"    // web admin UPPER_SNAKE_CASE (current)
+                ))
+                .limit(20)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e("CargoDebug", "Error observing in-transit cargo: ${error.message}")
+                        trySend(Result.Error(error))
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        val cargoList = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                doc.toObject(Cargo::class.java)?.copy(id = doc.id)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing in-transit cargo: ${e.message}")
+                                null
+                            }
+                        }.sortedByDescending { it.createdAt }
+
+                        trySend(Result.Success(cargoList))
+                        Log.d("CargoDebug", "In-transit pulse emit: ${cargoList.size} items")
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting up in-transit cargo listener", e)
+            trySend(Result.Error(e))
         }
+
+        awaitClose { listener?.remove() }
     }
 
     // Track cargo by reference number - PUBLIC ACCESS (no userId needed)

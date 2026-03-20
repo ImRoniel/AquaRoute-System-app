@@ -216,26 +216,39 @@ class UserDashboardViewModel(
 
         // Removed old observeUserActiveCargo tracker since UI is entirely fleet-oriented now
 
-        // Fleet-wide cargo observation (no userId filter) for Cargo Pulse card + Hero Header stats
+        // Fleet-wide ALL-ACTIVE cargo — used for Hero Header stat chips only
         viewModelScope.launch {
-            cargoRepository.observeFleetActiveCargo() // Removed limit: fetch all active for accurate fleet stats
+            cargoRepository.observeFleetActiveCargo()
                 .catch { e ->
                     Log.e(TAG, "Error observing fleet cargo", e)
-                    _fleetActiveCargo.value = emptyList() // Fallback to hide loading state
+                    updateStatsFromCargo(emptyList())
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> updateStatsFromCargo(result.data)
+                        is Result.Error   -> Log.e(TAG, "Fleet cargo error: ${result.exception.message}")
+                        else              -> {}
+                    }
+                }
+        }
+
+        // Fleet-wide IN-TRANSIT only cargo — drives Cargo Pulse card rows + active badge
+        viewModelScope.launch {
+            cargoRepository.observeFleetInTransitCargo()
+                .catch { e ->
+                    Log.e(TAG, "Error observing in-transit cargo", e)
+                    _fleetActiveCargo.value = emptyList()
                     _fleetActiveCargoCount.value = 0
-                    updateStatsFromCargo(emptyList())     // Zero hero stats on error
                 }
                 .collectLatest { result ->
                     when (result) {
                         is Result.Success -> {
-                            _fleetActiveCargo.value = result.data
+                            _fleetActiveCargo.value      = result.data
                             _fleetActiveCargoCount.value = result.data.size
-                            updateStatsFromCargo(result.data) // Power the Hero Header with fleet stats!
                         }
                         is Result.Error -> {
-                            Log.e(TAG, "Fleet cargo error: ${result.exception.message}")
-                            // CRITICAL FIX: Do NOT clear existing cached UI state on network/index errors!
-                            // Keep the previous fleetActiveCargo intact so the screen doesn't go blank.
+                            Log.e(TAG, "In-transit cargo error: ${result.exception.message}")
+                            // Keep existing UI state — don't blank screen on transient errors
                         }
                         else -> {}
                     }
@@ -364,21 +377,26 @@ class UserDashboardViewModel(
     }
 
     private fun updateStatsFromCargo(cargoList: List<Cargo>) {
-        val inTransit  = cargoList.count { it.status.lowercase() == "in_transit" || it.status.lowercase() == "in transit" }
-        val delivered  = cargoList.count { it.status.lowercase() == "delivered" }
-        val delayed    = cargoList.count { it.status.lowercase() == "delayed" }
-        val processing = cargoList.count { it.status.lowercase() == "processing" || it.status.lowercase() == "pending" }
+        // Normalize to uppercase for robust matching regardless of how the web admin wrote the status
+        val inTransit  = cargoList.count {
+            val s = it.status.uppercase()
+            s == "IN_TRANSIT" || s == "IN TRANSIT"
+        }
+        val delivered  = cargoList.count { it.status.equals("delivered",  ignoreCase = true) }
+        val delayed    = cargoList.count { it.status.equals("delayed",    ignoreCase = true) }
+        val processing = cargoList.count {
+            val s = it.status.uppercase()
+            s == "PROCESSING" || s == "PENDING"
+        }
 
         val currentStats = _dashboardStats.value ?: DashboardStats()
-        val updatedStats = currentStats.copy(
+        _dashboardStats.value = currentStats.copy(
             totalShipments = cargoList.size,
             inTransit  = inTransit,
             delivered  = delivered,
             delayed    = delayed
         )
-        _dashboardStats.value  = updatedStats
 
-        // Post individual count LiveData for dashboard chips
         _inTransitCount.value  = inTransit
         _deliveredCount.value  = delivered
         _delayedCount.value    = delayed
