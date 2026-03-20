@@ -106,7 +106,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:background="@drawable/custom_backround1"
+            android:background="@drawable/splashscreen"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"

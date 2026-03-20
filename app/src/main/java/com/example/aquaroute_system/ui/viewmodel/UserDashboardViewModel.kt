@@ -13,6 +13,7 @@ import com.example.aquaroute_system.util.SessionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -119,11 +120,18 @@ class UserDashboardViewModel(
     private var _cachedAllFerries = listOf<Ferry>()
     private val spatialIndex = SpatialIndex()
 
+    // QUOTA FIX: throttle weather checks to at most once per hour
+    private var lastWeatherCheckTime = 0L
+    private val WEATHER_CHECK_INTERVAL_MS = 60 * 60 * 1000L
+
+    // Job to track the active nearby-ports observation (cancelled & relaunched on location change)
+    private var nearbyPortsJob: Job? = null
+
     // Location debounce states
     private var lastSearchLocation: Location? = null
     private var lastSearchTime: Long = 0L
-    private val MIN_DISTANCE_M = 100f
-    private val MIN_TIME_MS = 500L
+    private val MIN_DISTANCE_M = 1000f  // QUOTA FIX: was 100f — 1 km before re-querying Firestore
+    private val MIN_TIME_MS = 30_000L   // QUOTA FIX: was 500ms — 30 s minimum between listener re-attachments
 
     init {
         loadCurrentUser()
@@ -184,24 +192,8 @@ class UserDashboardViewModel(
                 }
         }
 
-        viewModelScope.launch {
-            portStatusRepository.observeAllPortStatuses()
-                .catch { e ->
-                    Log.e(TAG, "Error observing ports", e)
-                    _errorMessage.value = "Failed to load ports: ${e.message}"
-                }
-                .collectLatest { result ->
-                    when (result) {
-                        is Result.Success -> {
-                            _portStatuses.value = result.data
-                        }
-                        is Result.Error -> {
-                            _errorMessage.value = "Ports error: ${result.exception.message}"
-                        }
-                        else -> {}
-                    }
-                }
-        }
+        // Port status observation is now location-driven.
+        // See updateNearbyPorts() — called from setUserLocation().
 
         viewModelScope.launch {
             weatherRepository.observeAllWeatherConditions()
@@ -354,6 +346,7 @@ class UserDashboardViewModel(
             lastSearchTime = System.currentTimeMillis()
             lastSearchLocation = location
             updateNearestFerryWithRadiusSearch(location)
+            updateNearbyPorts(location)
             
             // Also update legacy nearby list
             updateNearbyFerries()
@@ -397,14 +390,71 @@ class UserDashboardViewModel(
         _isLoading.value = true
         loadCurrentUser()
         updateNearbyFerries()
+        _userLocation.value?.let { updateNearbyPorts(it) }
         _isLoading.value = false
     }
-    // New function to check nearby weather
+
+    // -----------------------------------------------------------------
+    // Location-aware port status (5 km radius)
+    // -----------------------------------------------------------------
+
+    /**
+     * Cancel the previous port listener and start a new one scoped to
+     * the user's current position.  Maps FirestorePort → PortStatus
+     * so HomeFragment can display Open / Limited / Closed counts.
+     */
+    private fun updateNearbyPorts(location: Location) {
+        nearbyPortsJob?.cancel()
+        nearbyPortsJob = viewModelScope.launch {
+            portRepository.observePortsNearLocation(
+                location.latitude, location.longitude, 5.0  // 5 km
+            )
+                .catch { e ->
+                    Log.e(TAG, "Error observing nearby ports", e)
+                    _portStatuses.value = emptyList()
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                            _portStatuses.value = result.data.map { mapToPortStatus(it, hour) }
+                        }
+                        is Result.Error -> {
+                            Log.e(TAG, "Nearby ports error: ${result.exception.message}")
+                            _portStatuses.value = emptyList()
+                        }
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    /** Convert a FirestorePort into a PortStatus using time-aware status. */
+    private fun mapToPortStatus(port: FirestorePort, hour: Int): PortStatus {
+        val dynamicStatus = port.getCurrentStatus(hour)
+        val normalizedStatus = when {
+            dynamicStatus.contains("Open", ignoreCase = true)        -> "open"
+            dynamicStatus.contains("Closing Soon", ignoreCase = true) -> "limited"
+            dynamicStatus.contains("Limited", ignoreCase = true)     -> "limited"
+            dynamicStatus.contains("Closed", ignoreCase = true)      -> "closed"
+            else -> port.status.lowercase()
+        }
+        return PortStatus(
+            portId   = port.id,
+            portName = port.name,
+            status   = normalizedStatus
+        )
+    }
+    // QUOTA FIX: throttled weather check — runs at most once per hour, smaller bounds, capped port count
     private fun checkNearbyWeather(location: Location) {
+        val now = System.currentTimeMillis()
+        if (now - lastWeatherCheckTime < WEATHER_CHECK_INTERVAL_MS) return // Skip if checked recently
+        lastWeatherCheckTime = now
+
         viewModelScope.launch {
             val lat = location.latitude
             val lon = location.longitude
-            val range = 5.0 // ~500km radius
+            val range = 1.0 // QUOTA FIX: was 5.0 (~500 km) — reduced to ~111 km
 
             val ports = portRepository.getPortsInBounds(
                 lat - range, lat + range,
@@ -412,10 +462,12 @@ class UserDashboardViewModel(
             )
             if (ports.isEmpty()) return@launch
 
+            // QUOTA FIX: cap to 10 ports to prevent runaway individual-document reads
+            val portsToCheck = ports.take(10)
             val stalePortIds = mutableListOf<String>()
-            for (port in ports) {
+            for (port in portsToCheck) {
                 val lastUpdated = weatherRepository.getWeatherLastUpdated(port.id)
-                if (lastUpdated == null || System.currentTimeMillis() - lastUpdated > 60 * 60 * 1000) {
+                if (lastUpdated == null || now - lastUpdated > WEATHER_CHECK_INTERVAL_MS) {
                     stalePortIds.add(port.id)
                 }
             }

@@ -152,6 +152,7 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
                     "In Transit", "Processing", "Pending"
                 ))
                 .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(20) // QUOTA FIX: was unbounded — every write re-read all cargo docs
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         Log.e(TAG, "Error observing fleet cargo", error)

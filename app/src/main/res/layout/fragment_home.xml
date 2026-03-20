@@ -750,7 +750,7 @@
                         android:id="@+id/tvPortsEmpty"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Loading port data..."
+                        android:text="No ports nearby"
                         android:textColor="@color/medium_text"
                         android:textSize="13sp"
                         android:gravity="center"

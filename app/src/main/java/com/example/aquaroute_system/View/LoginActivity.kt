@@ -107,10 +107,6 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        binding.btnGuest.setOnClickListener {
-            Toast.makeText(this, "Continuing as Guest", Toast.LENGTH_SHORT).show()
-            navigateToMainDashboard()
-        }
 
         binding.tvCreateAccount.setOnClickListener {
             startActivity(Intent(this, SignupActivity::class.java))
@@ -141,13 +137,11 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showLoading() {
         binding.btnLogin.isEnabled = false
-        binding.btnGuest.isEnabled = false
         binding.progressBar?.visibility = android.view.View.VISIBLE
     }
 
     private fun hideLoading() {
         binding.btnLogin.isEnabled = true
-        binding.btnGuest.isEnabled = true
         binding.progressBar?.visibility = android.view.View.GONE
     }
 
