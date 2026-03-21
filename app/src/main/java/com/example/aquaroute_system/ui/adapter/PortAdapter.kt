@@ -1,15 +1,17 @@
 package com.example.aquaroute_system.ui.adapter
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.aquaroute_system.R
 import com.example.aquaroute_system.data.models.FirestorePort
 import com.example.aquaroute_system.databinding.ItemPortBinding
-import java.util.*
+import java.util.Locale
 
 class PortAdapter(
     private var currentHour: Int,
@@ -22,6 +24,14 @@ class PortAdapter(
         notifyDataSetChanged()
     }
 
+    // ── Status → color mapping (uses startsWith to avoid 'Closed (opens at X)' false match) ──
+    private fun statusStyle(statusText: String): Pair<String, Int> = when {
+        statusText.startsWith("Open",     ignoreCase = true) -> statusText to Color.parseColor("#4CAF50") // 🟢
+        statusText.startsWith("Closing",  ignoreCase = true) -> statusText to Color.parseColor("#FF9800") // 🟠
+        statusText.startsWith("Opens at", ignoreCase = true) -> statusText to Color.parseColor("#9E9E9E") // ⚫
+        statusText.startsWith("Closed",   ignoreCase = true) -> statusText to Color.parseColor("#F44336") // 🔴
+        else                                                  -> statusText to Color.parseColor("#9E9E9E") // ⚫
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PortViewHolder {
         val binding = ItemPortBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -32,44 +42,35 @@ class PortAdapter(
         holder.bind(getItem(position))
     }
 
-    inner class PortViewHolder(private val binding: ItemPortBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class PortViewHolder(private val binding: ItemPortBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
         fun bind(port: FirestorePort) {
-            binding.tvPortName.text = port.name
-            
-            // Proximity (Placeholder for distance calculation - usually passed in or calculated by VM)
-            // For now, we'll just show the type if distance isn't readily available in the model
+            // ── Name & type ────────────────────────────────────────────
+            binding.tvPortName.text = port.name.ifBlank { "Unknown Port" }
             binding.tvDistance.text = port.type.replaceFirstChar { it.uppercase() }
 
-            // Dynamic Status
+            // ── Status pill badge (guaranteed correct — uses startsWith) ──
             val statusText = port.getCurrentStatus(currentHour)
-            binding.statusChip.text = statusText.uppercase(Locale.getDefault())
-            
-            val (bgColor, textColor) = when {
-                statusText.contains("Open", ignoreCase = true) -> 
-                    R.drawable.bg_status_pill_open to R.color.success_green
-                statusText.contains("Closing", ignoreCase = true) -> 
-                    R.drawable.bg_status_pill_warning to R.color.warning_orange
-                else -> 
-                    R.drawable.bg_status_pill_closed to R.color.error_red
-            }
-            
-            // Safeguard if drawables don't exist under these specific names yet
-            try {
-                binding.statusChip.setBackgroundResource(bgColor)
-                binding.statusChip.setTextColor(ContextCompat.getColor(binding.root.context, textColor))
-            } catch (e: Exception) {}
+            val (label, color) = statusStyle(statusText)
+            binding.statusChip.text = label.uppercase(Locale.getDefault())
+            binding.statusChip.setTextColor(Color.WHITE)
+            ViewCompat.setBackgroundTintList(
+                binding.statusChip,
+                ColorStateList.valueOf(color)
+            )
 
-            // Vessel Activity
+            // ── Vessel activity ────────────────────────────────────────
             val activeVessels = vesselCounts()[port.id] ?: 0
             binding.tvActiveVessels.text = "$activeVessels Active"
             binding.vesselActivityLayout.alpha = if (activeVessels > 0) 1.0f else 0.5f
 
-            // Port Icon
+            // ── Port type icon ─────────────────────────────────────────
             val iconRes = when (port.type.lowercase()) {
                 "terminal" -> R.drawable.ic_port_terminal
-                "pier" -> R.drawable.ic_port_pier
+                "pier"     -> R.drawable.ic_port_pier
                 "boatyard" -> R.drawable.ic_port_boatyard
-                else -> R.drawable.ic_port_marker
+                else       -> R.drawable.ic_port_marker
             }
             binding.ivPortType.setImageResource(iconRes)
 
@@ -78,7 +79,7 @@ class PortAdapter(
     }
 
     class PortDiffCallback : DiffUtil.ItemCallback<FirestorePort>() {
-        override fun areItemsTheSame(oldItem: FirestorePort, newItem: FirestorePort): Boolean = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: FirestorePort, newItem: FirestorePort): Boolean = oldItem == newItem
+        override fun areItemsTheSame(old: FirestorePort, new: FirestorePort) = old.id == new.id
+        override fun areContentsTheSame(old: FirestorePort, new: FirestorePort) = old == new
     }
 }

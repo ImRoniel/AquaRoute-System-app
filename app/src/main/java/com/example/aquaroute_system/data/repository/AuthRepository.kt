@@ -33,8 +33,9 @@ class AuthRepository(
         displayName: String
     ): Result<User> {
         return try {
-            Log.d(TAG, "Attempting signup for: $email")
-            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+            val cleanEmail = email.trim().lowercase()
+            Log.d(TAG, "Attempting signup for: $cleanEmail")
+            val authResult = auth.createUserWithEmailAndPassword(cleanEmail, password).await()
             val firebaseUser = authResult.user ?: throw Exception("User creation failed")
             Log.d(TAG, "Firebase Auth successful for UID: ${firebaseUser.uid}")
 
@@ -44,25 +45,44 @@ class AuthRepository(
                 .build()
             firebaseUser.updateProfile(profileUpdates).await()
 
-            // Create user object
-            val user = User(
-                uid = firebaseUser.uid,
-                email = email,
-                displayName = displayName,
-                createdAt = System.currentTimeMillis(),
-                lastLoginAt = System.currentTimeMillis(),
-                isEmailVerified = firebaseUser.isEmailVerified
+            // ── Write the SAME schema the web dashboard uses (models/users.js) ──
+            // This ensures any user — however created — has the same document shape.
+            val firestorePayload = mapOf(
+                "uid"         to firebaseUser.uid,
+                "email"       to cleanEmail,
+                "displayName" to displayName,
+                "role"        to "user",
+                "userType"    to "user",
+                "createdAt"   to com.google.firebase.firestore.FieldValue.serverTimestamp(),
+                "lastLoginAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
+                "isEmailVerified" to firebaseUser.isEmailVerified,
+                "preferences" to mapOf(
+                    "darkMode"               to false,
+                    "notificationsEnabled"   to true,
+                    "locationTrackingEnabled" to true,
+                    "mapLayer"               to "normal",
+                    "language"               to "en"
+                )
             )
-            Log.d(TAG, "Created user object: $user")
 
-            // Save user to Firestore
             firestore.collection(USERS_COLLECTION)
                 .document(firebaseUser.uid)
-                .set(user)
+                .set(firestorePayload)
                 .await()
             Log.d(TAG, "Saved user to Firestore")
 
-            // Save session locally
+            // Build a local User object for the session
+            val user = User(
+                uid           = firebaseUser.uid,
+                email         = cleanEmail,
+                displayName   = displayName,
+                createdAt     = System.currentTimeMillis(),
+                lastLoginAt   = System.currentTimeMillis(),
+                isEmailVerified = firebaseUser.isEmailVerified,
+                role          = "user",
+                userType      = "user"
+            )
+
             Log.d(TAG, "Saving session for user: ${user.email}")
             sessionManager.saveUserSession(user, firebaseUser.uid)
 
@@ -76,8 +96,14 @@ class AuthRepository(
     // Login with email and password
     suspend fun loginWithEmail(email: String, password: String): Result<User> {
         return try {
-            Log.d(TAG, "Attempting login for: $email")
-            val authResult = auth.signInWithEmailAndPassword(email, password).await()
+            // ── Credential sanitization ──────────────────────────────────────────
+            // The web admin form field is named 'username' and may not trim before
+            // submitting to Firebase Auth. Normalize on the Android side to be safe.
+            val cleanEmail    = email.trim().lowercase()
+            val cleanPassword = password.trim()
+
+            Log.d(TAG, "Attempting login for: $cleanEmail")
+            val authResult = auth.signInWithEmailAndPassword(cleanEmail, cleanPassword).await()
             val firebaseUser = authResult.user ?: throw Exception("Login failed")
             Log.d(TAG, "Firebase Auth successful for UID: ${firebaseUser.uid}")
 
@@ -106,16 +132,54 @@ class AuthRepository(
         }
     }
 
-    // Get user from Firestore
+    // Get user from Firestore — manually maps fields to avoid toObject() crashing on
+    // Firestore Timestamp fields (createdAt) that cannot be auto-coerced to Long.
     private suspend fun getUserFromFirestore(uid: String): User {
         val document = firestore.collection(USERS_COLLECTION)
             .document(uid)
             .get()
             .await()
 
-        return if (document.exists()) {
-            document.toObject(User::class.java) ?: createDefaultUser(uid)
-        } else {
+        if (!document.exists()) return createDefaultUser(uid)
+
+        return try {
+            val data = document.data ?: return createDefaultUser(uid)
+
+            // Safely convert Firestore Timestamp OR Long to epoch milliseconds
+            fun toMillis(raw: Any?): Long? = when (raw) {
+                is com.google.firebase.Timestamp -> raw.toDate().time
+                is Long                          -> raw
+                is Double                        -> raw.toLong()
+                else                             -> null
+            }
+
+            // Safely read the preferences sub-map (web only writes 3 of 5 fields)
+            val prefsMap = data["preferences"] as? Map<*, *>
+            val preferences = UserPreferences(
+                darkMode               = prefsMap?.get("darkMode")               as? Boolean ?: false,
+                notificationsEnabled   = prefsMap?.get("notificationsEnabled")   as? Boolean ?: true,
+                locationTrackingEnabled= prefsMap?.get("locationTrackingEnabled")as? Boolean ?: true,
+                mapLayer               = prefsMap?.get("mapLayer")               as? String  ?: "normal",
+                language               = prefsMap?.get("language")               as? String  ?: "en"
+            )
+
+            User(
+                uid             = data["uid"]             as? String  ?: uid,
+                email           = data["email"]           as? String  ?: (auth.currentUser?.email ?: ""),
+                displayName     = (data["displayName"]    as? String)?.trim(),
+                photoUrl        = data["photoUrl"]        as? String,
+                phoneNumber     = data["phoneNumber"]     as? String,
+                createdAt       = toMillis(data["createdAt"]),
+                lastLoginAt     = toMillis(data["lastLoginAt"]),
+                isEmailVerified = data["isEmailVerified"] as? Boolean ?: (auth.currentUser?.isEmailVerified ?: false),
+                userType        = data["userType"]        as? String  ?: "user",
+                role            = data["role"]            as? String  ?: "user",
+                preferences     = preferences
+            ).also {
+                Log.d(TAG, "✅ User mapped from Firestore: uid=${it.uid} email=${it.email} role=${it.role}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "⚠️ Manual mapping failed, falling back to default: ${e.message}", e)
             createDefaultUser(uid)
         }
     }
