@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pill-shaped badge used for ferry status in item_ferry.xml.
+     Background tint is set programmatically in FerryAdapter to match status color. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="16dp" />
+    <solid android:color="#4CAF50" />
+</shape>

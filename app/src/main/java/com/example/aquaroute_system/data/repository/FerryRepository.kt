@@ -123,7 +123,8 @@ class FerryRepository(private val firestore: FirebaseFirestore) {
                 last_updated = data["last_updated"] as? String,
                 routePoints = routePoints,
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                route_distance_km = (data["route_distance_km"] as? Number)?.toDouble() ?: 0.0
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing ferry document ${doc.id}", e)

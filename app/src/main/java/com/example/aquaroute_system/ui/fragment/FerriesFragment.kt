@@ -1,6 +1,8 @@
 package com.example.aquaroute_system.ui.fragment
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -71,6 +73,15 @@ class FerriesFragment : Fragment() {
 
     private fun setupListeners() {
         binding.btnCloseFerryPreview.setOnClickListener { hideFerryPreview() }
+
+        // Real-time search — filters the in-memory list, zero Firebase reads
+        binding.etFerrySearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.setSearchQuery(s?.toString() ?: "")
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     // ─── Ferry tap handler ───────────────────────────────────────────

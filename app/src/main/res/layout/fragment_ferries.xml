@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    fragment_ferries.xml — Active Ferries screen with search bar
+    New IDs: etFerrySearch (SearchView TextInputEditText), searchContainer
+    All existing IDs preserved: rvFerries, emptyState, tvFerryCount,
+    ferryPreviewPanel, ferryMiniMapView, btnCloseFerryPreview, etc.
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,7 +12,7 @@
     android:layout_height="match_parent"
     android:background="@color/background_light">
 
-    <!-- Header -->
+    <!-- ── Header ──────────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/ferriesHeader"
         android:layout_width="match_parent"
@@ -50,21 +56,68 @@
                 android:textColor="@color/medium_text"
                 android:textSize="13sp" />
         </LinearLayout>
+
     </LinearLayout>
 
-    <!-- RecyclerView -->
+    <!-- ── Search bar ─────────────────────────────────────────────── -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/searchContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="6dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeWidth="0dp"
+        app:layout_constraintTop_toBottomOf="@id/ferriesHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="14dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                app:tint="@color/medium_text"
+                android:layout_marginEnd="10dp" />
+
+            <EditText
+                android:id="@+id/etFerrySearch"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Search ferries by name or route…"
+                android:textSize="14sp"
+                android:textColor="@color/dark_text"
+                android:textColorHint="@color/light_text"
+                android:background="@null"
+                android:singleLine="true"
+                android:imeOptions="actionSearch"
+                android:inputType="text" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ── Ferry list ─────────────────────────────────────────────── -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFerries"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingBottom="180dp"
-        app:layout_constraintTop_toBottomOf="@id/ferriesHeader"
+        app:layout_constraintTop_toBottomOf="@id/searchContainer"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Empty State -->
+    <!-- ── Empty state ────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/emptyState"
         android:layout_width="wrap_content"
@@ -101,7 +154,7 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Ferry Detail Panel (slides up from bottom when a ferry is tapped) -->
+    <!-- ── Ferry Detail Panel (slides up when ferry tapped) ──────── -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/ferryPreviewPanel"
         android:layout_width="match_parent"
@@ -186,7 +239,6 @@
                 android:paddingTop="10dp"
                 android:paddingBottom="8dp">
 
-                <!-- Title -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -197,7 +249,6 @@
                     android:fontFamily="sans-serif-medium"
                     android:layout_marginBottom="8dp" />
 
-                <!-- Icon + Temp + Description -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -310,7 +361,6 @@
                     android:visibility="gone" />
 
             </LinearLayout>
-
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

@@ -27,7 +27,8 @@ data class Ferry(
     @IgnoredOnParcel
     val routePoints: List<GeoPoint>? = null,
     val startTime: Long? = null,
-    val endTime: Long? = null         // Timestamp when journey ends (ms)// NEW: from Firebase
+    val endTime: Long? = null,
+    val route_distance_km: Double = 0.0
 ) : Parcelable {
 
     // Helper to get destination from route

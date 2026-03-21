@@ -13,6 +13,7 @@ import com.example.aquaroute_system.data.repository.WeatherRefreshRepository
 import com.example.aquaroute_system.data.repository.WeatherRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class FerriesViewModel(
@@ -21,6 +22,13 @@ class FerriesViewModel(
     private val weatherRefreshRepository: WeatherRefreshRepository
 ) : ViewModel() {
 
+    // ── Raw unfiltered ferry list (kept in memory for free local search) ──
+    private val _allFerries = mutableListOf<Ferry>()
+
+    // ── Search query StateFlow (updated on every keystroke, zero Firebase reads) ──
+    private val _searchQuery = MutableStateFlow("")
+
+    // ── Filtered list exposed to the Fragment ──────────────────────────
     private val _ferries = MutableLiveData<List<Ferry>>(emptyList())
     val ferries: LiveData<List<Ferry>> = _ferries
 
@@ -30,17 +38,42 @@ class FerriesViewModel(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    // Weather for the currently selected ferry's CURRENT LOCATION
     private val _ferryWeather = MutableLiveData<Result<WeatherCondition>>()
     val ferryWeather: LiveData<Result<WeatherCondition>> = _ferryWeather
 
     private var ferryListJob: Job? = null
     private var weatherJob: Job? = null
 
-    init {
-        observeFerries()
+    // ── Accepted active statuses (matches actual Firestore values) ─────
+    companion object {
+        private const val TAG = "FerriesVM"
+        private val ACTIVE_STATUSES = setOf(
+            "on_time",      // ← confirmed live Firestore value
+            "delayed",
+            "docked",
+            "at sea",
+            "active",
+            "en route",
+            "underway"
+        )
     }
 
+    init {
+        observeFerries()
+        // Whenever the search query changes → re-filter the in-memory list (no Firebase read)
+        viewModelScope.launch {
+            _searchQuery.collect { query ->
+                _ferries.postValue(applySearch(_allFerries.toList(), query))
+            }
+        }
+    }
+
+    // ── Public API: called from Fragment on every search keystroke ─────
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    // ── Real-time Firestore listener ───────────────────────────────────
     private fun observeFerries() {
         ferryListJob?.cancel()
         ferryListJob = viewModelScope.launch {
@@ -50,17 +83,22 @@ class FerriesViewModel(
                     is Result.Success -> {
                         _isLoading.value = false
                         _errorMessage.value = null
-                        // Show all ferries — filter to "active" statuses if available
-                        val active = result.data.filter { ferry ->
-                            ferry.status.lowercase() in listOf("at sea", "active", "en route", "underway", "docked")
-                        }
-                        Log.d("FerriesVM", "Ferries: ${result.data.size} total, ${active.size} filtered")
-                        _ferries.value = active.ifEmpty { result.data }
+
+                        // Filter to active statuses; fall back to full list if none match
+                        val active = result.data.filter { it.status.lowercase() in ACTIVE_STATUSES }
+                        val toShow = active.ifEmpty { result.data }
+
+                        Log.d(TAG, "Ferries: ${result.data.size} total, ${toShow.size} shown")
+
+                        // Update master list → re-apply current search filter
+                        _allFerries.clear()
+                        _allFerries.addAll(toShow)
+                        _ferries.postValue(applySearch(toShow, _searchQuery.value))
                     }
                     is Result.Error -> {
                         _isLoading.value = false
                         _errorMessage.value = "Failed to load ferries: ${result.exception.message}"
-                        Log.e("FerriesVM", "Error: ${result.exception.message}")
+                        Log.e(TAG, "Error: ${result.exception.message}")
                     }
                     is Result.Loading -> _isLoading.value = true
                 }
@@ -68,57 +106,50 @@ class FerriesViewModel(
         }
     }
 
-    /**
-     * Fetches current-location weather for the given ferry.
-     *
-     * Cache policy (Firebase quota guard):
-     *   - If a valid weather doc exists in Firestore and is < 15 min old → emit cached data, skip backend.
-     *   - Otherwise → POST /weather/refresh-by-coords with ferry.lat/lon → delay 2 s → re-read Firestore.
-     */
+    // ── Local search filter — pure in-memory, zero Firestore reads ─────
+    private fun applySearch(ferries: List<Ferry>, query: String): List<Ferry> {
+        if (query.isBlank()) return ferries
+        val q = query.trim()
+        return ferries.filter { ferry ->
+            ferry.name.contains(q, ignoreCase = true) ||
+            ferry.route.contains(q, ignoreCase = true)
+        }
+    }
+
+    // ── Weather for the tapped ferry ──────────────────────────────────
     fun fetchWeatherForFerry(ferry: Ferry) {
         weatherJob?.cancel()
         weatherJob = viewModelScope.launch {
             val ferryId = ferry.id
-            Log.d("WeatherTrace", "[FerriesVM] fetchWeatherForFerry: $ferryId (${ferry.lat},${ferry.lon})")
+            Log.d("WeatherTrace", "[FerriesVM] fetchWeatherForFerry: $ferryId")
 
             _ferryWeather.value = Result.Loading
 
-            // ── Step 1: Check Firestore cache ──────────────────────────────────────
+            // Step 1: Check Firestore cache (15-min TTL)
             var cachedAndFresh = false
             weatherRepository.getWeatherForLocation(ferryId).collect { result ->
                 if (result is Result.Success) {
                     val ageMs = System.currentTimeMillis() - result.data.updatedAt
-                    val FIFTEEN_MIN_MS = 15 * 60 * 1000L
-                    if (ageMs < FIFTEEN_MIN_MS) {
-                        Log.d("WeatherTrace", "[FerriesVM] Cache HIT for $ferryId (age=${ageMs/1000}s) — skipping backend")
+                    if (ageMs < 15 * 60 * 1000L) {
                         _ferryWeather.value = result
                         cachedAndFresh = true
-                    } else {
-                        Log.d("WeatherTrace", "[FerriesVM] Cache STALE for $ferryId (age=${ageMs/1000}s)")
                     }
-                    return@collect // stop the flow after first emission
+                    return@collect
                 }
             }
             if (cachedAndFresh) return@launch
 
-            // ── Step 2: Refresh from backend using live coordinates ────────────────
-            Log.d("WeatherTrace", "[FerriesVM] Calling backend refresh-by-coords for $ferryId")
-            val refreshResult = weatherRefreshRepository.requestRefreshByCoords(
+            // Step 2: Backend refresh via live coordinates
+            weatherRefreshRepository.requestRefreshByCoords(
                 locationId = ferryId,
                 lat = ferry.lat,
                 lon = ferry.lon,
                 name = ferry.name.ifBlank { ferryId }
             )
-            when (refreshResult) {
-                is Result.Success -> Log.d("WeatherTrace", "[FerriesVM] Coords refresh OK")
-                is Result.Error  -> Log.w("WeatherTrace", "[FerriesVM] Coords refresh failed: ${refreshResult.exception.message}")
-                else -> {}
-            }
 
-            // ── Step 3: Wait for Firestore write propagation, then read ───────────
+            // Step 3: Wait for write propagation, then read updated doc
             delay(2000)
             weatherRepository.getWeatherForLocation(ferryId).collect { result ->
-                Log.d("WeatherTrace", "[FerriesVM] ferryWeather after refresh: $result")
                 _ferryWeather.value = result
                 return@collect
             }
@@ -126,7 +157,6 @@ class FerriesViewModel(
     }
 
     fun clearError() { _errorMessage.value = null }
-
     fun refresh() { observeFerries() }
 
     override fun onCleared() {
