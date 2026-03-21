@@ -3,6 +3,8 @@ package com.example.aquaroute_system.ui.fragment
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +12,6 @@ import android.view.ViewGroup
 import android.view.animation.TranslateAnimation
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -262,6 +263,8 @@ class PortsFragment : Fragment() {
 
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener {
+            viewModel.setSearchQuery("")
+            binding.etPortSearch.setText("")
             viewModel.refreshPortsNearUser()
         }
 
@@ -273,12 +276,13 @@ class PortsFragment : Fragment() {
             hidePortPreview()
         }
 
-        binding.searchPorts.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                filterPorts(newText)
-                return true
+        // ── Global search via debounced prefix query (ViewModel owns filtering) ──
+        binding.etPortSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.setSearchQuery(s?.toString() ?: "")
             }
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
@@ -354,6 +358,10 @@ class PortsFragment : Fragment() {
             }
         }
 
+        viewModel.isSearchMode.observe(viewLifecycleOwner) { isSearch ->
+            binding.tvSearchModeChip.visibility = if (isSearch) View.VISIBLE else View.GONE
+        }
+
         userViewModel.userLocation.observe(viewLifecycleOwner) { location ->
             location?.let { viewModel.setUserLocation(it) }
         }
@@ -388,18 +396,6 @@ class PortsFragment : Fragment() {
         binding.btnEnableLocation.visibility = View.GONE
     }
 
-    private fun filterPorts(query: String?) {
-        val allPorts = viewModel.ports.value ?: return
-        if (query.isNullOrBlank()) {
-            adapter.submitList(allPorts)
-        } else {
-            val filtered = allPorts.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                it.type.contains(query, ignoreCase = true)
-            }
-            adapter.submitList(filtered)
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

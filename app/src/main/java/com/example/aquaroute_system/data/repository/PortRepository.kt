@@ -249,4 +249,36 @@ class PortRepository {
             listener.remove()
         }
     }
-}
+
+    /**
+     * Global prefix search against the `search_name` field (requires migration to have run).
+     *
+     * The `search_name` field is `name.lowercase()` written by [PortMigrationUtil].
+     * We lowercase the query here so the search is fully case-insensitive —
+     * typing "Manila", "MANILA", or "manila" all return the same results.
+     *
+     * Cost: 1 page-read (≤ [limit] docs) regardless of the 17k collection size.
+     */
+    suspend fun searchPortsByNamePrefix(query: String, limit: Long = 20): List<FirestorePort> {
+        val q = query.trim().lowercase()   // match search_name field format
+        if (q.isBlank()) return emptyList()
+        Log.d(TAG, "searchPortsByNamePrefix: '$q' limit=$limit")
+        return try {
+            val snapshot = firestore.collection(PORTS_COLLECTION)
+                .orderBy("search_name")
+                .startAt(q)
+                .endAt(q + "\uF8FF")
+                .limit(limit)
+                .get()
+                .await()
+            val results = snapshot.documents.mapNotNull { parseFirestorePort(it) }
+            Log.d(TAG, "searchPortsByNamePrefix: ${results.size} results for '$q'")
+            results
+        } catch (e: Exception) {
+            Log.e(TAG, "searchPortsByNamePrefix failed for '$q': ${e.message}", e)
+            emptyList()
+        }
+    }
+}
+
+
