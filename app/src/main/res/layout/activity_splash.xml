@@ -1,27 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\res\layout\activity_splash.xml-->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    activity_splash.xml — Maritime Splash Screen Layout
+    Used by SplashScreen.kt for the visual splash on all API levels.
+    Background: navy gradient matching Auth screens.
+    Content: centered logo + app name + animated loading dots.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/splash_background"
-    android:gravity="center">
+    android:background="@drawable/auth_background">
 
+    <!-- ── Centered Brand Group ──────────────────────────── -->
     <LinearLayout
+        android:id="@+id/brandGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:id="@+id/ferryIcon"
-            android:layout_width="242dp"
-            android:layout_height="277dp"
-            android:src="@drawable/ic_ferry"
-            android:contentDescription="AquaRoute Logo" />
+        <!-- Logo icon in a navy circle card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="12dp"
+            app:cardBackgroundColor="#0D5FA8">
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_aquaroute_logo"
+                android:contentDescription="AquaRoute Logo" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- App Name -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AquaRoute"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black"
+            android:letterSpacing="-0.02"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Tagline -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Maritime Operations Platform"
+            android:textColor="#B2C8E0"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif"
+            android:letterSpacing="0.02" />
 
     </LinearLayout>
 
-</RelativeLayout>
+    <!-- ── Bottom Loading Text ───────────────────────────── -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:text="Loading..."
+        android:textColor="#55FFFFFF"
+        android:textSize="12sp"
+        android:fontFamily="sans-serif"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-
+</androidx.constraintlayout.widget.ConstraintLayout>

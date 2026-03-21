@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ic_splash_icon.xml — Dedicated Android 12+ Splash Screen Icon
+
+    PROBLEM:  windowSplashScreenAnimatedIcon fills its viewport edge-to-edge.
+              Android's circular mask crops the edges — logo appears zoomed.
+
+    SOLUTION: 600×600 square viewport. Logo path is scaled to 50% and centered,
+              giving it large transparent padding so the circular mask never crops.
+
+    MATH (scale = 0.50):
+      Original path bounding box: 242 × 278 viewport units
+      Scaled size: 242×0.50 = 121  ×  278×0.50 = 139
+      Center in 600×600:
+        translateX = (600 - 121) / 2 = 239.5 → 240
+        translateY = (600 - 139) / 2 = 230.5 → 231
+      (scaleX/Y pivot is 0,0 → translate shifts the scaled path to center)
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="600"
+    android:viewportHeight="600">
+
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="209"
+        android:translateY="196">
+
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="
+                M211.1,263.1
+                H34.6
+                L10.1,186.1
+                H101.6
+                L133.6,169.1
+                H231.6
+                L211.1,263.1
+                Z
+
+                M197.1,152.1
+                H130.6
+                L98.1,169.1
+                H46.1
+                V92.1
+                H197.1
+                V152.1
+                Z
+
+                M113.1,6.1
+                C117.518,6.1 121.1,9.682 121.1,14.1
+                V54.1
+                H162.1
+                C166.518,54.1 170.1,57.682 170.1,62.1
+                V80.1
+                H73.1
+                V54.1
+                H107.1
+                V6.1
+                H113.1
+                Z
+
+                M143.1,6.1
+                C147.518,6.1 151.1,9.682 151.1,14.1
+                V35.1
+                H138.1
+                V6.1
+                H143.1
+                Z" />
+
+    </group>
+
+</vector>

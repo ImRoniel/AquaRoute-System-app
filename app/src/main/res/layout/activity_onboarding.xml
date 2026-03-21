@@ -1,119 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\res\layout\activity_onboarding.xml-->
+<!--
+    activity_onboarding.xml — Maritime Theme
+    Binding IDs preserved: viewPager, indicator0, indicator1, indicator2, btnSkip, btnNext
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/custom_backround1"
+    android:background="@drawable/auth_background"
     tools:context=".View.OnboardingActivity">
 
-    <!-- App Logo -->
-    <TextView
-        android:id="@+id/tvAppLogo"
-        android:layout_width="wrap_content"
+    <!-- ── Brand strip at top ────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/brandStrip"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="56dp"
-        android:fontFamily="sans-serif-black"
-        android:text="@string/app_name"
-        android:textColor="@color/deep_ocean_blue"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="52dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- ViewPager2 for slides -->
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_aquaroute_logo"
+            android:contentDescription="AquaRoute Logo"
+            android:layout_marginEnd="10dp" />
 
-    <!-- Page Indicator Dots -->
+        <TextView
+            android:id="@+id/tvAppLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-black"
+            android:letterSpacing="-0.02" />
 
+    </LinearLayout>
+
+    <!-- ── ViewPager2 Slides ─────────────────────────────── -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintBottom_toTopOf="@+id/layoutIndicator"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/brandStrip"
+        app:layout_constraintBottom_toTopOf="@id/layoutIndicator"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvAppLogo"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- ── Page Indicator Dots ───────────────────────────── -->
     <LinearLayout
         android:id="@+id/layoutIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="20dp"
         android:gravity="center"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/layoutButtons"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/layoutButtons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/indicator0"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_marginHorizontal="4dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginHorizontal="5dp"
             android:src="@drawable/page_indicator_dot_active" />
 
         <ImageView
             android:id="@+id/indicator1"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_marginHorizontal="4dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginHorizontal="5dp"
             android:src="@drawable/page_indicator_dot" />
 
         <ImageView
             android:id="@+id/indicator2"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_marginHorizontal="4dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginHorizontal="5dp"
             android:src="@drawable/page_indicator_dot" />
+
     </LinearLayout>
 
-    <!-- Bottom Buttons -->
+    <!-- ── Bottom Buttons ────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/layoutButtons"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="40dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Skip — ghost text link -->
         <TextView
             android:id="@+id/btnSkip"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
+            android:layout_marginEnd="12dp"
             android:gravity="center"
             android:text="@string/skip"
-            android:textColor="@color/medium_text"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/btnNext"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/splashscreen"
+            android:textColor="#B2C8E0"
+            android:textSize="15sp"
+            android:textStyle="bold"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="center"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <!-- Next / Get Started — navy pill button -->
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="2"
+            android:backgroundTint="#FFFFFF"
             android:text="@string/next"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textColor="@color/primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            app:cornerRadius="26dp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

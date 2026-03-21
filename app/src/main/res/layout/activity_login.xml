@@ -1,178 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--C:\Users\Roniel Cuaresma\AndroidStudioProjects\AquaRouteSystem\app\src\main\res\layout\activity_login.xml--><androidx.constraintlayout.widget.ConstraintLayout
+<!--
+    activity_login.xml — Maritime Theme Overhaul
+    Background: @color/primary (#0A4D8C navy) via gradient drawable
+    All widget IDs (etEmail, etPassword, btnLogin, tvCreateAccount, progressBar) are PRESERVED.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/custom_backround1"
+    android:background="@drawable/auth_background"
     tools:context=".View.LoginActivity">
 
-    <!-- Main login Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/LoginCard"
+    <!-- ── Scrollable Content ───────────────────────────── -->
+    <ScrollView
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginBottom="40dp"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@android:color/transparent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fillViewport="true"
-            android:scrollbars="none">
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="60dp"
+            android:paddingBottom="40dp">
 
-            <LinearLayout
+            <!-- ── Brand Logo ──────────────────────────── -->
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_aquaroute_logo"
+                android:contentDescription="AquaRoute Logo"
+                android:layout_marginBottom="12dp" />
+
+            <!-- ── App Name ────────────────────────────── -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AquaRoute"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="-0.02"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Maritime Operations Platform"
+                android:textColor="#B2C8E0"
+                android:textSize="13sp"
+                android:layout_marginBottom="40dp" />
+
+            <!-- ── Login Card ──────────────────────────── -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/LoginCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="8dp"
+                app:cardBackgroundColor="#FFFFFF">
 
-                <!-- Login/Signup/Guest Tabs -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp">
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
+                    <!-- Card title -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Log in to save routes &amp; Alerts"
+                        android:textColor="@color/dark_text"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-black"
+                        android:layout_marginBottom="24dp" />
 
-                </LinearLayout>
+                    <!-- Email Label -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Email"
+                        android:textColor="@color/medium_text"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.06"
+                        android:layout_marginBottom="6dp" />
 
-                <!-- Main Title -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Log in to save routes &amp; Alerts  "
-                    android:textColor="@color/text_dark"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-black"
-                    android:lineHeight="34sp"/>
+                    <!-- Email Field -->
+                    <EditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:background="@drawable/edittext_background"
+                        android:hint="Enter your email"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/dark_text"
+                        android:inputType="textEmailAddress"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="16dp" />
 
+                    <!-- Password Label -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Password"
+                        android:textColor="@color/medium_text"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.06"
+                        android:layout_marginBottom="6dp" />
 
+                    <!-- Password Field -->
+                    <EditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:background="@drawable/edittext_background"
+                        android:hint="Enter your password"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/dark_text"
+                        android:inputType="textPassword"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="28dp" />
 
-
-                <!-- Email Field -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="user@example.com"
-                    android:textColor="@color/text_dark"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <EditText
-                    android:id="@+id/etEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/edittext_background"
-                    android:hint="Enter your email"
-                    android:textColorHint="@color/text_hint"
-                    android:textColor="@color/text_dark"
-                    android:inputType="textEmailAddress"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Password Field -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="password"
-                    android:textColor="@color/text_dark"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
-
-                <EditText
-                    android:id="@+id/etPassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/edittext_background"
-                    android:hint="Enter your password"
-                    android:textColorHint="@color/text_hint"
-                    android:textColor="@color/text_dark"
-                    android:inputType="textPassword"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:textSize="14sp"
-                    android:layout_marginBottom="24dp" />
-
-                <!-- Login or Guest? Buttons -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp">
-
+                    <!-- Login Button -->
                     <Button
                         android:id="@+id/btnLogin"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        android:backgroundTint="@color/primary_blue"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:backgroundTint="@color/primary"
                         android:text="Login"
                         android:textColor="@android:color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp"
+                        app:cornerRadius="26dp" />
+
+                    <!-- Progress Bar -->
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Create Account Link -->
+                    <TextView
+                        android:id="@+id/tvCreateAccount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Create Account"
+                        android:textColor="@color/primary"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        app:cornerRadius="24dp" />
+                        android:layout_gravity="center_horizontal"
+                        android:padding="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground" />
 
-
-
-<!--                    <Button-->
-<!--                        android:id="@+id/btnGuest"-->
-<!--                        android:layout_width="0dp"-->
-<!--                        android:layout_height="48dp"-->
-<!--                        android:layout_weight="1"-->
-<!--                        android:layout_marginStart="8dp"-->
-<!--                        android:backgroundTint="@color/text_medium"-->
-<!--                        android:text="Guest?"-->
-<!--                        android:textColor="@android:color/white"-->
-<!--                        android:textSize="14sp"-->
-<!--                        android:textStyle="bold"-->
-<!--                        app:cornerRadius="24dp" />-->
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <!-- Progress Bar -->
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:visibility="gone"
-                    android:layout_marginVertical="16dp" />
-                <!-- Create Account Link -->
-                <TextView
-                    android:id="@+id/tvCreateAccount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Create Account"
-                    android:textColor="@color/primary_blue"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center_horizontal"
-                    android:padding="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground"/>
-
-            </LinearLayout>
-        </ScrollView>
-    </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AquaRoute Official Logo — Android VectorDrawable
+    Converted from: assets/aquaRoute_logo.svg (viewBox 0 0 242 278)
+    fillColor set to #FFFFFF (White) for use on dark Navy backgrounds.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="55dp"
+    android:viewportWidth="242"
+    android:viewportHeight="278">
+
+    <!--
+        Main logo shape — single compound path extracted from the SVG.
+        All fill colors are set to #FFFFFF so the logo pops on navy backgrounds.
+        The SVG uses a mask/stroke technique; we use the outline path directly.
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M211.1,263.1
+            H34.6
+            L10.1,186.1
+            H101.6
+            L133.6,169.1
+            H231.6
+            L211.1,263.1
+            Z
+
+            M197.1,152.1
+            H130.6
+            L98.1,169.1
+            H46.1
+            V92.1
+            H197.1
+            V152.1
+            Z
+
+            M113.1,6.1
+            C117.518,6.1 121.1,9.682 121.1,14.1
+            V54.1
+            H162.1
+            C166.518,54.1 170.1,57.682 170.1,62.1
+            V80.1
+            H73.1
+            V54.1
+            H107.1
+            V6.1
+            H113.1
+            Z
+
+            M143.1,6.1
+            C147.518,6.1 151.1,9.682 151.1,14.1
+            V35.1
+            H138.1
+            V6.1
+            H143.1
+            Z" />
+
+</vector>

@@ -19,9 +19,9 @@
     <!-- MAIN THEME - This MUST be named exactly "Theme.AquaRouteSystem" -->
     <style name="Theme.AquaRouteSystem" parent="Base.Theme.AquaRouteSystem" />
 
-    <!-- Splash Screen Theme -->
+    <!-- Splash Screen Theme — window background for pre-API 31 devices -->
     <style name="Theme.Splash" parent="Theme.AquaRouteSystem">
-        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:windowBackground">@drawable/auth_background</item>
     </style>
 
     <!-- Onboarding Theme -->

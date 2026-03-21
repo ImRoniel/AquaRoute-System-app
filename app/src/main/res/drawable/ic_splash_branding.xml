@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ic_splash_branding.xml — Bottom Branding for Android 12+ Splash
+
+    Shown at the bottom of the splash screen via windowSplashScreenBrandingImage.
+    Like Instagram's "from Meta" label.
+
+    Renders: small ferry logo icon on the left + "AquaRoute" rendered as
+    a letterform wordmark using geometric path segments.
+
+    Canvas: 400 × 100 viewport (roughly 200×50dp at 2x density)
+    Style: semi-transparent white (#CCFFFFFF) to be subtle like Instagram's
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="50dp"
+    android:viewportWidth="400"
+    android:viewportHeight="100">
+
+    <!-- Mini ferry icon (logo scaled to ~40×46 centered at left) -->
+    <group
+        android:translateX="23"
+        android:translateY="27"
+        android:scaleX="0.165"
+        android:scaleY="0.165">
+        <path
+            android:fillColor="#CCFFFFFF"
+            android:pathData="
+                M211.1,263.1
+                H34.6 L10.1,186.1 H101.6 L133.6,169.1 H231.6 L211.1,263.1 Z
+                M197.1,152.1 H130.6 L98.1,169.1 H46.1 V92.1 H197.1 V152.1 Z
+                M113.1,6.1
+                C117.518,6.1 121.1,9.682 121.1,14.1 V54.1 H162.1
+                C166.518,54.1 170.1,57.682 170.1,62.1 V80.1 H73.1 V54.1 H107.1 V6.1 H113.1 Z
+                M143.1,6.1 C147.518,6.1 151.1,9.682 151.1,14.1 V35.1 H138.1 V6.1 H143.1 Z" />
+    </group>
+
+    <!-- Thin divider line between icon and wordmark -->
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M55,25 H57 V75 H55 Z" />
+
+    <!-- Wordmark: "AquaRoute" as simple rectangular letterforms -->
+    <!-- A -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M68,70 L76,30 L84,70 L82,70 L79,55 L73,55 L70,70 Z M74,50 L78,50 L76,38 Z" />
+    <!-- q -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M98,80 L98,45 L95,45 L95,43 L102,43 L102,45 L100,45 L100,80 Z
+                          M91,56 C91,48 101,48 101,56 C101,64 91,64 91,56 Z
+                          M93,56 C93,62 99,62 99,56 C99,50 93,50 93,56 Z" />
+    <!-- u -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M108,43 L108,62 C108,66 114,66 114,62 L114,43 L116,43 L116,62 C116,68 106,68 106,62 L106,43 Z" />
+    <!-- a -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M122,50 C122,43 132,43 132,50 L132,67 L130,67 L130,64 C130,67 122,68 122,62 C122,57 130,55 130,55 L130,50 C130,46 124,46 124,50 Z
+                          M130,58 C126,58 124,60 124,62 C124,65 130,65 130,62 Z" />
+    <!-- R -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M147,30 L147,70 L149,70 L149,52 L153,52 L158,70 L160,70 L155,52 C159,51 160,48 160,44 C160,38 156,30 152,30 Z
+                          M149,32 L152,32 C155,32 158,36 158,44 C158,50 155,50 152,50 L149,50 Z" />
+    <!-- o -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M164,56 C164,48 174,48 174,56 C174,64 164,64 164,56 Z
+                          M166,56 C166,62 172,62 172,56 C172,50 166,50 166,56 Z" />
+    <!-- u -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M179,43 L179,62 C179,66 185,66 185,62 L185,43 L187,43 L187,62 C187,68 177,68 177,62 L177,43 Z" />
+    <!-- t -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M194,33 L196,33 L196,43 L200,43 L200,45 L196,45 L196,64 C196,66 197,66 200,66 L200,68 C196,68 194,67 194,64 L194,45 L192,45 L192,43 L194,43 Z" />
+    <!-- e -->
+    <path android:fillColor="#CCFFFFFF"
+        android:pathData="M205,56 C205,48 215,48 215,56 L215,58 L207,58 C207,62 209,65 215,65 L215,67 C207,67 205,63 205,56 Z
+                          M207,56 L213,56 C213,51 207,51 207,56 Z" />
+
+</vector>

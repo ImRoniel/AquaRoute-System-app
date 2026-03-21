@@ -15,7 +15,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AquaRouteSystem">  <!-- This should now work -->
+        android:theme="@style/Theme.AquaRouteSystem">
 
         <!-- OpenStreetMap Configuration -->
         <meta-data
@@ -25,7 +25,8 @@
             android:name="osmdroid.cachePath"
             android:value="/osmdroid/Cache" />
 
-        <!-- SPLASH SCREEN -->
+        <!-- SESSION ROUTER (replaces old splash screen UI) -->
+        <!-- Visual splash is handled by the native Android 12+ SplashScreen API (Theme.AquaRouteSystem) -->
         <activity
             android:name=".View.SplashScreen"
             android:exported="true"
@@ -60,7 +61,7 @@
             android:exported="false"
             android:theme="@style/Theme.Auth" />
 
-        <!-- MAIN DASHBOARD (Screen 6) -->
+        <!-- MAIN DASHBOARD -->
         <activity
             android:name=".View.MainDashboard"
             android:exported="false"

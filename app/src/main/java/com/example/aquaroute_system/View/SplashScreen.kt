@@ -2,60 +2,49 @@ package com.example.aquaroute_system.View
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import com.example.aquaroute_system.R
 import com.example.aquaroute_system.util.SessionManager
 
+/**
+ * SplashScreen — Instant session router. NO UI layout.
+ *
+ * The visual splash experience is provided entirely by the Android system:
+ *  • API 31+  → native SplashScreen API (windowSplashScreenBackground + animated icon in values-v31/themes.xml)
+ *  • API < 31 → Theme.Splash windowBackground (auth_background navy gradient)
+ *
+ * This activity never calls setContentView(), so the system splash is dismissed
+ * the moment this Activity's onCreate completes — making the transition instant.
+ *
+ * Routing logic:
+ *  - Valid 30-day session → MainDashboard (LiveMapView), bypassing onboarding + login
+ *  - First run            → OnboardingActivity
+ *  - Returning user       → LoginActivity
+ */
 class SplashScreen : AppCompatActivity() {
-
-    private val SPLASH_DELAY: Long = 2000 // 2 seconds
-    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
+        // No setContentView — the themed window background handles the visual splash
 
-        sessionManager = SessionManager(this)
+        val sessionManager = SessionManager(this)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            // Check if user is already logged in
-            if (sessionManager.isSessionValid()) {
-                // User has valid session - go to MainDashboard
-                navigateToMainDashboard()
-            } else {
-                // Check if first time user
-                val isFirstRun = getSharedPreferences("app_prefs", MODE_PRIVATE)
-                    .getBoolean("is_first_run", true)
-
-                if (isFirstRun) {
-                    // First time user - show onboarding
-                    navigateToOnboarding()
-                } else {
-                    // Returning user - go to login
-                    navigateToLogin()
+        if (sessionManager.isSessionValid()) {
+            startActivity(
+                Intent(this, LiveMapView::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
+            )
+        } else {
+            val isFirstRun = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .getBoolean("is_first_run", true)
+
+            if (isFirstRun) {
+                startActivity(Intent(this, OnboardingActivity::class.java))
+            } else {
+                startActivity(Intent(this, LoginActivity::class.java))
             }
-        }, SPLASH_DELAY)
-    }
+        }
 
-    private fun navigateToMainDashboard() {
-        val intent = Intent(this, LiveMapView::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
-
-    private fun navigateToOnboarding() {
-        val intent = Intent(this, OnboardingActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
-
-    private fun navigateToLogin() {
-        val intent = Intent(this, LoginSignupActivity::class.java)
-        startActivity(intent)
         finish()
     }
 }

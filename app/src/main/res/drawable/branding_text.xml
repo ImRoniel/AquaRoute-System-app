@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    branding_text.xml — PLACEHOLDER
+
+    This is a temporary transparent 1×1 placeholder so the build passes.
+    Replace this file with your real branding_text.png (see dimensions below)
+    by placing it at: res/drawable-xxhdpi/branding_text.png
+
+    Android will use the PNG over this vector automatically when both exist.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="60dp"
+    android:viewportWidth="200"
+    android:viewportHeight="60">
+    <!-- Transparent placeholder — replaced by your PNG -->
+</vector>

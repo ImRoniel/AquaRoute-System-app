@@ -111,12 +111,14 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun navigateToAuth() {
-        // Mark that user has seen onboarding
+        // Mark that user has seen onboarding — next launch will bypass this screen
         getSharedPreferences("app_prefs", MODE_PRIVATE).edit()
             .putBoolean("is_first_run", false)
             .apply()
 
-        val intent = Intent(this, LoginSignupActivity::class.java)
+        // Route to LoginActivity (LoginSignupActivity did not exist — was crash point)
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }

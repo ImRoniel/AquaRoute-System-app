@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Inactive indicator dot — semi-transparent white, visible on navy background -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <size android:width="12dp" android:height="12dp" />
-    <solid android:color="@color/light_gray" />
+    <size android:width="10dp" android:height="10dp" />
+    <solid android:color="#55FFFFFF" />
 </shape>
