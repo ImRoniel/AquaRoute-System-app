@@ -24,7 +24,8 @@ class FerryAdapter(
         fun statusStyle(status: String): Pair<String, Int> = when (status.lowercase()) {
             "on_time"     -> "ON TIME"     to Color.parseColor("#4CAF50") // 🟢 green
             "delayed"     -> "DELAYED"     to Color.parseColor("#FF9800") // 🟠 orange
-            "cancelled"   -> "CANCELLED"   to Color.parseColor("#F44336") // 🔴 red
+            "cancelled", 
+            "suspended"   -> status.uppercase() to Color.parseColor("#F44336") // 🔴 red
             "docked"      -> "DOCKED"      to Color.parseColor("#2196F3") // 🔵 blue
             "maintenance" -> "MAINTENANCE" to Color.parseColor("#9E9E9E") // ⚫ grey
             else          -> status.uppercase().ifBlank { "UNKNOWN" } to Color.parseColor("#9E9E9E")

@@ -54,7 +54,10 @@ class FerriesViewModel(
             "at sea",
             "active",
             "en route",
-            "underway"
+            "underway",
+            "suspended",    // Admin updated
+            "cancelled",
+            "maintenance"
         )
     }
 
