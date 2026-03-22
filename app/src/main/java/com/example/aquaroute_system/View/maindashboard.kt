@@ -178,21 +178,6 @@ class MainDashboard : AppCompatActivity() {
             drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        // ── QUICK ACCESS ──────────────────────────────────────────
-        binding.drawerWeather.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            startActivity(Intent(this, WeatherAdvisoriesActivity::class.java))
-        }
-
-        binding.drawerPorts.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_ports)
-        }
-
-        binding.drawerVoyageHistory.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            startActivity(Intent(this, VoyageHistoryActivity::class.java))
-        }
 
         // ── ACCOUNT ───────────────────────────────────────────────
         binding.drawerProfile.setOnClickListener {
