@@ -307,9 +307,8 @@ class HomeFragment : Fragment() {
         binding.btnTrackAllCargo.setOnClickListener {
             (activity as? MainDashboard)?.navigateToTab(R.id.nav_cargo)
         }
-        binding.btnViewWeather.setOnClickListener {
-            (activity as? MainDashboard)?.navigateToTab(R.id.nav_ferries)
-        }
+        // btnViewWeather removed — weather advisories now live in the Drawer menu
+        // and the advisory banner is already displayed inline in this card.
     }
 
     // -------------------------------------------------------------------------

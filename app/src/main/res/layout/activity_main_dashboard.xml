@@ -107,121 +107,63 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
+                <!-- Section label -->
                 <TextView
-                    android:id="@+id/drawerDashboard"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:drawableLeft="@drawable/ic_dashboard"
-                    android:drawablePadding="16dp"
-                    android:drawableTint="@color/deep_ocean_blue"
-                    android:text="DASHBOARD"
+                    android:layout_height="wrap_content"
+                    android:text="QUICK ACCESS"
                     android:textColor="@color/deep_ocean_blue"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
                     android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
+                    android:paddingTop="12dp"
+                    android:paddingBottom="4dp" />
 
-                <TextView
-                    android:id="@+id/drawerLiveMap"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:drawableLeft="@drawable/ic_live_map"
-                    android:drawablePadding="16dp"
-                    android:drawableTint="@color/medium_text"
-                    android:text="LIVE MAP"
-                    android:textColor="@color/medium_text"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
-
-                <TextView
-                    android:id="@+id/drawerMyCargo"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:drawableLeft="@drawable/ic_my_cargo"
-                    android:drawablePadding="16dp"
-                    android:drawableTint="@color/medium_text"
-                    android:text="MY CARGO"
-                    android:textColor="@color/medium_text"
-                    android:textSize="16sp"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="?attr/selectableItemBackground" />
-
-<!--                <TextView-->
-<!--                    android:id="@+id/drawerPorts"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="48dp"-->
-<!--                    android:text="⚓  [PORTS &amp; STATUS]"-->
-<!--                    android:textColor="@color/medium_text"-->
-<!--                    android:textSize="16sp"-->
-<!--                    android:gravity="center_vertical"-->
-<!--                    android:paddingStart="16dp"-->
-<!--                    android:background="?attr/selectableItemBackground" />-->
-
-<!--                <TextView-->
-<!--                    android:id="@+id/drawerVoyageHistory"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="48dp"-->
-<!--                    android:text="📊  [VOYAGE HISTORY]"-->
-<!--                    android:textColor="@color/medium_text"-->
-<!--                    android:textSize="16sp"-->
-<!--                    android:gravity="center_vertical"-->
-<!--                    android:paddingStart="16dp"-->
-<!--                    android:background="?attr/selectableItemBackground" />-->
-
-<!--                <TextView-->
-<!--                    android:id="@+id/drawerSavedRoutes"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="48dp"-->
-<!--                    android:text="⭐  [SAVED ROUTES]"-->
-<!--                    android:textColor="@color/medium_text"-->
-<!--                    android:textSize="16sp"-->
-<!--                    android:gravity="center_vertical"-->
-<!--                    android:paddingStart="16dp"-->
-<!--                    android:background="?attr/selectableItemBackground" />-->
-
+                <!-- Weather Advisories -->
                 <TextView
                     android:id="@+id/drawerWeather"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="52dp"
                     android:drawableLeft="@drawable/ic_weather"
                     android:drawablePadding="16dp"
                     android:drawableTint="@color/medium_text"
-                    android:text="WEATHER ADVISORIES"
+                    android:text="Weather Advisories"
                     android:textColor="@color/medium_text"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:background="?attr/selectableItemBackground" />
 
+                <!-- Ports Directory -->
                 <TextView
-                    android:id="@+id/drawerSupport"
+                    android:id="@+id/drawerPorts"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:drawableLeft="@drawable/ic_support"
+                    android:layout_height="52dp"
+                    android:drawableLeft="@drawable/ic_ports"
                     android:drawablePadding="16dp"
                     android:drawableTint="@color/medium_text"
-                    android:text="SUPPORT &amp; HELP"
+                    android:text="Ports Directory"
                     android:textColor="@color/medium_text"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:background="?attr/selectableItemBackground" />
 
+                <!-- Voyage History -->
                 <TextView
-                    android:id="@+id/drawerSettings"
+                    android:id="@+id/drawerVoyageHistory"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:drawableLeft="@drawable/ic_settings"
+                    android:layout_height="52dp"
+                    android:drawableLeft="@drawable/ic_transit"
                     android:drawablePadding="16dp"
                     android:drawableTint="@color/medium_text"
-                    android:text="SETTINGS"
+                    android:text="Voyage History"
                     android:textColor="@color/medium_text"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:background="?attr/selectableItemBackground" />
@@ -230,34 +172,53 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/light_gray"
-                    android:layout_marginVertical="8dp" />
+                    android:layout_marginVertical="4dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
 
+                <!-- Section label -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📢 ANNOUNCEMENTS"
+                    android:text="ACCOUNT"
                     android:textColor="@color/deep_ocean_blue"
-                    android:textSize="14sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
-                    android:padding="16dp" />
+                    android:letterSpacing="0.08"
+                    android:paddingStart="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp" />
 
+                <!-- My Profile -->
                 <TextView
+                    android:id="@+id/drawerProfile"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="• New ferry route: Manila - Palawan"
+                    android:layout_height="52dp"
+                    android:drawableLeft="@drawable/ic_person"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="My Profile"
                     android:textColor="@color/medium_text"
-                    android:textSize="14sp"
-                    android:paddingHorizontal="16dp"
-                    android:paddingBottom="8dp" />
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:background="?attr/selectableItemBackground" />
 
+                <!-- Settings -->
                 <TextView
+                    android:id="@+id/drawerSettings"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="• App version 2.0 released"
+                    android:layout_height="52dp"
+                    android:drawableLeft="@drawable/ic_settings"
+                    android:drawablePadding="16dp"
+                    android:drawableTint="@color/medium_text"
+                    android:text="Settings"
                     android:textColor="@color/medium_text"
-                    android:textSize="14sp"
-                    android:paddingHorizontal="16dp"
-                    android:paddingBottom="16dp" />
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:background="?attr/selectableItemBackground" />
+
             </LinearLayout>
         </ScrollView>
 

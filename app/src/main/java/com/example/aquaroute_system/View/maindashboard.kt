@@ -173,31 +173,41 @@ class MainDashboard : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Toolbar menu button to open drawer
+        // Toolbar hamburger → open drawer
         binding.toolbarLayout.btnMenu.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
 
-        binding.drawerDashboard.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_home)
-        }
-
-        binding.drawerLiveMap.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_map)
-        }
-
-        binding.drawerMyCargo.setOnClickListener {
-            drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_cargo)
-        }
-
+        // ── QUICK ACCESS ──────────────────────────────────────────
         binding.drawerWeather.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            navigateToTab(R.id.nav_ferries)
+            startActivity(Intent(this, WeatherAdvisoriesActivity::class.java))
         }
 
+        binding.drawerPorts.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            navigateToTab(R.id.nav_ports)
+        }
+
+        binding.drawerVoyageHistory.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            startActivity(Intent(this, VoyageHistoryActivity::class.java))
+        }
+
+        // ── ACCOUNT ───────────────────────────────────────────────
+        binding.drawerProfile.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            // TODO: navigate to ProfileFragment or ProfileActivity when created
+            Toast.makeText(this, "My Profile — coming soon!", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.drawerSettings.setOnClickListener {
+            drawerLayout.closeDrawer(GravityCompat.START)
+            // TODO: navigate to SettingsActivity when created
+            Toast.makeText(this, "Settings — coming soon!", Toast.LENGTH_SHORT).show()
+        }
+
+        // ── FOOTER ────────────────────────────────────────────────
         binding.drawerLogout.setOnClickListener {
             logout()
         }

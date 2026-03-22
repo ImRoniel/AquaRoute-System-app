@@ -757,20 +757,6 @@
                         android:padding="8dp"
                         android:visibility="gone" />
 
-                    <!-- View Weather button -->
-                    <TextView
-                        android:id="@+id/btnViewWeather"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:gravity="center"
-                        android:text="VIEW WEATHER ADVISORIES →"
-                        android:textColor="@color/weather_teal"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:background="?attr/selectableItemBackground"
-                        android:layout_marginTop="8dp" />
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
