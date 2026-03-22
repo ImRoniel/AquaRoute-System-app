@@ -19,6 +19,13 @@ data class FirestorePort(
 ) {
     // NEW: Get dynamic status based on current time
     fun getCurrentStatus(currentHour: Int): String {
+        // If explicitly closed, limited, or explicitly forced OPEN by admin, override schedule
+        if (status.equals("Closed", ignoreCase = true) || 
+            status.equals("Limited", ignoreCase = true) || 
+            status.equals("Open", ignoreCase = true)) {
+            return status
+        }
+
         // If no hours defined, return original status
         if (openHour == null || closeHour == null) {
             return status

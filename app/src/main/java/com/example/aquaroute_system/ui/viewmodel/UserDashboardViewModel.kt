@@ -424,7 +424,7 @@ class UserDashboardViewModel(
         nearbyPortsJob?.cancel()
         nearbyPortsJob = viewModelScope.launch {
             portRepository.observePortsNearLocation(
-                location.latitude, location.longitude, 5.0  // 5 km
+                location.latitude, location.longitude, 5.0  // 10 km (matches Ports Tab default)
             )
                 .catch { e ->
                     Log.e(TAG, "Error observing nearby ports", e)
@@ -450,10 +450,11 @@ class UserDashboardViewModel(
     private fun mapToPortStatus(port: FirestorePort, hour: Int): PortStatus {
         val dynamicStatus = port.getCurrentStatus(hour)
         val normalizedStatus = when {
-            dynamicStatus.contains("Open", ignoreCase = true)        -> "open"
-            dynamicStatus.contains("Closing Soon", ignoreCase = true) -> "limited"
-            dynamicStatus.contains("Limited", ignoreCase = true)     -> "limited"
-            dynamicStatus.contains("Closed", ignoreCase = true)      -> "closed"
+            dynamicStatus.startsWith("Closed", ignoreCase = true)      -> "closed"
+            dynamicStatus.startsWith("Opens at", ignoreCase = true)    -> "closed"
+            dynamicStatus.startsWith("Closing", ignoreCase = true)     -> "limited"
+            dynamicStatus.contains("Limited", ignoreCase = true)       -> "limited"
+            dynamicStatus.startsWith("Open", ignoreCase = true)        -> "open"
             else -> port.status.lowercase()
         }
         return PortStatus(
