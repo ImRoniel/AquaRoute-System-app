@@ -21,6 +21,7 @@ class SessionManager(context: Context) {
         private const val KEY_AUTH_TOKEN = "auth_token"
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_RECENT_SEARCHES = "recent_searches"
+        private const val KEY_BEGINNER_MODE = "beginner_mode"
     }
 
     fun saveUserSession(user: User, authToken: String = "") {
@@ -113,6 +114,14 @@ class SessionManager(context: Context) {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    fun setBeginnerMode(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BEGINNER_MODE, enabled).apply()
+    }
+
+    fun isBeginnerMode(): Boolean {
+        return prefs.getBoolean(KEY_BEGINNER_MODE, false)
     }
 
     fun getLoginTime(): Long? {

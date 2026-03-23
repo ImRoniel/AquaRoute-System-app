@@ -48,6 +48,7 @@ class MainDashboard : AppCompatActivity() {
         setupNavigation()
         requestUserLocation()
         setupClickListeners()
+        setupNavigationListeners()
     }
 
     private fun initializeDependencies() {
@@ -173,23 +174,26 @@ class MainDashboard : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Toolbar hamburger → open drawer
+        // Toolbar hamburger → open drawer OR back navigation
         binding.toolbarLayout.btnMenu.setOnClickListener {
-            drawerLayout.openDrawer(GravityCompat.START)
+            val currentDest = navController.currentDestination?.id
+            if (currentDest == R.id.nav_profile || currentDest == R.id.nav_settings) {
+                navController.popBackStack()
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START)
+            }
         }
 
 
         // ── ACCOUNT ───────────────────────────────────────────────
         binding.drawerProfile.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            // TODO: navigate to ProfileFragment or ProfileActivity when created
-            Toast.makeText(this, "My Profile — coming soon!", Toast.LENGTH_SHORT).show()
+            navController.navigate(R.id.nav_profile)
         }
 
         binding.drawerSettings.setOnClickListener {
             drawerLayout.closeDrawer(GravityCompat.START)
-            // TODO: navigate to SettingsActivity when created
-            Toast.makeText(this, "Settings — coming soon!", Toast.LENGTH_SHORT).show()
+            navController.navigate(R.id.nav_settings)
         }
 
         // ── FOOTER ────────────────────────────────────────────────
@@ -209,6 +213,25 @@ class MainDashboard : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun setupNavigationListeners() {
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.nav_profile, R.id.nav_settings -> {
+                    // Hide bottom nav for these screens
+                    binding.bottomNav.visibility = View.GONE
+                    // Change menu icon to back
+                    binding.toolbarLayout.btnMenu.setImageResource(R.drawable.ic_arrow_back)
+                }
+                else -> {
+                    // Show bottom nav for main tabs
+                    binding.bottomNav.visibility = View.VISIBLE
+                    // Change back icon back to menu (hamburger)
+                    binding.toolbarLayout.btnMenu.setImageResource(R.drawable.ic_menu)
+                }
+            }
+        }
     }
 
     override fun onBackPressed() {
