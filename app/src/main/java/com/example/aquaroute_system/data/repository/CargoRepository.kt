@@ -148,11 +148,11 @@ class CargoRepository(private val firestore: FirebaseFirestore) {
             listener = firestore.collection(CARGO_COLLECTION)
                 .whereIn("status", listOf(
                     // lowercase (legacy Android writes)
-                    "in_transit", "processing", "pending",
+                    "in_transit", "processing", "pending", "delivered", "delayed",
                     // Title Case (web admin form values)
-                    "In Transit", "Processing", "Pending",
+                    "In Transit", "Processing", "Pending", "Delivered", "Delayed",
                     // UPPER_SNAKE_CASE (current web admin writes)
-                    "IN_TRANSIT", "PROCESSING", "PENDING"
+                    "IN_TRANSIT", "PROCESSING", "PENDING", "DELIVERED", "DELAYED"
                 ))
                 .limit(50) // fetch all active for accurate fleet-wide stats
                 .addSnapshotListener { snapshot, error ->
