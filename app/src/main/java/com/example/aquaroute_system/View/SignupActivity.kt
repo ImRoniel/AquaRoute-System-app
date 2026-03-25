@@ -77,6 +77,11 @@ class SignupActivity : AppCompatActivity() {
             val password = binding.etPassword.text.toString().trim()
             val confirmPassword = binding.etConfirmPassword?.text.toString().trim()
 
+            if (!binding.cbTerms.isChecked) {
+                Toast.makeText(this, "Please accept the Terms and Conditions to proceed", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             if (validateInputs(fullName, email, password, confirmPassword)) {
                 authViewModel.signUp(email, password, fullName)
             }
